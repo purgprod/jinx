@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Container Principal -->
+    <div class="container" id="backtest-container">
+        <!-- Divisão da esquerda -->
+        <div class="left-panel">
+            <h1 class="purg-title">Purg <span class="beta-box">Beta</span></h1>
+            <button id="backtestButton" class="config-button">Backtesting</button>
+            <button id="configButton" class="config-button">Configuração</button>
+            <!-- Botão Sair -->
+            <button id="logoutButton" class="logout-button">Sair</button>
+        </div>
+
+        <!-- Conteúdo de Backtesting -->
+        <div class="center-panel">
+            <h2 class="config-title">Backtest</h2>
+
+            <!-- Adicionando Padrão e Personalizado -->
+            <div id="top-right-panel">
+                <h2 class="config-heading">Configurações</h2>
+                <div class="buttons-container">
+                    <button id="padraoButton" class="config-button active">Padrão</button>
+                    <button id="personalizadoButton" class="config-button">Personalizado</button>
+					<button id="runBacktestButton" class="config-button">Executar Backtest</button>
+                </div>
+                <!-- Campos de Data -->
+                <div class="date-picker-container">
+                    <div class="date-picker">
+                        <label for="startDateInput">Data de Início:</label>
+                        <input type="date" id="startDateInput">
+                    </div>
+                    <div class="date-picker">
+                        <label for="endDateInput">Data de Fim:</label>
+                        <input type="date" id="endDateInput">
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="config-right-panel" class="config-container" style="display: none;">
+                <h2 class="config-title">Painel de Configurações</h2>
+                <div class="checkbox-container">
+                    <label for="flag-select">Escolha o perfil:</label>
+                    <select id="flag-select">
+                        <option value="Conservador">Conservador</option>
+                        <option value="Moderado" selected>Moderado</option>
+                        <option value="Agressivo">Agressivo</option>
+                    </select>
+                </div>
+                <h3 class="market-heading">Mercados:</h3>
+                <div class="market-buttons">
+                    <button id="backtest-golsMandanteButton" class="market-button">Gols: Mandante</button>
+                    <button id="backtest-golsVisitanteButton" class="market-button">Gols: Visitante</button>
+                    <button id="backtest-escanteiosMandanteButton" class="market-button">Escanteios: Mandante</button>
+                </div>
+            </div>
+
+            <div id="backtest-results">
+                <!-- Resultados do Backtest serão exibidos aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script para comportamento dos botões Padrão e Personalizado
+        const padraoButton = document.getElementById("padraoButton");
+        const personalizadoButton = document.getElementById("personalizadoButton");
+        const configRightPanel = document.getElementById("config-right-panel");
+
+        padraoButton.addEventListener("click", () => {
+            configRightPanel.style.display = 'none';
+            padraoButton.classList.add("active");
+            personalizadoButton.classList.remove("active");
+        });
+
+        personalizadoButton.addEventListener("click", () => {
+            configRightPanel.style.display = 'block';
+            personalizadoButton.classList.add("active");
+            padraoButton.classList.remove("active");
+        });
+
+        // Redirecionamento para a página principal
+        document.getElementById('configButton').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+
+        // Redirecionamento para a página de Backtesting
+        document.getElementById('backtestButton').addEventListener('click', () => {
+            window.location.href = '/backtest';
+        });
+
+        // Comportamento do botão de logout
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            window.location.href = '/login';
+        });
+    </script>
+    
+    <script src="backtesting.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Jogos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Container Principal -->
+    <div class="container" id="main-container">
+        <!-- Divisão da esquerda -->
+        <div class="left-panel">
+            <h1 class="purg-title">Purg <span class="beta-box">Beta</span></h1>
+			<button id="backtestButton" class="config-button">Backtesting</button>
+			<button id="configButton" class="config-button">Configuração</button>
+            <!-- Botão Sair -->
+            <button id="logoutButton" class="logout-button">Sair</button>
+        </div>
+
+        <!-- Divisão central para exibir os cards -->
+        <div class="center-panel">
+            <h2 class="bets-title">Cupom de Aposta</h2>
+            <div id="cardsContainer">
+                <!-- Cards serão preenchidos pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Divisão da direita -->
+        <div class="right-panel">
+            <div id="top-right-panel">
+                <h2 class="config-heading">Configurações</h2>
+                <div class="buttons-container">
+                    <button id="padraoButton" class="config-button active">Padrão</button>
+                    <button id="personalizadoButton" class="config-button">Personalizado</button>
+                    <button id="atualizarButton" class="config-button">Atualizar</button>
+                </div>
+            </div>
+
+            <div id="config-right-panel" class="config-container" style="display: none;">
+                <h2 class="config-title">Painel de Configurações</h2>
+                <div class="checkbox-container">
+                    <label for="flag-select">Escolha o perfil:</label>
+                    <select id="flag-select">
+                        <option value="Conservador">Conservador</option>
+                        <option value="Moderado" selected>Moderado</option>
+                        <option value="Agressivo">Agressivo</option>
+                    </select>
+                </div>
+                <h3 class="market-heading">Mercados:</h3>
+                <div class="market-buttons">
+                    <button id="golsMandanteButton" class="market-button">Gols: Mandante</button>
+                    <button id="golsVisitanteButton" class="market-button">Gols: Visitante</button>
+                    <button id="escanteiosMandanteButton" class="market-button">Escanteios: Mandante</button>
+                </div>
+            </div>
+
+            <div id="bottom-right-panel">
+                <h2 class="table-title">Próximas Partidas</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Mandante</th>
+                            <th>Visitante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gamesTableBody">
+                        <!-- Linhas da tabela serão preenchidas pelo JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
