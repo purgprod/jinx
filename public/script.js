@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("DOM fully loaded and parsed");
 
+    // Referências aos elementos do DOM
     const padraoButton = document.getElementById("padraoButton");
     const personalizadoButton = document.getElementById("personalizadoButton");
     const atualizarButton = document.getElementById("atualizarButton");
@@ -8,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const logoutButton = document.getElementById("logoutButton");
     const loginForm = document.getElementById("loginForm");
     const mainContainer = document.getElementById("main-container");
+    const usuariosButton = document.getElementById("usuariosButton");
+    const resultadosButton = document.getElementById("resultadosButton");
 
     console.log("Element references initialized");
 
@@ -33,9 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("Usuário autenticado");
                 mainContainer.style.display = 'flex';
                 mainContainer.classList.add("fade-in");
-                atualizarPainelConfig("padrao");
-                atualizarApostas();
-                createGamesTable();
             }
         })
         .catch(error => {
@@ -78,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-
     // Adicionar eventos aos botões
     if (logoutButton) {
         logoutButton.addEventListener("click", (event) => {
@@ -112,6 +111,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert('Erro no servidor');
                 });
             }, 1000);
+        });
+    }
+
+    // Adiciona evento ao botão "Usuários"
+    if (usuariosButton) {
+        usuariosButton.addEventListener("click", () => {
+            console.log("Botão 'Usuários' clicado");
+            loadUsers(); // Certifique-se de que a função loadUsers está definida no usuarios.js
+        });
+    }
+
+    // Adiciona evento ao botão "Resultados Financeiros"
+    if (resultadosButton) {
+        resultadosButton.addEventListener("click", () => {
+            console.log("Botão 'Resultados Financeiros' clicado");
+            loadFinancialResults(); // Chama a função no resultados.js
         });
     }
 });

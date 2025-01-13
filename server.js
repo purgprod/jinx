@@ -3,6 +3,7 @@ const path = require('path');
 const session = require('express-session');
 const logger = require('./logger'); // Importa o logger configurado
 const authController = require('./controllers/authController');
+const resultadosRouter = require('./routes/route_resultados'); // Importa o roteador para os resultados financeiros
 const app = express();
 const port = 3000;
 
@@ -76,6 +77,9 @@ app.get('/config', (req, res) => {
     logger.info('Serving config page');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Usar o roteador para resultados financeiros
+app.use('/', resultadosRouter); // Prefixo das rotas para resultados financeiros
 
 // Iniciar o servidor
 app.listen(port, () => {
