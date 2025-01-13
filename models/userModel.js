@@ -2,7 +2,7 @@ const mysql = require('mysql2');
 
 // Configuração do banco de dados MySQL
 const connection = mysql.createConnection({
-    host: '18.116.69.207',
+    host: '3.145.69.40',
     user: 'admin',
     password: 'Purgtrihold',
     database: 'usuarios' // Este deve ser o nome do banco de dados correto para usuários
@@ -12,7 +12,7 @@ const connection = mysql.createConnection({
 exports.findUserByEmail = (email, callback) => {
     console.log('Buscando usuário com e-mail:', email); // Log do e-mail sendo buscado
 
-    const query = 'SELECT * FROM users WHERE email = ?';
+    const query = 'SELECT * FROM users_jinx WHERE email = ?';
     connection.query(query, [email], (err, results) => {
         if (err) {
             console.error('Erro ao consultar o banco de dados:', err);
@@ -34,7 +34,7 @@ exports.findUserByEmail = (email, callback) => {
 
 // Função para criar um novo usuário
 exports.createUser = (email, hashedPassword, callback) => {
-    const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
+    const query = 'INSERT INTO users_jinx (email, password) VALUES (?, ?)';
     connection.query(query, [email, hashedPassword], (err, results) => {
         if (err) {
             console.error('Erro ao inserir no banco de dados:', err);
