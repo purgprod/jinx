@@ -1,10 +1,11 @@
+// database/database_usuarios.js
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-    host: '3.145.69.40', // IP do servidor MySQL
+    host: '3.145.83.144', // IP do servidor MySQL
     user: 'admin',         // Nome de usuário do MySQL
     password: 'Purgtrihold', // Senha do MySQL
-    database: 'crowdfunding',  // Nome do banco de dados
+    database: 'usuarios',  // Nome do banco de dados
     port: 3306,            // Porta padrão do MySQL
     waitForConnections: true,
     connectionLimit: 10,   // Número máximo de conexões no pool

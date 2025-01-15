@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const userModel = require('../models/userModel');
+const userModel = require('../models/model_autenticacao');
 
 exports.login = (req, res) => {
     console.log('Requisição de login recebida:', req.body); // Log para verificar se a requisição chegou
@@ -103,9 +103,11 @@ exports.logout = (req, res) => {
 };
 
 exports.checkSession = (req, res) => {
+    console.log('Verificando sessão. Sessão:', req.session); // Log do estado da sessão
     if (req.session.user) {
         return res.status(200).json({ authenticated: true });
     } else {
         return res.status(401).json({ authenticated: false });
     }
 };
+
