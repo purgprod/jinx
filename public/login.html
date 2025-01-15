@@ -8,8 +8,6 @@
 </head>
 <body class="fade-in">
     <div class="container-login">
-
-        <!-- Painel de login -->
         <div id="login-container" class="login-container">
             <h1>Jinx</h1>
             <form id="loginForm">
@@ -20,51 +18,12 @@
                 <input type="password" id="password" placeholder="******" required>
                 
                 <button type="submit">Entrar</button>
-                <p id="error-message">Credenciais inválidas. Tente novamente.</p>
+                <p id="error-message" style="display:none;">Credenciais inválidas. Tente novamente.</p>
             </form>
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const loginForm = document.getElementById("loginForm");
-            const errorMessage = document.getElementById("error-message");
-
-            // Adiciona a classe fade-in ao carregar a página
-            setTimeout(() => {
-                document.body.classList.add("fade-in");
-            }, 0);
-
-            loginForm.addEventListener("submit", (event) => {
-                event.preventDefault();
-                const email = document.getElementById("email").value;
-                const password = document.getElementById("password").value;
-
-                fetch('/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.body.classList.add("fade-out");
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1000); // Tempo da animação
-                    } else {
-                        errorMessage.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    errorMessage.textContent = 'Erro ao tentar fazer login. Por favor, tente novamente.';
-                    errorMessage.style.display = 'block';
-                    console.error('Erro no servidor:', error);
-                });
-            });
-        });
-    </script>
+    <script src="autenticacao.js" defer></script> <!-- Incluindo o script da autenticação -->
 </body>
 </html>
+

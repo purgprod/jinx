@@ -2,8 +2,8 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const logger = require('./logger'); // Importa o logger configurado
-const authController = require('./controllers/authController');
-const resultadosRouter = require('./routes/route_resultados'); // Importa o roteador para os resultados financeiros
+const controller_autenticacao = require('./controllers/controller_autenticacao');
+const resultadosRouter = require('./routes/route_resultados_financeiros'); // Importa o roteador para os resultados financeiros
 const app = express();
 const port = 3000;
 
@@ -55,17 +55,17 @@ app.use((req, res, next) => {
 app.post('/auth/login', (req, res, next) => {
     logger.info('Login attempt:', req.body);
     next();
-}, authController.login);
+}, controller_autenticacao.login);
 
 app.get('/auth/check-session', isAuthenticated, (req, res, next) => {
     logger.info('Session check for user:', req.session.user);
     next();
-}, authController.checkSession);
+}, controller_autenticacao.checkSession);
 
 app.post('/auth/logout', (req, res, next) => {
     logger.info('Logout for user:', req.session.user);
     next();
-}, authController.logout);
+}, controller_autenticacao.logout);
 
 // Servir páginas estáticas para rotas específicas
 app.get('/login', (req, res) => {
