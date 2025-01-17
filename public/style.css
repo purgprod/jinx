@@ -336,6 +336,7 @@ body {
     background-color: #1E90FF;
 }
 
+
 /* Estilos para o título do formulário */
 .center-panel h2 {
     text-align: center;
@@ -345,3 +346,19 @@ body {
     font-weight: bold;
 }
 
+.button-novo {
+    display: block; /* Garante que o botão ocupe uma linha inteira */
+    margin: 20px auto; /* Centraliza o botão horizontalmente */
+    padding: 10px 20px;
+    background-color: #4682B4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.button-novo:hover {
+    background-color: #1E90FF;
+}

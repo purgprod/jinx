@@ -9,5 +9,8 @@ router.get('/api/resultados-financeiros', ResultadosFinanceirosController.getRes
 // Rota para atualizar um resultado financeiro
 router.put('/api/resultados-financeiros/:id', ResultadosFinanceirosController.updateResultado);
 
+// Rota para criar um novo resultado financeiro
+router.post('/api/resultados-financeiros', ResultadosFinanceirosController.createResultado);
+
 module.exports = router;
 

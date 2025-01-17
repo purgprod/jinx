@@ -39,7 +39,7 @@ function loadFinancialResults() {
                 centerPanel.innerHTML = `
                     <h2 class="bets-title">Resultados Financeiros</h2>
                     <button id="novoButton" class="button-novo">Novo</button>
-                    <div id="cardsContainer" class="cards-container">
+		    <div id="cardsContainer" class="cards-container">
                         ${financialResults}
                     </div>
                 `;
@@ -56,13 +56,7 @@ function loadFinancialResults() {
                 const novoButton = document.getElementById('novoButton');
                 if (novoButton) {
                     novoButton.addEventListener('click', () => {
-                        import('./resultados_financeiros_novo.js')
-                            .then(module => {
-                                module.loadNewFinancialDetails();
-                            })
-                            .catch(error => {
-                                console.error('Erro ao carregar o módulo:', error);
-                            });
+                        window.location.href = 'js/resultados_financeiros/resultados_financeiros_novo.js';
                     });
                 }
             } else {

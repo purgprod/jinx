@@ -27,6 +27,18 @@ const ResultadosFinanceirosController = {
             logger.error('Erro ao atualizar o resultado financeiro:', error);
             res.status(500).json({ error: 'Erro ao atualizar o resultado financeiro' });
         }
+    },
+
+    async createResultado(req, res) {
+        const data = req.body;
+
+        try {
+            await ResultadosFinanceirosModel.createResultadoFinanceiro(data);
+            res.status(201).json({ message: 'Resultado financeiro criado com sucesso' });
+        } catch (error) {
+            logger.error('Erro ao criar o resultado financeiro:', error);
+            res.status(500).json({ error: 'Erro ao criar o resultado financeiro' });
+        }
     }
 };
 

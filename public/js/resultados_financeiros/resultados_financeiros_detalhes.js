@@ -94,7 +94,7 @@ function loadFinancialDetails(idResultado) {
                     <textarea id="controle" name="controle" readonly>${data.controle}</textarea>
 
                     <label for="crescimento_12_meses">Crescimento 12 Meses:</label>
-                    <input type="number" step="0.01" id="crescimento_12_meses" name="crescimento_12_meses" value="${data.crescimento_12_meses}" readonly>
+                    <input type="text" step="0.01" id="crescimento_12_meses" name="crescimento_12_meses" value="${data.crescimento_12_meses}%" readonly>
 
                     <label for="perfil_das_receitas">Perfil das Receitas:</label>
                     <textarea id="perfil_das_receitas" name="perfil_das_receitas" readonly>${data.perfil_das_receitas}</textarea>
