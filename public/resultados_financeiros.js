@@ -1,3 +1,5 @@
+let financialDataMap = {}; // Objeto para armazenar os dados localmente
+
 function loadFinancialResults() {
     console.log("Iniciando chamada para '/api/resultados-financeiros'");
 
@@ -11,9 +13,14 @@ function loadFinancialResults() {
         .then(data => {
             console.log("Dados recebidos do servidor:", data);
 
+            // Armazena os dados em um mapa para acesso rápido
+            data.forEach(result => {
+                financialDataMap[result.id_resultado] = result;
+            });
+
             // Mapeia os resultados financeiros para exibição em forma de cards
             const financialResults = data.map(result => `
-                <div class="card">
+                <div class="card" data-id="${result.id_resultado}">
                     <h3 class="card-title">${result.razao_social}</h3>
                     <p><strong>CNPJ:</strong> ${result.cnpj}</p>
                     <p><strong>Valor Financiamento:</strong> R$ ${parseFloat(result.valor_financiamento_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -27,12 +34,25 @@ function loadFinancialResults() {
             `).join('');
 
             // Atualiza o conteúdo do painel central
-            const centerPanel = document.getElementById('cardsContainer');
-            centerPanel.innerHTML = `
-                <div class="cards-container">
-                    ${financialResults}
-                </div>
-            `;
+            const centerPanel = document.querySelector('.center-panel');
+            if (centerPanel) {
+                centerPanel.innerHTML = `
+                    <h2 class="bets-title">Resultados Financeiros</h2>
+                    <div id="cardsContainer" class="cards-container">
+                        ${financialResults}
+                    </div>
+                `;
+
+                // Adiciona evento de clique a cada card
+                document.querySelectorAll('.card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const idResultado = card.getAttribute('data-id');
+                        loadFinancialDetails(idResultado);
+                    });
+                });
+            } else {
+                console.error('Elemento center-panel não encontrado.');
+            }
         })
         .catch(error => {
             console.error("Erro ao buscar resultados financeiros:", error);

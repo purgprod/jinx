@@ -164,16 +164,19 @@ body {
     background-color: #F3F3F3; /* Adicionei uma cor de fundo para visualização */
 }
 
-/* Container dos cards */
+/* ========================================================================== */
+/* Estilos para os Cards dos Usuários */
+/* ========================================================================== */
+
 .cards-container {
-    display: flex;
+    display: flex; 
     flex-wrap: wrap; /* Permite que os cards quebrem linha */
     gap: 20px; /* Espaçamento entre os cards */
     justify-content: center; /* Centraliza os cards */
     padding: 20px;
 }
 
-/* Estilo dos cards */
+/* Estilo dos cards dos usuários */
 .card {
     background-color: #FFFFFF; /* Fundo branco */
     color: #333333; /* Texto escuro */
@@ -186,7 +189,7 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease; /* Animação ao passar o mouse */
 }
 
-/* Título do card */
+/* Título do card dos usuários */
 .card-title {
     font-size: 18px;
     font-weight: bold;
@@ -209,6 +212,8 @@ body {
     transform: translateY(-5px); /* Eleva o card */
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Aumenta a sombra */
 }
+
+/* FIM DO ESTILO DOS USUÁRIOS */
 
 .bets-title {
     color: #D4D4D4;
@@ -277,5 +282,66 @@ body {
 
 #logoutButton:hover {
     background-color: #4682B4; 
+}
+
+/* Estilos para o formulário de detalhes financeiros */
+#financialDetailsForm {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    padding: 20px;
+    background-color: #FFFFFF; /* Fundo branco para contraste */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+}
+
+/* Estilos para os rótulos */
+#financialDetailsForm label {
+    grid-column: span 1;
+    font-weight: bold;
+    color: #333333; /* Texto escuro para contraste */
+    margin-bottom: 7px;
+}
+
+/* Estilos para os campos de entrada */
+#financialDetailsForm input,
+#financialDetailsForm textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #D4D4D4;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #333333; /* Texto escuro */
+    background-color: #F9F9F9; /* Fundo claro */
+}
+
+/* Estilos para o botão de submissão */
+#financialDetailsForm button {
+    grid-column: span 2;
+    padding: 10px 20px;
+    background-color: #4682B4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+#financialDetailsForm button:hover {
+    background-color: #1E90FF;
+}
+
+/* Estilos para o título do formulário */
+.center-panel h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333333;
+    font-size: 24px;
+    font-weight: bold;
 }
 

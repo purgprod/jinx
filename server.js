@@ -4,6 +4,8 @@ const session = require('express-session');
 const logger = require('./logger'); // Importa o logger configurado
 const controller_autenticacao = require('./controllers/controller_autenticacao');
 const resultadosRouter = require('./routes/route_resultados_financeiros'); // Importa o roteador para os resultados financeiros
+const model_users = require('./models/model_usuarios.js');
+
 const app = express();
 const port = 3000;
 
@@ -51,6 +53,32 @@ app.use((req, res, next) => {
     next();
 });
 
+// Endpoint para buscar usuários
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const users = await model_users.getUsers(); // Para buscar usuários do banco de dados
+        res.json(users); // Envia os usuários como resposta em JSON
+    } catch (error) {
+        logger.error('Erro ao buscar usuários:', error);
+        res.status(500).json({ error: 'Erro ao buscar os usuários' });
+    }
+});
+
+// Endpoint para alterar a senha do usuário
+app.post('/api/usuarios/:id/change-password', async (req, res) => {
+    const userId = req.params.id; // Obtém o ID do usuário da rota
+    const { password } = req.body; // Obtém a nova senha do corpo da requisição
+
+    try {
+        // Atualiza a senha no banco de dados
+        await model_users.updatePassword(userId, password); // Supondo que você tenha essa função no seu modelo
+        res.status(200).send('Senha alterada com sucesso'); // Retorna sucesso
+    } catch (error) {
+        logger.error('Erro ao alterar a senha:', error);
+        res.status(500).send('Erro ao alterar a senha'); // Retorna erro em caso de falha
+    }
+});
+
 // Endpoints de autenticação
 app.post('/auth/login', (req, res, next) => {
     logger.info('Login attempt:', req.body);
@@ -85,4 +113,3 @@ app.use('/', resultadosRouter); // Prefixo das rotas para resultados financeiros
 app.listen(port, () => {
     logger.info(`Servidor rodando em http://localhost:${port}`);
 });
-
