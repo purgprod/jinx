@@ -3,15 +3,15 @@ const mysql = require('mysql2/promise');
 // Configurar pool de conexão com o MySQL usando as configurações fornecidas
 const pool = mysql.createPool({
     host: '18.219.7.151',  // Host do banco de dados
-    user: 'admin',            // Usuário do banco de dados
-    database: 'usuarios',        // Nome do banco de dados
-    password: 'Purgtrihold',  // Senha do banco de dados
+    user: 'admin',          // Usuário do banco de dados
+    database: 'usuarios',   // Nome do banco de dados
+    password: 'Purgtrihold', // Senha do banco de dados
 });
 
 class UsersModel {
     // Método para obter usuários
     static async getUsers() {
-        const query = 'SELECT * FROM users'; // Query para selecionar os usuários
+        const query = 'SELECT * FROM users'; // Query para selecionar todos os usuários
         try {
             const [rows] = await pool.query(query); // Executa a query
             return rows; // Retorna os usuários
@@ -24,9 +24,9 @@ class UsersModel {
     // Método para atualizar a senha
     static async updatePassword(usuarioId, newPassword) {
         const query = `
-            UPDATE users 
+            UPDATE users
             SET password = ?  // Atualizando para o campo correto
-            WHERE \`usuario_id\` = ? 
+            WHERE \`usuario_id\` = ?
         `;
 
         try {

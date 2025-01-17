@@ -16,7 +16,7 @@ function loadUsers() {
 
             // Armazena os dados em um mapa para acesso rápido
             data.forEach(user => {
-                userDataMap[user.usuario_id] = user;
+                userDataMap[user.usuario_id] = user; // Certifique-se de que o nome da propriedade está correto
             });
 
             // Mapeia os resultados dos usuários para exibição
@@ -67,7 +67,7 @@ function openChangePasswordModal(userId) {
             </div>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
@@ -118,4 +118,3 @@ window.loadUsers = loadUsers; // Faça a função acessível globalmente
 
 // Chamada para carregar usuários quando a página for carregada
 document.addEventListener('DOMContentLoaded', loadUsers);
-

@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const logger = require('./logger'); // Importa o logger configurado
+const logger = require('./logger');
 const controller_autenticacao = require('./controllers/controller_autenticacao');
-const resultadosRouter = require('./routes/route_resultados_financeiros'); // Importa o roteador para os resultados financeiros
+const route_resultados_financeiros = require('./routes/route_resultados_financeiros'); 
 const model_users = require('./models/model_usuarios.js');
 
 const app = express();
@@ -107,7 +107,7 @@ app.get('/config', (req, res) => {
 });
 
 // Usar o roteador para resultados financeiros
-app.use('/', resultadosRouter); // Prefixo das rotas para resultados financeiros
+app.use('/', route_resultados_financeiros); // Prefixo das rotas para resultados financeiros
 
 // Iniciar o servidor
 app.listen(port, () => {

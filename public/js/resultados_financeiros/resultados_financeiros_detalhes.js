@@ -63,7 +63,6 @@ function loadFinancialDetails(idResultado) {
 
                     <label for="motivo_da_captacao">Motivo da Captação:</label>
                     <textarea id="motivo_da_captacao" name="motivo_da_captacao" readonly>${data.motivo_da_captacao}</textarea>
-
                     <label for="descritivo">Descritivo:</label>
                     <textarea id="descritivo" name="descritivo" readonly>${data.descritivo}</textarea>
 
@@ -130,21 +129,59 @@ function loadFinancialDetails(idResultado) {
 
             // Adiciona um evento de clique ao botão Editar
             const editButton = document.getElementById('editButton');
-            editButton.addEventListener('click', () => {
-                document.querySelectorAll('#financialDetailsForm input, #financialDetailsForm textarea').forEach(element => {
-                    element.removeAttribute('readonly');
+            if (editButton) {
+                editButton.addEventListener('click', () => {
+                    document.querySelectorAll('#financialDetailsForm input, #financialDetailsForm textarea').forEach(element => {
+                        element.removeAttribute('readonly');
+                    });
                 });
-            });
+            } else {
+                console.error('Botão Editar não encontrado.');
+            }
 
             // Adiciona um evento de submissão ao formulário
             const form = document.getElementById('financialDetailsForm');
-            form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                console.log('Dados do formulário:', data);
-                // Aqui você pode enviar os dados para o servidor ou processá-los conforme necessário
-            });
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    const formData = new FormData(form);
+                    const updatedData = Object.fromEntries(formData.entries());
+
+                    // Substitui valores vazios por null
+                    for (let key in updatedData) {
+                        if (updatedData[key] === '') {
+                            updatedData[key] = null;
+                        }
+                    }
+
+                    console.log('Dados do formulário a serem enviados:', updatedData); // Log para verificar os dados
+
+                    // Envia os dados atualizados para o servidor
+                    fetch(`/api/resultados-financeiros/${idResultado}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedData),
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Dados atualizados com sucesso!');
+                        } else {
+                            response.json().then(data => {
+                                console.error('Erro ao atualizar os dados:', data);
+                                alert('Erro ao atualizar os dados.');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao atualizar os dados:', error);
+                        alert('Erro ao atualizar os dados.');
+                    });
+                });
+            } else {
+                console.error('Formulário não encontrado.');
+            }
         } else {
             console.error('Elemento center-panel não encontrado.');
         }
