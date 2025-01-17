@@ -20,7 +20,7 @@ function loadFinancialDetails(idResultado) {
                     <input type="text" id="id_resultado" name="id_resultado" value="${data.id_resultado}" readonly>
 
                     <label for="data_criacao">Data de Criação:</label>
-                    <input type="text" id="data_criacao" name="data_criacao" value="${data.data_criacao}" readonly>
+                    <input type="text" id="data_criacao" name="data_criacao" value="${formatDate(data.data_criacao)}" readonly>
 
                     <label for="razao_social">Razão Social:</label>
                     <input type="text" id="razao_social" name="razao_social" value="${data.razao_social}" readonly>
@@ -35,18 +35,18 @@ function loadFinancialDetails(idResultado) {
                     <input type="text" id="cnae_principal" name="cnae_principal" value="${data.cnae_principal}" readonly>
 
                     <label for="capital_social">Capital Social:</label>
-                    <input type="number" step="0.01" id="capital_social" name="capital_social" value="${data.capital_social}" readonly>
+                    <input type="number" step="0.01" id="capital_social" name="capital_social" value="${parseFloat(data.capital_social).toLocaleString('pt-BR')}" readonly>
 
                     <label for="data_de_fundacao">Data de Fundação:</label>
                     <input type="date" id="data_de_fundacao" name="data_de_fundacao" value="${formatDate(data.data_de_fundacao)}" readonly>
 
                     <label for="valor_financiamento_total">Valor Financiamento Total:</label>
-                    <input type="number" step="0.01" id="valor_financiamento_total" name="valor_financiamento_total" value="${data.valor_financiamento_total}" readonly>
+                    <input type="number" id="valor_financiamento_total" name="valor_financiamento_total" value="${parseFloat(data.valor_financiamento_total).toLocaleString('pt-BR')}" readonly>
 
                     <label for="valor_financiado_purg">Valor Financiado Purg:</label>
-                    <input type="number" step="0.01" id="valor_financiado_purg" name="valor_financiado_purg" value="${data.valor_financiado_purg}" readonly>
+                    <input type="number" step="0.01" id="valor_financiado_purg" name="valor_financiado_purg" value="${parseFloat(data.valor_financiado_purg).toLocaleString('pt-BR')}" readonly>
 
-                    <label for="juros_a_a">Juros a.a:</label>
+                    <label for="juros_a_a">Rentabilidade a.a:</label>
                     <input type="number" step="0.01" id="juros_a_a" name="juros_a_a" value="${data.juros_a_a}" readonly>
 
                     <label for="vencimento">Vencimento:</label>
@@ -59,11 +59,12 @@ function loadFinancialDetails(idResultado) {
                     <input type="number" id="prazo" name="prazo" value="${data.prazo}" readonly>
 
                     <label for="resultado_financeiro">Resultado Financeiro:</label>
-                    <input type="number" step="0.01" id="resultado_financeiro" name="resultado_financeiro" value="${data.resultado_financeiro}" readonly>
+                    <input type="number" id="resultado_financeiro" name="resultado_financeiro" value="${data.resultado_financeiro}" readonly>
 
                     <label for="motivo_da_captacao">Motivo da Captação:</label>
                     <textarea id="motivo_da_captacao" name="motivo_da_captacao" readonly>${data.motivo_da_captacao}</textarea>
-                    <label for="descritivo">Descritivo:</label>
+
+		    <label for="descritivo">Descritivo:</label>
                     <textarea id="descritivo" name="descritivo" readonly>${data.descritivo}</textarea>
 
                     <label for="garantias_oferecidas">Garantias Oferecidas:</label>
@@ -94,7 +95,7 @@ function loadFinancialDetails(idResultado) {
                     <textarea id="controle" name="controle" readonly>${data.controle}</textarea>
 
                     <label for="crescimento_12_meses">Crescimento 12 Meses:</label>
-                    <input type="text" step="0.01" id="crescimento_12_meses" name="crescimento_12_meses" value="${data.crescimento_12_meses}%" readonly>
+                    <input type="number" step="0.01" id="crescimento_12_meses" name="crescimento_12_meses" value="${data.crescimento_12_meses}" readonly>
 
                     <label for="perfil_das_receitas">Perfil das Receitas:</label>
                     <textarea id="perfil_das_receitas" name="perfil_das_receitas" readonly>${data.perfil_das_receitas}</textarea>

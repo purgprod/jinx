@@ -3,7 +3,8 @@ const path = require('path');
 const session = require('express-session');
 const logger = require('./logger');
 const controller_autenticacao = require('./controllers/controller_autenticacao');
-const route_resultados_financeiros = require('./routes/route_resultados_financeiros'); 
+const route_resultados_financeiros = require('./routes/route_resultados_financeiros');
+const route_tokens = require('./routes/route_tokens');
 const model_users = require('./models/model_usuarios.js');
 
 const app = express();
@@ -66,16 +67,30 @@ app.get('/api/usuarios', async (req, res) => {
 
 // Endpoint para alterar a senha do usuário
 app.post('/api/usuarios/:id/change-password', async (req, res) => {
-    const userId = req.params.id; // Obtém o ID do usuário da rota
+    const usuarioId = req.params.id; // Obtém o ID do usuário da rota
     const { password } = req.body; // Obtém a nova senha do corpo da requisição
 
     try {
         // Atualiza a senha no banco de dados
-        await model_users.updatePassword(userId, password); // Supondo que você tenha essa função no seu modelo
+        await model_users.updatePassword(usuarioId, password); // Chama a função updatePassword
         res.status(200).send('Senha alterada com sucesso'); // Retorna sucesso
     } catch (error) {
         logger.error('Erro ao alterar a senha:', error);
         res.status(500).send('Erro ao alterar a senha'); // Retorna erro em caso de falha
+    }
+});
+
+// Endpoint para criar um novo usuário
+app.post('/api/usuarios', async (req, res) => {
+    const { nome, email, password } = req.body; // Obtenha os dados do corpo da requisição
+
+    try {
+        // Você deve ter uma função no modelo para inserir o novo usuário
+        await model_users.createUser({ nome, email, password });  
+        res.status(201).json({ message: 'Usuário criado com sucesso!' });
+    } catch (error) {
+        logger.error('Erro ao criar usuário:', error);
+        res.status(500).json({ error: 'Erro ao criar usuário' });
     }
 });
 
@@ -108,6 +123,9 @@ app.get('/config', (req, res) => {
 
 // Usar o roteador para resultados financeiros
 app.use('/', route_resultados_financeiros); // Prefixo das rotas para resultados financeiros
+
+// Usar o roteador para tokens
+app.use('/', route_tokens); // Prefixo das rotas para tokens
 
 // Iniciar o servidor
 app.listen(port, () => {

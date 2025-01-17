@@ -20,12 +20,12 @@ function loadUsers() {
             });
 
             // Mapeia os resultados dos usuários para exibição
-            const userResults = data.map((user, index) => `
+            const userResults = data.map(user => `
                 <div class="user-card" data-id="${user.usuario_id}">
                     <h3 class="user-title">${user.nome}</h3>
                     <p><strong>Email:</strong> ${user.email}</p>
                     <p><strong>Data de Criação:</strong> ${new Date(user.created_at).toLocaleDateString('pt-BR')}</p>
-                    ${index === 0 ? `<button onclick="openChangePasswordModal('${user.usuario_id}')">Alterar Senha</button>` : ''}
+                    <button onclick="openChangePasswordModal('${user.usuario_id}')">Alterar Senha</button>
                 </div>
             `).join('');
 
@@ -38,14 +38,6 @@ function loadUsers() {
                         ${userResults}
                     </div>
                 `;
-
-                // Adiciona um evento de clique a cada card, se necessário
-                document.querySelectorAll('.user-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const idUsuario = card.getAttribute('data-id');
-                        loadUserDetails(idUsuario); // Função que você precisa implementar para detalhes
-                    });
-                });
             } else {
                 console.error('Elemento center-panel não encontrado.');
             }
@@ -100,6 +92,7 @@ function changePassword(userId) { // userId é agora passado como argumento
             if (response.ok) {
                 alert('Senha alterada com sucesso!');
                 closePasswordModal(); // Fecha o modal
+                loadUsers(); // Recarrega a lista de usuários para refletir as alterações
             } else {
                 alert('Erro ao alterar a senha.');
             }
@@ -113,8 +106,36 @@ function changePassword(userId) { // userId é agora passado como argumento
     }
 }
 
+// Função para criar um novo usuário
+function createUser() {
+    const nome = document.getElementById('nome').value; // Obtenha o nome do campo de entrada
+    const email = document.getElementById('email').value; // Obtenha o email do campo de entrada
+    const password = document.getElementById('newUserPassword').value; // Obtenha a senha do campo de entrada
+
+    fetch('/api/usuarios', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nome, email, password }),
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Usuário criado com sucesso!');
+            loadUsers(); // Recarrega a lista de usuários após a criação
+        } else {
+            alert('Erro ao criar usuário.');
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao criar usuário:', error);
+        alert('Erro ao criar usuário.');
+    });
+}
+
 // Torna a função acessível no escopo global
 window.loadUsers = loadUsers; // Faça a função acessível globalmente
+window.createUser = createUser; // Torna createUser acessível globalmente
 
 // Chamada para carregar usuários quando a página for carregada
 document.addEventListener('DOMContentLoaded', loadUsers);
