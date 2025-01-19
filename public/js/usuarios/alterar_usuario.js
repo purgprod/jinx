@@ -35,7 +35,8 @@ function fetchUserData() {
         }
     })
     .then(userData => {
-        displayUserInfo(userData); // Exibe as informações do usuário
+        // Adiciona as informações do usuário e o botão de exclusão diretamente aqui
+        displayUserInfo(userData); // Chama a função para exibir as informações do usuário
     })
     .catch(error => {
         console.error(error);
@@ -51,8 +52,30 @@ function displayUserInfo(userData) {
             <div class="user-card">
                 <h3>Nome: ${userData.nome}</h3>
                 <p>Email: ${userData.email}</p>
+                <button class="button-novo" onclick="deleteUser('${userData.usuario_id}')">Excluir Usuário</button> <!-- Botão Excluir -->
             </div>
         `;
+    }
+}
+
+// Função para excluir um usuário
+function deleteUser(usuarioId) {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+        fetch(`/api/usuarios/${usuarioId}`, { // URL onde sua API espera a requisição para excluir
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Usuário excluído com sucesso!'); // Mensagem de sucesso
+                showUserCards(); // Volta para a tela inicial após excluir
+            } else {
+                alert('Erro ao excluir usuário.'); // Mensagem de erro
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao excluir usuário:', error);
+            alert('Erro ao excluir usuário.'); // Mensagem de erro
+        });
     }
 }
 

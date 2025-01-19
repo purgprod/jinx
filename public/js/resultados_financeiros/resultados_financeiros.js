@@ -1,4 +1,5 @@
 let financialDataMap = {}; // Objeto para armazenar os dados localmente
+let showInactive = false; // Estado que indica se deve mostrar os inativos
 
 function loadFinancialResults() {
     console.log("Iniciando chamada para '/api/resultados-financeiros'");
@@ -18,29 +19,39 @@ function loadFinancialResults() {
                 financialDataMap[result.id_resultado] = result;
             });
 
-            // Mapeia os resultados financeiros para exibição em forma de cards
-            const financialResults = data.map(result => `
-                <div class="card" data-id="${result.id_resultado}">
-                    <h3 class="card-title">${result.razao_social}</h3>
-                    <p><strong>CNPJ:</strong> ${result.cnpj}</p>
-                    <p><strong>Valor Financiamento:</strong> R$ ${parseFloat(result.valor_financiamento_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <p><strong>Retorno a.a:</strong> ${parseFloat(result.juros_a_a).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%</p>
-                    <p><strong>Resultado Financeiro:</strong> R$ ${parseFloat(result.resultado_financeiro).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <p><strong>Risco:</strong> ${result.risco}</p>
-                    <p><strong>Vencimento:</strong> ${new Date(result.vencimento).toLocaleDateString('pt-BR')}</p>
-                    <p><strong>Site:</strong> <a href="https://${result.site}" target="_blank">${result.site}</a></p>
-                    <p><strong>Instagram:</strong> <a href="https://${result.instagram}" target="_blank">${result.instagram}</a></p>
-                </div>
-            `).join('');
+            // Função para filtrar dados ativos e inativos
+            const filterData = () => {
+                return data.filter(result => showInactive || result.status_ativo === 1);
+            };
+
+            // Função para criar o HTML dos cards
+            const createCardsHTML = (filteredData) => {
+                return filteredData.map(result => `
+                    <div class="card" data-id="${result.id_resultado}">
+                        <h3 class="card-title">${result.razao_social}</h3>
+                        <p><strong>CNPJ:</strong> ${result.cnpj}</p>
+                        <p><strong>Valor Financiamento:</strong> R$ ${parseFloat(result.valor_financiamento_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Retorno a.a:</strong> ${parseFloat(result.juros_a_a).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%</p>
+                        <p><strong>Resultado Financeiro:</strong> R$ ${parseFloat(result.resultado_financeiro).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Risco:</strong> ${result.risco}</p>
+                        <p><strong>Vencimento:</strong> ${new Date(result.vencimento).toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Site:</strong> <a href="https://${result.site}" target="_blank">${result.site}</a></p>
+                        <p><strong>Instagram:</strong> <a href="https://${result.instagram}" target="_blank">${result.instagram}</a></p>
+                    </div>
+                `).join('');
+            };
 
             // Atualiza o conteúdo do painel central
             const centerPanel = document.querySelector('.center-panel');
             if (centerPanel) {
+                const filteredData = filterData();
                 centerPanel.innerHTML = `
-                    <h2 class="bets-title">Resultados Financeiros</h2>
-                    <button id="novoButton" class="button-novo">Novo</button>
+                    <div class="button-container">
+                        <button id="novoButton" class="button-azul">Novo</button>
+                        <button id="inativosButton" class="button-vermelho">${showInactive ? "Ocultar Inativos" : "Mostrar Inativos"}</button>
+                    </div>
                     <div id="cardsContainer" class="cards-container">
-                        ${financialResults}
+                        ${createCardsHTML(filteredData)}
                     </div>
                 `;
 
@@ -63,6 +74,15 @@ function loadFinancialResults() {
                             .catch(error => {
                                 console.error('Erro ao carregar o módulo:', error);
                             });
+                    });
+                }
+
+                // Adiciona evento de clique ao botão Mostrar/Ocultar Inativos
+                const inativosButton = document.getElementById('inativosButton');
+                if (inativosButton) {
+                    inativosButton.addEventListener('click', () => {
+                        showInactive = !showInactive;
+                        loadFinancialResults(); // Recarrega os resultados para aplicar o filtro
                     });
                 }
             } else {

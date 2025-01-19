@@ -63,7 +63,7 @@ function loadFinancialDetails(idResultado) {
 
                     <label for="motivo_da_captacao">Motivo da Captação:</label>
                     <textarea id="motivo_da_captacao" name="motivo_da_captacao" readonly>${data.motivo_da_captacao}</textarea>
-
+                    
                     <label for="descritivo">Descritivo:</label>
                     <textarea id="descritivo" name="descritivo" readonly>${data.descritivo}</textarea>
 
@@ -121,10 +121,10 @@ function loadFinancialDetails(idResultado) {
                     <label for="status_ativo">Status Ativo:</label>
                     <input type="number" id="status_ativo" name="status_ativo" value="${data.status_ativo}" readonly>
 
-                    <div class="button-group">
-                        <button type="button" id="editButton">Editar</button>
-                        <button type="submit">Salvar</button>
-                        <button type="button" id="inativarButton">Inativar</button>
+                    <div class="button-container">
+                        <button id="editButton" class="button-azul">Editar</button>
+                        <button type="submit" id="saveButton" class="button-azul">Salvar</button>
+                        <button type="button" id="inativarButton" class="button-vermelho">Inativar</button>
                     </div>
                 </form>
             `;
@@ -133,7 +133,7 @@ function loadFinancialDetails(idResultado) {
             const editButton = document.getElementById('editButton');
             if (editButton) {
                 editButton.addEventListener('click', () => {
-                    document.querySelectorAll('#financialDetailsForm input, #financialDetailsForm textarea').forEach(element => {
+                    document.querySelectorAll('#financialDetailsForm input:not([readonly]), #financialDetailsForm textarea:not([readonly])').forEach(element => {
                         element.removeAttribute('readonly');
                     });
                 });
@@ -156,9 +156,9 @@ function loadFinancialDetails(idResultado) {
                         }
                     }
 
-                    console.log('Dados do formulário a serem enviados:', updatedData); // Log para verificar os dados
+                    console.log('Dados do formulário a serem enviados:', updatedData);
 
-                    // Envia os dados atualizados para o servidor
+                    // Enviar apenas se o botão "Salvar" foi clicado
                     fetch(`/api/resultados-financeiros/${idResultado}`, {
                         method: 'PUT',
                         headers: {
@@ -188,19 +188,20 @@ function loadFinancialDetails(idResultado) {
             // Adiciona um evento de clique ao botão Inativar
             const inativarButton = document.getElementById('inativarButton');
             if (inativarButton) {
-                inativarButton.addEventListener('click', () => {
+                inativarButton.addEventListener('click', (event) => {
+                    event.preventDefault(); // Evita submissão do formulário
                     if (confirm('Tem certeza que deseja inativar este resultado financeiro?')) {
                         fetch(`/api/resultados-financeiros/${idResultado}/inativar`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ status_ativo: 0 }), // Altera status_ativo para 0
+                            body: JSON.stringify({}), // Submeta um corpo vazio se não houver requisitos adicionais
                         })
                         .then(response => {
                             if (response.ok) {
                                 alert('Resultado financeiro inativado com sucesso!');
-                                // Atualize a interface ou redirecione conforme necessário
+                                loadFinancialDetails(idResultado); // Recarrega para refletir as mudanças
                             } else {
                                 response.json().then(data => {
                                     console.error('Erro ao inativar o resultado financeiro:', data);
@@ -217,7 +218,6 @@ function loadFinancialDetails(idResultado) {
             } else {
                 console.error('Botão Inativar não encontrado.');
             }
-
         } else {
             console.error('Elemento center-panel não encontrado.');
         }

@@ -123,6 +123,19 @@ app.get('/api/usuarios/:email', async (req, res) => {
     }
 });
 
+// Endpoint para excluir um usuário
+app.delete('/api/usuarios/:usuario_id', async (req, res) => {
+    const usuarioId = req.params.usuario_id; // Obtém o ID do usuário da rota
+
+    try {
+        await model_users.deleteUser(usuarioId); // Chama a função para excluir o usuário
+        res.status(200).send('Usuário excluído com sucesso.'); // Retorna sucesso
+    } catch (error) {
+        logger.error('Erro ao excluir usuário:', error);
+        res.status(500).send('Erro ao excluir usuário.'); // Retorna erro em caso de falha
+    }
+});
+
 // Endpoints de autenticação
 app.post('/auth/login', (req, res, next) => {
     logger.info('Login attempt:', req.body);

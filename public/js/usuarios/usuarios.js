@@ -6,7 +6,7 @@ function showUserCards() {
             <div class="card" id="criarNovoUsuarioCard" onclick="loadCreateUserForm()">
                 <h2 class="card-title">Criar Novo Usuário</h2>
             </div>
-            <div class="card" id="alterarUsuarioCard" onclick="showAlterUserCard(event)">
+            <div class="card" id="alterarUsuarioCard" onclick="showAlterUserCard()">
                 <h2 class="card-title">Alterar Usuário Existente</h2>
             </div>
         `;
@@ -14,10 +14,7 @@ function showUserCards() {
 }
 
 // Função para mostrar o card de 'Alterar Usuário'
-function showAlterUserCard(event) {
-    // Previne a propagação do evento
-    event.stopPropagation();
-
+function showAlterUserCard() {
     const centralPanel = document.querySelector('.center-panel');
     if (centralPanel) {
         centralPanel.innerHTML = `

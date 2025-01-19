@@ -318,22 +318,16 @@ body {
     background-color: #F9F9F9; /* Fundo claro */
 }
 
-/* Estilos para o botão de submissão */
+/* Estilos comuns para botões */
 #financialDetailsForm button {
     grid-column: span 2;
     padding: 10px 20px;
-    background-color: #4682B4;
-    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
     margin-top: 20px;
-}
-
-#financialDetailsForm button:hover {
-    background-color: #1E90FF;
 }
 
 
@@ -346,8 +340,7 @@ body {
     font-weight: bold;
 }
 
-.button-novo {
-    display: block; /* Garante que o botão ocupe uma linha inteira */
+.button-azul {
     margin: 20px auto; /* Centraliza o botão horizontalmente */
     padding: 10px 20px;
     background-color: #4682B4;
@@ -359,6 +352,23 @@ body {
     transition: background-color 0.3s;
 }
 
-.button-novo:hover {
+.button-azul:hover {
     background-color: #1E90FF;
 }
+
+.button-vermelho {
+    margin: 20px auto; /* Centraliza o botão horizontalmente */
+    padding: 10px 20px;
+    background-color: #DE9A95;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.button-vermelho:hover {
+    background-color: #F70808;
+}
+

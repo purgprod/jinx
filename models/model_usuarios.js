@@ -84,6 +84,20 @@ class UsersModel {
             throw error; // Lança o erro para ser tratado no endpoint
         }
     }
+
+    // Método para excluir um usuário
+    static async deleteUser(usuarioId) {
+        const query = 'DELETE FROM users WHERE usuario_id = ?'; // Query para excluir o usuário
+        try {
+            const [result] = await pool.execute(query, [usuarioId]); // Executa a query
+            if (result.affectedRows === 0) {
+                throw new Error('Usuário não encontrado.');
+            }
+        } catch (error) {
+            console.error(`Erro ao excluir usuário: ${error.message}`);
+            throw error; // Lança o erro para ser tratado no endpoint
+        }
+    }
 }
 
 module.exports = UsersModel; // Exporta o modelo para uso em outras partes do aplicativo
