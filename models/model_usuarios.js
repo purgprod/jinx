@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt'); // Importando a biblioteca bcrypt
 
 // Configurar pool de conexão com o MySQL usando as configurações fornecidas
 const pool = mysql.createPool({
-    host: '3.149.214.11', // Host do banco de dados
+    host: '18.191.123.39', // Host do banco de dados
     user: 'admin',         // Usuário do banco de dados
     database: 'usuarios',  // Nome do banco de dados
     password: 'Purgtrihold', // Senha do banco de dados
