@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const usuariosButton = document.getElementById("usuariosButton");
     const resultadosButton = document.getElementById("resultadosButton");
     const tokensButton = document.getElementById("tokensButton");
-    const alterarUsuarioButton = document.getElementById("alterarUsuarioButton"); // O botão para alterar usuário pode ser referenciado
 
     console.log("Element references initialized");
 
@@ -18,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (usuariosButton) {
         usuariosButton.addEventListener("click", () => {
             console.log("Botão 'Usuários' clicado");
-            showCreateUserCard(); // Mostra o cartão de criar novo usuário
+            showUserCards(); // Mostra os cartões de criação e alteração de usuários
         });
     }
 
@@ -37,28 +36,18 @@ document.addEventListener("DOMContentLoaded", () => {
             loadTokensResults();  // Chama a função no tokens.js
         });
     }
-
-    // Adiciona evento ao botão "Alterar Usuário"
-    if (alterarUsuarioButton) { // Certifique-se que existe o botão no HTML
-        alterarUsuarioButton.addEventListener("click", () => {
-            console.log("Botão 'Alterar Usuário' clicado");
-            showAlterUserCard(); // Chama a função para mostrar o cartão de alterar usuário
-        });
-    }
 });
 
-// Função para mostrar apenas o card de 'Criar Novo Usuário'
-function showCreateUserCard() {
-    const cardsContainer = document.getElementById('cardsContainer');
-    if (cardsContainer) {
-        // Limpa qualquer conteúdo anterior e mostra apenas o cartão de criação de usuário
-        cardsContainer.innerHTML = `
-            <div class="card" id="criarNovoUsuarioCard">
+// Função para mostrar os cartões no painel
+function showUserCards() {
+    const centralPanel = document.querySelector('.center-panel');
+    if (centralPanel) {
+        centralPanel.innerHTML = `
+            <div class="card" id="criarNovoUsuarioCard" onclick="loadCreateUserForm()">
                 <h2 class="card-title">Criar Novo Usuário</h2>
-                <input type="text" id="novoNome" placeholder="Nome" required />
-                <input type="email" id="novoEmail" placeholder="Email" required />
-                <input type="password" id="newUserPassword" placeholder="Senha" required />
-                <button class="button-novo" onclick="createUser()">Criar Usuário</button>
+            </div>
+            <div class="card" id="alterarUsuarioCard" onclick="showAlterUserCard()">
+                <h2 class="card-title">Alterar Usuário Existente</h2>
             </div>
         `;
     }
@@ -66,18 +55,24 @@ function showCreateUserCard() {
 
 // Função para mostrar o card de 'Alterar Usuário'
 function showAlterUserCard() {
-    const cardsContainer = document.getElementById('cardsContainer');
-    if (cardsContainer) {
-        // Limpa qualquer conteúdo anterior e mostra apenas o cartão de alteração de usuário
-        cardsContainer.innerHTML = `
-            <div class="card" id="alterarUsuarioCard">
-                <h2 class="card-title">Alterar Usuário</h2>
+    const centralPanel = document.querySelector('.center-panel');
+    if (centralPanel) {
+        centralPanel.innerHTML = `
+            <div class="form-container">
+                <h2>Alterar Usuário</h2>
                 <input type="email" id="emailParaAlterar" placeholder="E-mail do Usuário" required />
-                <button class="button-novo" onclick="fetchUserData()">Buscar Usuário</button>
+                <button onclick="fetchUserData()">Buscar Usuário</button>
                 <div id="usuarioInfo"></div> <!-- Área para exibir informações do usuário -->
             </div>
         `;
     }
+}
+
+// Função para direcionar para o formulário de criação de novo usuário
+function loadCreateUserForm() {
+    const script = document.createElement('script');
+    script.src = '/js/usuarios/criar_novo_usuario.js'; // Ajuste o caminho para o seu arquivo
+    document.body.appendChild(script); // Carrega o script para mostrar o formulário
 }
 
 // Função para buscar dados do usuário pelo e-mail
@@ -127,8 +122,7 @@ function createUser() {
     const email = document.getElementById('novoEmail').value; // Obtenha o email do campo de entrada
     const password = document.getElementById('newUserPassword').value; // Obtenha a senha do campo de entrada
 
-    // Primeiro, obtenha o próximo usuario_id
-    fetch('/api/usuarios/next-id') // Endpoint para obter o próximo usuario_id
+    fetch('/api/usuarios/next-id')
         .then(response => {
             if (!response.ok) throw new Error('Erro ao obter próximo usuario_id');
             return response.json(); // Processa a resposta como JSON

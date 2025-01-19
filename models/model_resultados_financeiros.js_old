@@ -79,21 +79,6 @@ const ResultadosFinanceirosModel = {
                 }
             });
         });
-    },
-
-    // Novo método para inativar um resultado financeiro
-    async inativarResultado(id) {
-        const sqlQuery = 'UPDATE resultados_financeiros SET status_ativo = 0 WHERE id_resultado = ?';
-        
-        return new Promise((resolve, reject) => {
-            connection.query(sqlQuery, [id], (error, results) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(results);
-                }
-            });
-        });
     }
 };
 

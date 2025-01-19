@@ -39,6 +39,18 @@ const ResultadosFinanceirosController = {
             logger.error('Erro ao criar o resultado financeiro:', error);
             res.status(500).json({ error: 'Erro ao criar o resultado financeiro' });
         }
+    },
+
+    async inativarResultado(req, res) {
+        const id = req.params.id;
+        
+        try {
+            await ResultadosFinanceirosModel.inativarResultado(id);
+            res.status(200).json({ message: 'Resultado financeiro inativado com sucesso' });
+        } catch (error) {
+            logger.error('Erro ao inativar o resultado financeiro:', error);
+            res.status(500).json({ error: 'Erro ao inativar o resultado financeiro' });
+        }
     }
 };
 

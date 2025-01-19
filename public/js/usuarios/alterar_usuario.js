@@ -8,6 +8,7 @@ function loadAlterUserInterface() {
                 <h2>Alterar Usuário</h2>
                 <input type="email" id="emailParaAlterar" placeholder="E-mail do Usuário" required />
                 <button class="button-novo" onclick="fetchUserData()">Buscar Usuário</button>
+                <button class="button-novo" onclick="showUserCards()">Voltar</button> <!-- Botão para voltar -->
                 <div id="usuarioInfo"></div> <!-- Área para exibir informações do usuário -->
             </div>
         `;
@@ -55,5 +56,5 @@ function displayUserInfo(userData) {
     }
 }
 
-// Chama a função para carregar a interface ao inicializar o arquivo
-document.addEventListener("DOMContentLoaded", loadAlterUserInterface);
+// Removido: Não chame mais a função no DOMContentLoaded
+// document.addEventListener("DOMContentLoaded", loadAlterUserInterface); // Esta linha foi removida
