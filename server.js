@@ -65,6 +65,17 @@ app.get('/api/usuarios', async (req, res) => {
     }
 });
 
+// Endpoint para obter o próximo usuario_id
+app.get('/api/usuarios/next-id', async (req, res) => {
+    try {
+        const nextId = await model_users.getNextUserId(); // Chama a função para obter o próximo id
+        res.json({ nextId }); // Retorna o próximo id em formato JSON
+    } catch (error) {
+        logger.error('Erro ao obter próximo usuario_id:', error);
+        res.status(500).json({ error: 'Erro ao obter próximo usuario_id' });
+    }
+});
+
 // Endpoint para alterar a senha do usuário
 app.post('/api/usuarios/:id/change-password', async (req, res) => {
     const usuarioId = req.params.id; // Obtém o ID do usuário da rota
@@ -85,12 +96,30 @@ app.post('/api/usuarios', async (req, res) => {
     const { nome, email, password } = req.body; // Obtenha os dados do corpo da requisição
 
     try {
-        // Você deve ter uma função no modelo para inserir o novo usuário
-        await model_users.createUser({ nome, email, password });  
+        const usuarioId = await model_users.getNextUserId(); // Obter o próximo usuario_id
+        await model_users.createUser({ usuario_id: usuarioId, nome, email, password }); // Chama a função createUser sem created_at
         res.status(201).json({ message: 'Usuário criado com sucesso!' });
     } catch (error) {
         logger.error('Erro ao criar usuário:', error);
         res.status(500).json({ error: 'Erro ao criar usuário' });
+    }
+});
+
+// Endpoint para buscar um usuário pelo e-mail
+app.get('/api/usuarios/:email', async (req, res) => {
+    const { email } = req.params; // Obtém o e-mail da rota
+
+    try {
+        // Chama a função para buscar o usuário pelo e-mail
+        const user = await model_users.getUserByEmail(email);
+        if (user) {
+            res.status(200).json(user); // Retorna os dados do usuário
+        } else {
+            res.status(404).send('Usuário não encontrado.'); // Retorna mensagem de erro se não encontrado
+        }
+    } catch (error) {
+        logger.error('Erro ao buscar usuário pelo e-mail:', error);
+        res.status(500).send('Erro ao buscar usuário.'); // Mensagem de erro do servidor
     }
 });
 

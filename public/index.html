@@ -22,16 +22,18 @@
         <!-- Divisão central para exibir as informações  -->
         <div class="center-panel">
             <h2 class="bets-title"></h2>
-            <div class="cards-container" id="cardsContainer">
-                <!-- Cards serão preenchidos pelo JavaScript -->
-            </div>
 
-            <!-- Formulário para Adicionar Novo Usuário -->
-            <h2>Criar Novo Usuário</h2>
-            <input type="text" id="nome" placeholder="Nome" required />
-            <input type="email" id="email" placeholder="Email" required />
-            <input type="password" id="newUserPassword" placeholder="Senha" required />
-            <button onclick="createUser()">Criar Usuário</button>
+            <div class="cards-container" id="cardsContainer">
+                <!-- Cartão para Criar Novo Usuário com evento de clique -->
+                <div class="card" id="criarNovoUsuarioCard" onclick="loadCreateUserForm()">
+                    <h2 class="card-title">Criar Novo Usuário</h2>
+                </div>
+
+                <!-- Novo cartão para Alterar Usuário Existente -->
+                <div class="card" id="alterarUsuarioCard" onclick="showAlterUserCard()">
+                    <h2 class="card-title">Alterar Usuário Existente</h2>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -42,6 +44,7 @@
     <script src="js/resultados_financeiros/resultados_financeiros_novo.js" defer></script>
     <script src="js/autenticacao/autenticacao.js" defer></script>
     <script src="script.js" defer></script>
+    <script src="js/usuarios/criar_novo_usuario.js" defer></script> <!-- Certifique-se de incluir este script -->
 
     <script>
         function openChangePasswordModal() {

@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt'); // Importando a biblioteca bcrypt
 
 // Configurar pool de conexão com o MySQL usando as configurações fornecidas
 const pool = mysql.createPool({
-    host: '18.219.7.151', // Host do banco de dados
+    host: '3.149.214.11', // Host do banco de dados
     user: 'admin',         // Usuário do banco de dados
     database: 'usuarios',  // Nome do banco de dados
     password: 'Purgtrihold', // Senha do banco de dados
@@ -18,6 +18,18 @@ class UsersModel {
             return rows; // Retorna os usuários
         } catch (error) {
             console.error(`Erro ao obter usuários: ${error.message}`);
+            throw error; // Lança o erro para ser tratado no endpoint
+        }
+    }
+
+    // Método para obter o próximo usuario_id
+    static async getNextUserId() {
+        const query = 'SELECT MAX(usuario_id) AS maxId FROM users'; // Query para obter o maior usuario_id
+        try {
+            const [rows] = await pool.query(query); // Executa a query
+            return rows[0].maxId ? rows[0].maxId + 1 : 1; // Retorna o próximo id ou 1 se não existir
+        } catch (error) {
+            console.error(`Erro ao obter próximo usuario_id: ${error.message}`);
             throw error; // Lança o erro para ser tratado no endpoint
         }
     }
@@ -44,18 +56,31 @@ class UsersModel {
     }
 
     // Método para criar um novo usuário
-    static async createUser({ nome, email, password }) {
+    static async createUser({ usuario_id, nome, email, password }) { // Remover created_at
         const hashedPassword = await bcrypt.hash(password, 10); // Faz o hash da senha antes de salvar
 
         const query = `
-            INSERT INTO users (nome, email, password)
-            VALUES (?, ?, ?)
+            INSERT INTO users (usuario_id, nome, email, password)
+            VALUES (?, ?, ?, ?)
         `;
 
         try {
-            await pool.execute(query, [nome, email, hashedPassword]); // Insere o novo usuário no banco
+            await pool.execute(query, [usuario_id, nome, email, hashedPassword]); // Insere o novo usuário no banco
         } catch (error) {
             console.error(`Erro ao criar usuário: ${error.message}`);
+            throw error; // Lança o erro para ser tratado no endpoint
+        }
+    }
+
+    // Método para obter um usuário pelo e-mail
+    static async getUserByEmail(email) {
+        const query = 'SELECT * FROM users WHERE email = ?'; // Query para buscar usuário pelo e-mail
+
+        try {
+            const [rows] = await pool.query(query, [email]); // Executa a query
+            return rows[0]; // Retorna o primeiro usuário encontrado, ou undefined se não existir
+        } catch (error) {
+            console.error(`Erro ao obter usuário pelo e-mail: ${error.message}`);
             throw error; // Lança o erro para ser tratado no endpoint
         }
     }
