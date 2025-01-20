@@ -30,7 +30,7 @@ const ResultadosFinanceirosModel = {
                 descritivo = ?, garantias_oferecidas = ?, historico_com_nexoos = ?, capital_e_capacidade = ?,
                 carater = ?, credito = ?, condicoes = ?, conexoes = ?, colateral = ?, controle = ?,
                 crescimento_12_meses = ?, perfil_das_receitas = ?, site = ?, facebook = ?, instagram = ?,
-                cobertura_sinistro = ?, flag_sinistro = ?, data_sinistro = ?, status_ativo = ?
+                cobertura_sinistro = ?, flag_sinistro = ?, data_sinistro = ?
             WHERE id_resultado = ?
         `;
         const values = [
@@ -40,7 +40,7 @@ const ResultadosFinanceirosModel = {
             data.descritivo, data.garantias_oferecidas, data.historico_com_nexoos, data.capital_e_capacidade,
             data.carater, data.credito, data.condicoes, data.conexoes, data.colateral, data.controle,
             data.crescimento_12_meses, data.perfil_das_receitas, data.site, data.facebook, data.instagram,
-            data.cobertura_sinistro, data.flag_sinistro, data.data_sinistro, data.status_ativo, id
+            data.cobertura_sinistro, data.flag_sinistro, data.data_sinistro, id
         ];
 
         logger.info(`Executando update para resultado financeiro com ID: ${id}`);
@@ -79,7 +79,29 @@ const ResultadosFinanceirosModel = {
                 }
             });
         });
+    },
+
+    async ativarResultado(id) {
+        const sqlQuery = `UPDATE resultados_financeiros SET status_ativo = 1 WHERE id_resultado = ?`;
+        logger.info(`Iniciando ativação de resultado financeiro com ID: ${id}`);
+
+        return new Promise((resolve, reject) => {
+            connection.query(sqlQuery, [id], (error, results) => {
+                if (error) {
+                    logger.error(`Erro ao ativar resultado financeiro com ID: ${id} - ${error.message}`);
+                    reject(error);
+                } else {
+                    if (results.affectedRows > 0) {
+                        logger.info(`Resultado financeiro com ID: ${id} ativado com sucesso.`);
+                    } else {
+                        logger.warn(`Nenhum resultado financeiro foi ativado para o ID: ${id}. Verifique se este ID existe.`);                    }
+                    logger.info(`Resultados da query: ${JSON.stringify(results)}`);
+                    resolve(results);
+                }
+            });
+        });
     }
+
 };
 
 module.exports = ResultadosFinanceirosModel;

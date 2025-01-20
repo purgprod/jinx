@@ -15,5 +15,8 @@ router.post('/api/resultados-financeiros', ResultadosFinanceirosController.creat
 // Rota para inativar um resultado financeiro
 router.put('/api/resultados-financeiros/:id/inativar', ResultadosFinanceirosController.inativarResultado);
 
+// Rota para ativar um resultado financeiro
+router.put('/api/resultados-financeiros/:id/ativar', ResultadosFinanceirosController.ativarResultado);
+
 module.exports = router;
 

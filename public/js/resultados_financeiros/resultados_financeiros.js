@@ -1,5 +1,5 @@
 let financialDataMap = {}; // Objeto para armazenar os dados localmente
-let showInactive = false; // Estado que indica se deve mostrar os inativos
+let showInactive = false; // Mantém false para garantir que inativos não sejam exibidos por padrão
 
 function loadFinancialResults() {
     console.log("Iniciando chamada para '/api/resultados-financeiros'");
@@ -19,7 +19,7 @@ function loadFinancialResults() {
                 financialDataMap[result.id_resultado] = result;
             });
 
-            // Função para filtrar dados ativos e inativos
+            // Função para filtrar dados ativos
             const filterData = () => {
                 return data.filter(result => showInactive || result.status_ativo === 1);
             };
@@ -37,6 +37,7 @@ function loadFinancialResults() {
                         <p><strong>Vencimento:</strong> ${new Date(result.vencimento).toLocaleDateString('pt-BR')}</p>
                         <p><strong>Site:</strong> <a href="https://${result.site}" target="_blank">${result.site}</a></p>
                         <p><strong>Instagram:</strong> <a href="https://${result.instagram}" target="_blank">${result.instagram}</a></p>
+                        ${result.status_ativo === 0 ? `<p class="inactive-label" style="color: red;"><strong>Inativo</strong></p>` : ''} <!-- Texto para inativos -->
                     </div>
                 `).join('');
             };
@@ -47,8 +48,8 @@ function loadFinancialResults() {
                 const filteredData = filterData();
                 centerPanel.innerHTML = `
                     <div class="button-container">
-                        <button id="novoButton" class="button-azul">Novo</button>
-                        <button id="inativosButton" class="button-vermelho">${showInactive ? "Ocultar Inativos" : "Mostrar Inativos"}</button>
+                        <button id="novoButton" class="button-azul">Criar Novo Resultado</button>
+                        <button id="inativosButton" class="button-vermelho">${showInactive ? "Ocultar Resultados Inativos" : "Mostrar Resultados Inativos"}</button>
                     </div>
                     <div id="cardsContainer" class="cards-container">
                         ${createCardsHTML(filteredData)}
@@ -96,4 +97,7 @@ function loadFinancialResults() {
 
 // Torna a função acessível no escopo global
 window.loadFinancialResults = loadFinancialResults;
+
+// Chama a função ao carregar a página para garantir que apenas os ativos sejam exibidos inicialmente
+window.addEventListener('load', loadFinancialResults);
 

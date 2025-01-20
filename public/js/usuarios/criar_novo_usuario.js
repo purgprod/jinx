@@ -15,21 +15,6 @@ function loadCreateUserForm() {
     }
 }
 
-// Função para retornar à tela de cartões
-function showUserCards() {
-    const centralPanel = document.querySelector('.center-panel');
-    if (centralPanel) {
-        centralPanel.innerHTML = `
-            <div class="card" id="criarNovoUsuarioCard" onclick="loadCreateUserForm()">
-                <h2 class="card-title">Criar Novo Usuário</h2>
-            </div>
-            <div class="card" id="alterarUsuarioCard" onclick="loadAlterarUsuario()">
-                <h2 class="card-title">Alterar Usuário Existente</h2>
-            </div>
-        `;
-    }
-}
-
 // Função para enviar os dados do novo usuário
 function submitNewUser() {
     const nome = document.getElementById('novoNome').value;

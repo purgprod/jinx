@@ -103,8 +103,8 @@ export function loadNewFinancialDetails() {
                 <label for="status_ativo">Status Ativo:</label>
                 <input type="number" id="status_ativo" name="status_ativo" value="1" readonly>
 
-                <div class="button-group">
-                    <button type="submit">Salvar</button>
+                <div class="button-container">
+                    <button type="submit" class"button-azul">Salvar</button>
                 </div>
             </form>
         `;

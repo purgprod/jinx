@@ -11,4 +11,7 @@ router.post('/register', controller_autenticacao.register);
 // Rota para logout
 router.post('/logout', controller_autenticacao.logout);
 
+//Rota para check session
+router.post('/check-session', controller_autenticacao.checkSession);
+
 module.exports = router;

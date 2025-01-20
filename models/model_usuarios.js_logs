@@ -1,20 +1,17 @@
 const mysql = require('mysql2'); // Usar 'mysql2' se apenas importá-lo normalmente
 const bcrypt = require('bcrypt'); 
 const connection = require('../database/database_usuarios');
-const logger = require('../logger'); // Presume-se que logger esteja configurado
+const logger = require('../logger');
 
 class UsersModel {
-    
     // Método para obter usuários
     static async getUsers() {
         const query = 'SELECT * FROM users';
-        logger.info('Iniciando a recuperação de todos os usuários.');
         try {
-            const [rows] = await connection.promise().query(query);
-            logger.info(`Número de usuários recuperados: ${rows.length}`);
+            const [rows] = await connection.promise().query(query); // Use .promise() para Promise API
             return rows;
         } catch (error) {
-            logger.error(`Erro ao obter usuários: ${error.message}`);
+            console.error(`Erro ao obter usuários: ${error.message}`);
             throw error;
         }
     }
@@ -22,21 +19,17 @@ class UsersModel {
     // Método para obter o próximo usuario_id
     static async getNextUserId() {
         const query = 'SELECT MAX(usuario_id) AS maxId FROM users';
-        logger.info('Recuperando o próximo ID de usuário.');
         try {
             const [rows] = await connection.promise().query(query);
-            const nextId = rows[0].maxId ? rows[0].maxId + 1 : 1;
-            logger.info(`Próximo usuario_id será: ${nextId}`);
-            return nextId;
+            return rows[0].maxId ? rows[0].maxId + 1 : 1;
         } catch (error) {
-            logger.error(`Erro ao obter próximo usuario_id: ${error.message}`);
+            console.error(`Erro ao obter próximo usuario_id: ${error.message}`);
             throw error;
         }
     }
 
     // Método para atualizar a senha com hashing
     static async updatePassword(usuarioId, newPassword) {
-        logger.info(`Iniciando a atualização de senha para o usuário ID: ${usuarioId}`);
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         const query = `
             UPDATE users
@@ -46,20 +39,16 @@ class UsersModel {
         try {
             const [result] = await connection.promise().execute(query, [hashedPassword, usuarioId]);
             if (result.affectedRows === 0) {
-                const message = 'Usuário não encontrado ou senha não alterada.';
-                logger.warn(message);
-                throw new Error(message);
+                throw new Error('Usuário não encontrado ou senha não alterada.');
             }
-            logger.info('Senha atualizada com sucesso.');
         } catch (error) {
-            logger.error(`Erro ao atualizar a senha: ${error.message}`);
+            console.error(`Erro ao atualizar a senha: ${error.message}`);
             throw error;
         }
     }
 
     // Método para criar um novo usuário
     static async createUser({ usuario_id, nome, email, password }) {
-        logger.info(`Iniciando a criação de usuário para o e-mail: ${email}`);
         const hashedPassword = await bcrypt.hash(password, 10);
         const query = `
             INSERT INTO users (usuario_id, nome, email, password)
@@ -67,45 +56,34 @@ class UsersModel {
         `;
         try {
             await connection.promise().execute(query, [usuario_id, nome, email, hashedPassword]);
-            logger.info('Usuário criado com sucesso.');
         } catch (error) {
-            logger.error(`Erro ao criar usuário: ${error.message}`);
+            console.error(`Erro ao criar usuário: ${error.message}`);
             throw error;
         }
     }
 
     // Método para obter um usuário pelo e-mail
     static async getUserByEmail(email) {
-        logger.info(`Recuperando usuário com e-mail: ${email}`);
         const query = `SELECT * FROM users WHERE email = ?`;
         try {
             const [rows] = await connection.promise().query(query, [email]);
-            if (rows[0]) {
-                logger.info('Usuário encontrado.');
-            } else {
-                logger.warn('Usuário não encontrado.');
-            }
             return rows[0];
         } catch (error) {
-            logger.error(`Erro ao obter usuário pelo e-mail: ${error.message}`);
+            console.error(`Erro ao obter usuário pelo e-mail: ${error.message}`);
             throw error;
         }
     }
 
     // Método para excluir um usuário
     static async deleteUser(usuarioId) {
-        logger.info(`Iniciando exclusão de usuário com ID: ${usuarioId}`);
         const query = 'DELETE FROM users WHERE usuario_id = ?';
         try {
             const [result] = await connection.promise().execute(query, [usuarioId]);
             if (result.affectedRows === 0) {
-                const message = 'Usuário não encontrado.';
-                logger.warn(message);
-                throw new Error(message);
+                throw new Error('Usuário não encontrado.');
             }
-            logger.info('Usuário excluído com sucesso.');
         } catch (error) {
-            logger.error(`Erro ao excluir usuário: ${error.message}`);
+            console.error(`Erro ao excluir usuário: ${error.message}`);
             throw error;
         }
     }
