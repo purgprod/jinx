@@ -340,6 +340,14 @@ body {
     font-weight: bold;
 }
 
+.center-panel h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333333;
+    font-size: 24px;
+    font-weight: bold;
+}
+
 .button-azul {
     margin: 20px auto; /* Centraliza o botão horizontalmente */
     padding: 10px 20px;

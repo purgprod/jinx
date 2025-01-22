@@ -39,12 +39,71 @@ class UsuariosController {
         logger.info('Tentativa de obtenção do próximo usuario_id');
 
         try {
-            const nextId = await UsuariosModel.getNextUserId(); // Corrige o nome do modelo
+            const nextId = await UsuariosModel.getNextUserId();
             logger.info('Próximo usuario_id obtido com sucesso', { nextId });
             res.json({ nextId });
         } catch (error) {
             logger.error('Erro ao obter próximo usuario_id', error);
             res.status(500).json({ error: 'Erro ao obter próximo usuario_id' });
+        }
+    }
+
+    // Endpoint para fazer update em um usuário
+    static async updateUsuario(req, res) {
+        const id = req.params.id;
+        const data = req.body;
+
+        try {
+            await UsuariosModel.updateUsuario(id, data);
+            res.status(200).json({ message: 'Dados atualizados com sucesso' });
+        } catch (error) {
+            logger.error('Erro ao atualizar o usuário:', error);
+            res.status(500).json({ error: 'Erro ao atualizar o usuário' });
+        }
+    }
+
+    // Endpoint para inativar um usuário
+    static async inativarUsuario(req, res) {
+        const id = req.params.id;
+        
+        try {
+            await UsuariosModel.inativarUsuario(id);
+            res.status(200).json({ message: 'Usuário inativado com sucesso' });
+        } catch (error) {
+            logger.error('Erro ao inativar o usuário:', error);
+            res.status(500).json({ error: 'Erro ao inativar o usuário' });
+        }
+    }
+
+    // Endpoint para ativar um usuário
+    static async ativarUsuario(req, res) {
+        const id = req.params.id;
+        
+        try {
+            await UsuariosModel.ativarUsuario(id);
+            res.status(200).json({ message: 'Usuário ativado com sucesso' });
+        } catch (error) {
+            logger.error('Erro ao ativar o usuário:', error);
+            res.status(500).json({ error: 'Erro ao ativar o usuário' });
+        }
+    }
+
+    // Endpoint para buscar tokens de um usuário
+    static async getUserTokens(req, res) {
+        const usuarioId = req.params.id;
+        logger.info(`Tentativa de busca de tokens para usuário com ID: ${usuarioId}`);
+
+        try {
+            const tokens = await UsuariosModel.tokensUsuario(usuarioId);
+            if (tokens.length > 0) {
+                logger.info(`Tokens encontrados para o usuário com ID: ${usuarioId}`);
+            } else {
+                logger.info(`Nenhum token encontrado para o usuário com ID: ${usuarioId}`);
+            }
+            res.json(tokens);
+        } catch (error) {
+            logger.error(`Erro ao buscar tokens para o usuário com ID: ${usuarioId}`, error);
+            res.status(500).json({ error: 'Erro ao buscar tokens do usuário' });
         }
     }
 }
