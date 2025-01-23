@@ -6,7 +6,7 @@ function loadUserDetails(usuario_id) {
             centerPanel.innerHTML = `
                 <h2>Detalhes do usuário ${data.nome}</h2>
                 <form id="financialDetailsForm">
-                    ${generateInputFields(data)}
+                    ${generateUserInputFields(data)}
                     <div class="button-container">
                         <button type="button" id="editButton" class="button-azul">Editar</button>
                         <button type="submit" id="saveButton" class="button-azul">Salvar</button>
@@ -66,7 +66,7 @@ function createTokenCardHTML(token) {
 }
 
 // Função que gera HTML para os campos de entrada baseado nos dados do usuário
-function generateInputFields(data) {
+function generateUserInputFields(data) {
     return `
         <label for="email">E-mail:</label>
         <input type="text" id="email" name="email" value="${data.email ?? ''}" readonly>
