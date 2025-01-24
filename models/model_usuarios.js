@@ -34,10 +34,10 @@ class UsersModel {
         }
     }
 
-    // Método para atualizar a senha com hashing
-    static async updatePassword(usuarioId, newPassword) {
+    // Método para reset de senha com a hashing para o padrão purg123
+    static async atualizarSenha(usuarioId, novaSenha) {
         logger.info(`Iniciando a atualização de senha para o usuário ID: ${usuarioId}`);
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(novaSenha, 10);
         const query = `
             UPDATE users
             SET password = ?

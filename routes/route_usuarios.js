@@ -25,5 +25,8 @@ router.put('/api/usuarios/:id/ativar', UsuariosController.ativarUsuario);
 // Rota para obter tokens de um usuário
 router.get('/api/usuarios/:id/tokens', UsuariosController.getUserTokens);
 
+// Rota para redefinir a senha de um usuário
+router.post('/api/usuarios/:id/resetar-senha', UsuariosController.resetarSenha);
+
 module.exports = router;
 

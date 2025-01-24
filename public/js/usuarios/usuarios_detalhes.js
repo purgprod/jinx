@@ -10,6 +10,7 @@ function loadUserDetails(usuario_id) {
                     <div class="button-container">
                         <button type="button" id="editButton" class="button-azul">Editar</button>
                         <button type="submit" id="saveButton" class="button-azul">Salvar</button>
+                        <button type="button" id="resetButton" class="button-verde">Resetar a Senha</button>
                         ${data.status_ativo === 0 ? `
                             <button type="button" id="ativarButton" class="button-verde">Ativar</button>
                         ` : `
@@ -20,8 +21,17 @@ function loadUserDetails(usuario_id) {
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
             `;
+
             setupEventListenersUsuarios(usuario_id);
             loadUserTokens(usuario_id); // Carrega e exibe os tokens
+
+            // Adicionando o evento ao botão "Resetar a Senha"
+            const resetButton = document.getElementById('resetButton');
+            if (resetButton) {
+                resetButton.addEventListener('click', () => {
+                    resetarSenha(usuario_id); // Chamando a função de resetar senha
+                });
+            }
         } else {
             console.error('Elemento center-panel não encontrado.');
         }
@@ -57,7 +67,7 @@ function createTokenCardHTML(token) {
             <h4>${token.razao_social}</h4>
             <p><strong>Risco:</strong> ${token.risco}</p>
             <p><strong>Quantidade de Tokens:</strong> ${token.quantidade_tokens}</p>
-	    <p><strong>Valor do Token:</strong> ${token.valor_token}</p>
+            <p><strong>Valor do Token:</strong> ${token.valor_token}</p>
             <p><strong>Rendimento do Token:</strong> ${token.rendimento_token}</p>
             <p><strong>Vencimento:</strong> ${formatDate(token.vencimento)}</p>
             <p><strong>Dias para Vencimento:</strong> ${token.dias_vencimento}</p>
@@ -167,4 +177,28 @@ function setupToggleActivationButton(usuario_id, buttonId, action) {
         });
     }
 }
+
+// Você deve garantir que resetarSenha está acessível globalmente
+function resetarSenha(usuario_id) {
+    // Enviar requisição para redefinir a senha do usuário
+    fetch(`/api/usuarios/${usuario_id}/resetar-senha`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Senha redefinida com sucesso!');
+            location.reload(); // Recarrega a página
+        } else {
+            alert('Erro ao redefinir a senha.');
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao redefinir a senha:', error);
+        alert('Erro ao redefinir a senha.');
+    });
+}
+
 

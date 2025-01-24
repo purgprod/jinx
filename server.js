@@ -92,9 +92,6 @@ app.use('/', route_tokens); // Prefixo das rotas para tokens
 //Usar o roteador para usuarios
 app.use('/', route_usuarios); // Prefixo das rotas para usuarios
 
-//Usar o roteador para autenticacao
-app.use('/', route_usuarios); // Prefixo das rotas para usuarios
-
 // Iniciar o servidor
 app.listen(port, () => {
     logger.info(`Servidor rodando em http://localhost:${port}`);

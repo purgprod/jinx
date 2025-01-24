@@ -41,57 +41,5 @@
     <script src="js/usuarios/usuarios_detalhes.js" defer></script>
     <script src="script.js" defer></script>
 
-    <script>
-        function openChangePasswordModal() {
-            const modalHtml = `
-                <div id="passwordModal" style="display: block;">
-                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                        <h2>Alterar Senha</h2>
-                        <input type="password" id="newPassword" placeholder="Nova Senha" required />
-                        <button onclick="changePassword()">Salvar</button>
-                        <button onclick="closePasswordModal()">Cancelar</button>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-
-        function closePasswordModal() {
-            const modal = document.getElementById('passwordModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        function changePassword() {
-            const newPassword = document.getElementById('newPassword').value;
-            const firstUserId = document.querySelector('.user-card').getAttribute('data-id');
-
-            if (newPassword) {
-                fetch(`/api/usuarios/${firstUserId}/change-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ password: newPassword }),
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Senha alterada com sucesso!');
-                        closePasswordModal();
-                    } else {
-                        alert('Erro ao alterar a senha.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao alterar a senha:', error);
-                    alert('Erro ao alterar a senha.');
-                });
-            } else {
-                alert('Por favor, digite uma nova senha.');
-            }
-        }
-
-    </script>
 </body>
 </html>
