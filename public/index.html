@@ -21,7 +21,7 @@
 
         <!-- Divisão central para exibir as informações  -->
         <div class="center-panel">
-            <h2 class="bets-title"></h2>
+            <h2 class="page-title"></h2>
 
             <!-- Botão Voltar -->
             <div id="voltarContainer" style="display: none;">
@@ -32,9 +32,10 @@
 
     <script src="js/usuarios/usuarios.js" defer></script>
     <script src="js/tokens/tokens.js" defer></script>
+    <script src="js/tokens/tokens_detalhes.js" defer></script>
     <script src="js/resultados_financeiros/resultados_financeiros.js" defer></script>
     <script src="js/resultados_financeiros/resultados_financeiros_detalhes.js" defer></script>
-    <script src="js/resultados_financeiros/resultados_financeiros_novo.js" defer></script>
+    <script type="module" src="js/resultados_financeiros/resultados_financeiros_novo.js" defer></script>
     <script src="js/autenticacao/autenticacao.js" defer></script>
     <script src="js/usuarios/criar_novo_usuario.js" defer></script>
     <script src="js/usuarios/usuarios_detalhes.js" defer></script>
@@ -91,32 +92,6 @@
             }
         }
 
-        // Função para criar um novo usuário
-        function createUser() {
-            const nome = document.getElementById('nome').value; // Obtenha o nome do campo de entrada
-            const email = document.getElementById('email').value; // Obtenha o email do campo de entrada
-            const password = document.getElementById('newUserPassword').value; // Obtenha a senha do campo de entrada
-
-            fetch('/api/usuarios', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ nome, email, password }),
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Usuário criado com sucesso!');
-                    loadUsers(); // Recarrega a lista de usuários após a criação
-                } else {
-                    alert('Erro ao criar usuário.');
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao criar usuário:', error);
-                alert('Erro ao criar usuário.');
-            });
-        }
     </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ function loadUserDetails(usuario_id) {
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
             `;
-            setupEventListeners(usuario_id);
+            setupEventListenersUsuarios(usuario_id);
             loadUserTokens(usuario_id); // Carrega e exibe os tokens
         } else {
             console.error('Elemento center-panel não encontrado.');
@@ -82,7 +82,7 @@ function generateUserInputFields(data) {
     `;
 }
 
-function setupEventListeners(usuario_id) {
+function setupEventListenersUsuarios(usuario_id) {
     const editButton = document.getElementById('editButton');
     if (editButton) {
         editButton.addEventListener('click', () => {
@@ -116,15 +116,15 @@ function setupEventListeners(usuario_id) {
             })
             .then(response => {
                 if (response.ok) {
-                    alert('Dados atualizados com sucesso!');
+                    alert('Usuário atualizado com sucesso!');
                     refreshPage(); // Recarrega a página após a atualização
                 } else {
                     return response.json().then(data => Promise.reject(data));
                 }
             })
             .catch(error => {
-                console.error('Erro ao atualizar os dados:', error);
-                alert('Erro ao atualizar os dados.');
+                console.error('Erro ao atualizar o usuário:', error);
+                alert('Erro ao atualizar o usuário.');
             });
         });
     } else {

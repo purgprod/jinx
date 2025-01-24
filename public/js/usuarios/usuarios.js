@@ -6,11 +6,12 @@ function showUserCards() {
     const centralPanel = document.querySelector('.center-panel');
     if (centralPanel) {
         centralPanel.innerHTML = `
-            <div class="button-container">
+	    <h2>Resultados Financeiros</h2>
+	    <div class="button-container">
                 <input type="email" id="emailParaAlterar" placeholder="E-mail do Usuário" required />
                 <button id="buscarButton" class="button-verde">Buscar Usuário</button>
                 <button id="criarNovoUsuarioButton" class="button-azul">Criar Novo Usuário</button>
-                <button id="inativosButton" class="button-vermelho">${showInactiveUsers ? "Ocultar Usuários Inativos" : "Mostrar Usuários Inativos"}</button>
+                <button id="inativosUsuarioButton" class="button-vermelho">${showInactiveUsers ? "Mostrar Usuários Inativos" : "Mostrar Usuários Inativos"}</button>
             </div>
             <div id="usersContainer" class="cards-container"></div>
         `;
@@ -32,9 +33,9 @@ function addUserButtonEventListeners() {
         buscarButton.addEventListener('click', filterUsers);
     }
 
-    const inativosButton = document.getElementById('inativosButton');
-    if (inativosButton) {
-        inativosButton.addEventListener('click', () => {
+    const inativosUsuarioButton = document.getElementById('inativosUsuarioButton');
+    if (inativosUsuarioButton) {
+        inativosUsuarioButton.addEventListener('click', () => {
             showInactiveUsers = !showInactiveUsers;
             filterUsers(); // Atualiza a exibição dos usuários
         });

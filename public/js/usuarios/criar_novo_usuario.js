@@ -34,7 +34,7 @@ function submitNewUser() {
     .then(response => {
         if (response.ok) {
             alert('Usuário criado com sucesso!'); // Sucesso
-            showUserCards(); // Retorna à tela de cartões
+            location.reload(); // Recarrega a página para mostrar os usuários atualizados
         } else {
             alert('Erro ao criar usuário.'); // Mensagem de erro
         }
@@ -44,3 +44,4 @@ function submitNewUser() {
         alert('Erro ao criar usuário.'); // Mensagem de erro
     });
 }
+

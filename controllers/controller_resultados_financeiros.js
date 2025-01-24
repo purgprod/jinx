@@ -22,7 +22,7 @@ const ResultadosFinanceirosController = {
 
         try {
             await ResultadosFinanceirosModel.updateResultadoFinanceiro(id, data);
-            res.status(200).json({ message: 'Dados atualizados com sucesso' });
+            res.status(200).json({ message: 'Resultado financeiro atualizado com sucesso' });
         } catch (error) {
             logger.error('Erro ao atualizar o resultado financeiro:', error);
             res.status(500).json({ error: 'Erro ao atualizar o resultado financeiro' });

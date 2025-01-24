@@ -7,7 +7,13 @@ const TokensController = require('../controllers/controller_tokens');
 router.get('/api/tokens', TokensController.getTokens);
 
 // Rota para atualizar um token
-router.put('/api/tokens/:id', TokensController.updateTokens);
+router.put('/api/tokens/:id', TokensController.updateToken);
+
+// Rota para inativar um token
+router.put('/api/tokens/:id/inativar', TokensController.inativarToken);
+
+// Rota para ativar um token
+router.put('/api/tokens/:id/ativar', TokensController.ativarToken);
 
 module.exports = router;
 

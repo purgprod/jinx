@@ -28,7 +28,7 @@ function loadFinancialDetails(idResultado) {
                     </div>
                 </form>
             `;
-            setupEventListeners(idResultado);
+            setupEventListenersResultados(idResultado);
         } else {
             console.error('Elemento center-panel não encontrado.');
         }
@@ -144,7 +144,7 @@ function generateInputFields(data) {
     `;
 }
 
-function setupEventListeners(idResultado) {
+function setupEventListenersResultados(idResultado) {
     const editButton = document.getElementById('editButton');
     if (editButton) {
         editButton.addEventListener('click', () => {
@@ -179,28 +179,33 @@ function setupEventListeners(idResultado) {
             })
             .then(response => {
                 if (response.ok) {
-                    alert('Dados atualizados com sucesso!');
-                    loadFinancialDetails(idResultado); // Recarregar os detalhes
+                    alert('Resultado financeiro atualizado com sucesso!');
+                    refreshPage(); // Recarregar a página após a atualização
                     return response.json();
                 } else {
                     return response.json().then(data => Promise.reject(data));
                 }
             })
             .catch(error => {
-                console.error('Erro ao atualizar os dados:', error);
-                alert('Erro ao atualizar os dados.');
+                console.error('Erro ao atualizar o resultado financeiro:', error);
+                alert('Erro ao atualizar o resultad o financeiro.');
             });
         });
     } else {
         console.error('Formulário não encontrado.');
     }
 
-    setupToggleActivationButton(idResultado, 'ativar', 'ativar');
-    setupToggleActivationButton(idResultado, 'inativar', 'inativar');
+    setupToggleActivationResultadosButton(idResultado, 'ativar', 'ativar');
+    setupToggleActivationResultadosButton(idResultado, 'inativar', 'inativar');
+}
+
+// Função para recarregar a página
+function refreshPage() {
+    location.reload(); // Recarrega a página inteira
 }
 
 // Configura botão para ativar/inativar
-function setupToggleActivationButton(idResultado, buttonId, action) {
+function setupToggleActivationResultadosButton(idResultado, buttonId, action) {
     const button = document.getElementById(buttonId + 'Button');
     if (button) {
         button.addEventListener('click', () => {
@@ -213,7 +218,7 @@ function setupToggleActivationButton(idResultado, buttonId, action) {
                 .then(response => {
                     if (response.ok) {
                         alert(`Resultado financeiro ${action} com sucesso!`);
-                        loadFinancialDetails(idResultado);
+                        refreshPage(); // Recarregar a página após ativação/inativação
                     } else {
                         return response.json().then(data => Promise.reject(data));
                     }

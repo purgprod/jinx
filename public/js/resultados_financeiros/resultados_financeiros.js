@@ -29,12 +29,12 @@ function loadFinancialResults() {
                 return filteredData.map(result => `
                     <div class="card" data-id="${result.id_resultado}">
                         <h3 class="card-title">${result.razao_social}</h3>
-                        <p><strong>CNPJ:</strong> ${result.cnpj}</p>
+			<p><strong>Risco:</strong> ${result.risco}</p>
                         <p><strong>Valor Financiamento:</strong> R$ ${parseFloat(result.valor_financiamento_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         <p><strong>Retorno a.a:</strong> ${parseFloat(result.juros_a_a).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%</p>
                         <p><strong>Resultado Financeiro:</strong> R$ ${parseFloat(result.resultado_financeiro).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        <p><strong>Risco:</strong> ${result.risco}</p>
                         <p><strong>Vencimento:</strong> ${new Date(result.vencimento).toLocaleDateString('pt-BR')}</p>
+			<p><strong>CNPJ:</strong> ${result.cnpj}</p>
                         <p><strong>Site:</strong> <a href="https://${result.site}" target="_blank">${result.site}</a></p>
                         <p><strong>Instagram:</strong> <a href="https://${result.instagram}" target="_blank">${result.instagram}</a></p>
                         ${result.status_ativo === 0 ? `<p class="inactive-label" style="color: red;"><strong>Inativo</strong></p>` : ''} <!-- Texto para inativos -->
@@ -47,7 +47,8 @@ function loadFinancialResults() {
             if (centerPanel) {
                 const filteredData = filterData();
                 centerPanel.innerHTML = `
-                    <div class="button-container">
+		    <h2>Resultados Financeiros</h2>
+		    <div class="button-container">
                         <button id="novoButton" class="button-azul">Criar Novo Resultado</button>
                         <button id="inativosButton" class="button-vermelho">${showInactive ? "Ocultar Resultados Inativos" : "Mostrar Resultados Inativos"}</button>
                     </div>
