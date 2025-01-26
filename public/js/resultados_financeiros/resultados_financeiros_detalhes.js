@@ -56,16 +56,16 @@ function generateInputFields(data) {
         <input type="text" id="cnae_principal" name="cnae_principal" value="${data.cnae_principal}" readonly>
 
         <label for="capital_social">Capital Social:</label>
-        <input type="number" step="0.01" id="capital_social" name="capital_social" value="${parseFloat(data.capital_social).toLocaleString('pt-BR')}" readonly>
+        <input type="number" id="capital_social" name="capital_social" value="${data.capital_social}" readonly>
 
         <label for="data_de_fundacao">Data de Fundação:</label>
         <input type="date" id="data_de_fundacao" name="data_de_fundacao" value="${formatDate(data.data_de_fundacao)}" readonly>
 
         <label for="valor_financiamento_total">Valor Financiamento Total:</label>
-        <input type="number" id="valor_financiamento_total" name="valor_financiamento_total" value="${parseFloat(data.valor_financiamento_total).toLocaleString('pt-BR')}" readonly>
+        <input type="number" id="valor_financiamento_total" name="valor_financiamento_total" value="${data.valor_financiamento_total}" readonly>
 
         <label for="valor_financiado_purg">Valor Financiado Purg:</label>
-        <input type="number" step="0.01" id="valor_financiado_purg" name="valor_financiado_purg" value="${parseFloat(data.valor_financiado_purg).toLocaleString('pt-BR')}" readonly>
+        <input type="number" id="valor_financiado_purg" name="valor_financiado_purg" value="${data.valor_financiado_purg}" readonly>
 
         <label for="juros_a_a">Rentabilidade a.a:</label>
         <input type="number" step="0.01" id="juros_a_a" name="juros_a_a" value="${data.juros_a_a}" readonly>

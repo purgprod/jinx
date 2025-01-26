@@ -85,7 +85,7 @@ function createTokenCardsHTML(tokens) {
             <p><strong>Risco:</strong> ${token.risco}</p>
             <p><strong>Vencimento:</strong> ${formatDate(token.vencimento)}</p>
             <p><strong>Quantidade Tokens:</strong> ${parseFloat(token.quantidade_tokens).toLocaleString('pt-BR')}</p>
-            <p><strong>Valor Token:</strong> R$ ${parseFloat(token.valor_token).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
+            <p><strong>Valor Token:</strong> R$ ${parseFloat(token.valor_token).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             <p><strong>Rendimento Token:</strong> R$ ${parseFloat(token.rendimento_token).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
             <p><strong>Flag Sinistro:</strong> ${token.flag_sinistro}</p>
             ${token.status_ativo === 0 ? `<p class="inactive-label" style="color: red;"><strong>Inativo</strong></p>` : ''}
