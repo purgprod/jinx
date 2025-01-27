@@ -28,5 +28,17 @@ router.get('/api/usuarios/:id/tokens', UsuariosController.getUserTokens);
 // Rota para redefinir a senha de um usuário
 router.post('/api/usuarios/:id/resetar-senha', UsuariosController.resetarSenha);
 
+// Rota para obter os últimos dados financeiros do usuário
+router.get('/api/usuarios/:id/ultimos-dados-financeiros', UsuariosController.getUltimosDadosFinanceiros);
+
+// Rota para obter os dados de valor de carteira históricos do usuário
+router.get('/api/usuarios/:id/dados-financeiros-historicos', UsuariosController.getDadosFinanceirosHistoricos);
+
+// Rota para obter os dados de rendimentos históricos do usuário
+router.get('/api/usuarios/:id/dados-financeiros-rendimentos-historicos', UsuariosController.getDadosRendimentosHistoricos);
+
+// Rota para obter o total de saques do usuário 
+router.get('/api/usuarios/:id/dados-saques', UsuariosController.getSaques);
+
 module.exports = router;
 

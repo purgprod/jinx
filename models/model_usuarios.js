@@ -34,7 +34,7 @@ class UsersModel {
         }
     }
 
-    // Método para reset de senha com a hashing para o padrão purg123
+    // Método para reset de senha com a hashing
     static async atualizarSenha(usuarioId, novaSenha) {
         logger.info(`Iniciando a atualização de senha para o usuário ID: ${usuarioId}`);
         const hashedPassword = await bcrypt.hash(novaSenha, 10);
@@ -205,6 +205,94 @@ class UsersModel {
             throw error;
         }
     }
+
+    // Método para obter a última carteira e rendimento do usuário
+    static async getUltimosDadosFinanceiros(usuarioId) {
+        const query = `
+            SELECT carteira_dia, rendimento_dia 
+            FROM usuarios_dados_financeiros_diarios 
+            WHERE usuario_id = ?
+            ORDER BY data_criacao DESC 
+            LIMIT 1
+        `;
+        logger.info(`Recuperando os últimos dados financeiros para o usuário ID: ${usuarioId}`);
+
+        try {
+            const [rows] = await crowdfundingConnection.promise().query(query, [usuarioId]);
+            if (rows.length > 0) {
+                logger.info(`Últimos dados financeiros encontrados para o usuário ID: ${usuarioId}`);
+                return rows[0];
+            } else {
+                logger.warn(`Nenhum dado financeiro encontrado para o usuário ID: ${usuarioId}`);
+                return null;
+            }
+        } catch (error) {
+            logger.error(`Erro ao buscar últimos dados financeiros para o usuário com ID: ${usuarioId} - ${error.message}`);
+            throw error;
+        }
+    }
+
+// Método para obter todos os dados de valor de carteira históricos de um usuário
+static async getDadosFinanceirosHistoricos(usuarioId) {
+    const query = `
+        SELECT data_criacao, carteira_dia 
+        FROM usuarios_dados_financeiros_diarios 
+        WHERE usuario_id = ? 
+        ORDER BY data_criacao ASC
+    `;
+    logger.info(`Recuperando dados de valor da carteira históricos para o usuário ID: ${usuarioId}`);
+
+    try {
+        const [rows] = await crowdfundingConnection.promise().query(query, [usuarioId]);
+        return rows; // Retorna todos os dados financeiros históricos
+    } catch (error) {
+        logger.error(`Erro ao buscar dados de valor da carteira históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+        throw error;
+    }
+}
+
+// Método para obter todos os dados de rendimentos históricos de um usuário
+static async getDadosRendimentosHistoricos(usuarioId) {
+    const query = `
+        SELECT data_criacao, rendimento_dia
+        FROM usuarios_dados_financeiros_diarios
+        WHERE usuario_id = ?
+        ORDER BY data_criacao ASC
+    `;
+    logger.info(`Recuperando dados de rendimentos históricos para o usuário ID: ${usuarioId}`);
+
+    try {
+        const [rows] = await crowdfundingConnection.promise().query(query, [usuarioId]);        return rows; // Retorna todos os dados financeiros históricos
+    } catch (error) {
+        logger.error(`Erro ao buscar dados de rendimentos  históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+        throw error;
+    }
+}
+
+    // Método para obter os saques do usuário
+    static async getSaques(usuarioId) {
+        const query = `
+            SELECT SUM(valor_saque) 
+            FROM saques 
+            WHERE usuario_id = ?
+        `;
+        logger.info(`Recuperando os valor total de saques para o usuário ID: ${usuarioId}`);
+
+        try {
+            const [rows] = await crowdfundingConnection.promise().query(query, [usuarioId]);
+            if (rows.length > 0) {
+                logger.info(`Saques encontrados para o usuário ID: ${usuarioId}`);
+                return rows[0];
+            } else {
+                logger.warn(`Nenhum saque encontrado para o usuário ID: ${usuarioId}`);
+                return null;
+            }
+        } catch (error) {
+            logger.error(`Erro ao buscar saques para o usuário com ID: ${usuarioId} - ${error.message}`);
+            throw error;
+        }
+    }
+
 }
 
 module.exports = UsersModel;

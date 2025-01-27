@@ -65,7 +65,7 @@ class UsuariosController {
     // Endpoint para inativar um usuário
     static async inativarUsuario(req, res) {
         const id = req.params.id;
-        
+
         try {
             await UsuariosModel.inativarUsuario(id);
             res.status(200).json({ message: 'Usuário inativado com sucesso' });
@@ -78,7 +78,7 @@ class UsuariosController {
     // Endpoint para ativar um usuário
     static async ativarUsuario(req, res) {
         const id = req.params.id;
-        
+
         try {
             await UsuariosModel.ativarUsuario(id);
             res.status(200).json({ message: 'Usuário ativado com sucesso' });
@@ -110,14 +110,14 @@ class UsuariosController {
     // Endpoint para redefinir a senha de um usuário
     static async resetarSenha(req, res) {
         const id = req.params.id;
-        
+
         try {
             // Aqui você pode gerar uma nova senha ou definir uma senha padrão
             const novaSenha = "purg123";  // Você pode personalizar ou gerar uma nova senha
-            
+
             // Chama a função no modelo para atualizar a senha
-            await UsuariosModel.atualizarSenha(id, novaSenha); 
-           
+            await UsuariosModel.atualizarSenha(id, novaSenha);
+
             logger.info(`Senha redefinida para o usuário com ID: ${id}`);
             res.status(200).json({ message: 'Senha redefinida com sucesso!' });
         } catch (error) {
@@ -125,6 +125,66 @@ class UsuariosController {
             res.status(500).json({ error: 'Erro ao redefinir a senha' });
         }
     }
+
+    // Endpoint para obter os últimos dados financeiros
+    static async getUltimosDadosFinanceiros(req, res) {
+        const usuarioId = req.params.id;
+
+        try {
+            const dadosFinanceiros = await UsuariosModel.getUltimosDadosFinanceiros(usuarioId);
+            if (dadosFinanceiros) {
+                res.status(200).json(dadosFinanceiros);
+            } else {
+                res.status(404).json({ message: 'Nenhum dado financeiro encontrado.' });
+            }
+        } catch (error) {
+            logger.error(`Erro ao buscar últimos dados financeiros para o usuário ID: ${usuarioId} - ${error.message}`);
+            res.status(500).json({ error: 'Erro ao buscar últimos dados financeiros.' });
+        }
+    }
+
+// Endpoint para obter todos os dados de valor de carteira históricos
+static async getDadosFinanceirosHistoricos(req, res) {
+    const usuarioId = req.params.id;
+
+    try {
+        const dadosHistoricos = await UsuariosModel.getDadosFinanceirosHistoricos(usuarioId);
+        res.status(200).json(dadosHistoricos);
+    } catch (error) {
+        logger.error(`Erro ao buscar dados de valor de carteira históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+        res.status(500).json({ error: 'Erro ao buscar dados de valor de carteira históricos.' });
+    }
+}
+
+// Endpoint para obter todos os dados de rendimentos históricos
+static async getDadosRendimentosHistoricos(req, res) {
+    const usuarioId = req.params.id;
+
+    try {
+        const dadosHistoricos = await UsuariosModel.getDadosRendimentosHistoricos(usuarioId);
+        res.status(200).json(dadosHistoricos);
+    } catch (error) {
+        logger.error(`Erro ao buscar dados de rendimentos históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+        res.status(500).json({ error: 'Erro ao buscar dados de rendimentos históricos.' });    }
+}
+
+   // Endpoint para obter os saques totais do usuário
+    static async getSaques(req, res) {
+        const usuarioId = req.params.id;
+
+        try {
+            const dadosSaques = await UsuariosModel.getSaques(usuarioId);
+            if (dadosSaques) {
+                res.status(200).json(dadosSaques);
+            } else {
+                res.status(404).json({ message: 'Nenhum dado de saque encontrado.' });
+            }
+        } catch (error) {
+            logger.error(`Erro ao buscar os saques para o usuário ID: ${usuarioId} - ${error.message}`);
+            res.status(500).json({ error: 'Erro ao buscar os saques.' });
+        }
+    }
+
 }
 
 module.exports = UsuariosController;

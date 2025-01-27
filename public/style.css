@@ -172,12 +172,13 @@ body {
     display: flex; 
     flex-wrap: wrap; /* Permite que os cards quebrem linha */
     gap: 20px; /* Espaçamento entre os cards */
-    justify-content: center; /* Centraliza os cards */
+    justify-content: space-between; /* Centraliza os cards */
     padding: 20px;
 }
 
 /* Estilo dos cards dos usuários */
 .card {
+    flex:1;
     background-color: #FFFFFF; /* Fundo branco */
     color: #333333; /* Texto escuro */
     border: 1px solid #D4D4D4; /* Borda cinza clara */
@@ -394,4 +395,12 @@ body {
 
 .button-verde:hover {
     background-color: #5BCF38;
+}
+
+.cards-basico {
+    display: flex; /* Mantém o layout flexível */
+    flex-wrap: wrap; /* Permite que os cards quebrem linha se necessário */
+    gap: 20px; /* Espaçamento entre os cards */
+    justify-content: space-between; /* Alinha os cards com espaço entre eles */
+    padding: 20px; /* Adiciona um padding ao redor da área dos cards */
 }

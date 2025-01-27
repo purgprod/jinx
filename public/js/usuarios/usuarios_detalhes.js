@@ -18,14 +18,25 @@ function loadUserDetails(usuario_id) {
                         `}
                     </div>
                 </form>
+                <div id="carteiraContainer" class="carteira-container"></div>
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
             `;
 
             setupEventListenersUsuarios(usuario_id);
-            loadUserTokens(usuario_id); // Carrega e exibe os tokens
+            Promise.all([
+                loadUserTokens(usuario_id), 
+                loadUltimosDadosFinanceiros(usuario_id),
+                loadDadosFinanceirosHistoricos(usuario_id), 
+                loadDadosRendimentosHistoricos(usuario_id) 
+            ]).then(() => {
+                return loadSaques(usuario_id); // Chame loadSaques após os outros loads
+            }).then(() => {
+                console.log("Todas as chamadas de API foram completadas.");
+            }).catch(err => {
+                console.error("Erro ao carregar dados:", err);
+            });
 
-            // Adicionando o evento ao botão "Resetar a Senha"
             const resetButton = document.getElementById('resetButton');
             if (resetButton) {
                 resetButton.addEventListener('click', () => {
@@ -42,7 +53,7 @@ function loadUserDetails(usuario_id) {
 
 // Função que busca e exibe os tokens do usuário
 function loadUserTokens(usuario_id) {
-    fetch(`/api/usuarios/${usuario_id}/tokens`)
+    return fetch(`/api/usuarios/${usuario_id}/tokens`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erro ao buscar tokens');
@@ -60,15 +71,240 @@ function loadUserTokens(usuario_id) {
         });
 }
 
+// Função que busca e exibe os últimos dados financeiros do usuário
+function loadUltimosDadosFinanceiros(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/ultimos-dados-financeiros`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar últimos dados financeiros');
+            }
+            return response.json();
+        })
+        .then(dados => {
+            console.log('Últimos dados financeiros:', dados); // Log dos dados
+            displayUltimosDadosFinanceiros(dados, usuario_id);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar últimos dados financeiros:', error);
+        });
+}
+
+// Função para exibir os últimos dados financeiros da carteira em formato de card
+function displayUltimosDadosFinanceiros(dados, usuario_id) {
+    const carteiraContainer = document.getElementById('carteiraContainer');
+    if (carteiraContainer) {
+        carteiraContainer.innerHTML = `
+            <h3>Dados Financeiros</h3>
+            <div class="cards-basico"> <!-- Usando a nova classe aqui -->
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Valor da Carteira:</strong> R$ ${parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Total de Saques:</strong> R$ <span id="totalSaque">0.00</span></p>
+                    </div>
+                </div>
+            </div>
+            <canvas id="carteiraChart"></canvas>
+            <canvas id="carteiraRendimentosChart"></canvas>
+        `;
+    }
+}
+
+// Função para carregar e exibir os saques do usuário
+function loadSaques(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/dados-saques`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar saques');
+            }
+            return response.json();
+        })
+        .then(dadosSaques => {
+            const totalSaqueElement = document.getElementById('totalSaque');
+            const totalSaque = dadosSaques['SUM(valor_saque)'] || 0; // Verifica se existe a soma
+            totalSaqueElement.textContent = parseFloat(totalSaque).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar saques do usuário:', error);
+        });
+}
+
+// Função que busca e exibe os dados financeiros históricos do usuário
+function loadDadosFinanceirosHistoricos(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-historicos`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados financeiros históricos');
+            }
+            return response.json();
+        })
+        .then(dados => {
+            console.log('Dados financeiros históricos:', dados); // Log dos dados
+            // Adicionando timeout aqui para garantir que o canvas esteja disponível
+            setTimeout(() => {
+                renderizarGrafico(dados);
+            }, 100); // Delay de 100 ms, ajuste se necessário
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados financeiros históricos:', error);
+        });
+}
+
+// Função para renderizar o gráfico com os dados financeiros
+let carteiraChart;
+
+function renderizarGrafico(dados) {
+    const canvas = document.getElementById('carteiraChart');
+    if (!canvas) {
+        console.error('Elemento canvas "carteiraChart" não encontrado.');
+        return; // Encerra a função se o canvas não existir
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Verificar se já existe um gráfico e destruí-lo
+    if (carteiraChart) {
+        carteiraChart.destroy();
+    }
+
+    const labels = dados.map(d => new Date(d.data_criacao).toLocaleDateString());
+    const valores = dados.map(d => parseFloat(d.carteira_dia));
+
+    if (valores.length === 0) {
+        console.error('Nenhum valor encontrado para o gráfico de carteira.');
+        return; // Saia se não houver valores
+    }
+
+    carteiraChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Valor da Carteira (R$)',
+                data: valores,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Valor em R$'
+                    },
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Datas'
+                    },
+                }
+            }
+        }
+    });
+}
+
+// Função que busca e exibe os dados de rendimentos históricos do usuário
+function loadDadosRendimentosHistoricos(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-rendimentos-historicos`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de rendimentos históricos');
+            }
+            return response.json();
+        })
+        .then(dados => {
+            console.log('Dados de rendimentos históricos:', dados); // Log dos dados
+            // Adicionando timeout aqui para garantir que o canvas esteja disponível
+            setTimeout(() => {
+                renderizarGraficoRendimentos(dados);
+            }, 100); // Delay de 100 ms, ajuste se necessário
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de rendimentos históricos:', error);
+        });
+}
+
+// Função para renderizar o gráfico com os dados de rendimentos
+let carteiraRendimentosChart;
+
+function renderizarGraficoRendimentos(dados) {
+    const canvas = document.getElementById('carteiraRendimentosChart');
+    if (!canvas) {
+        console.error('Elemento canvas "carteiraRendimentosChart" não encontrado.');
+        return; // Encerra a função se o canvas não existir
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Verifica se já existe um gráfico e o destrói
+    if (carteiraRendimentosChart) {
+        carteiraRendimentosChart.destroy();
+    }
+
+    // Extraindo labels e valores
+    const labels = dados.map(d => new Date(d.data_criacao).toLocaleDateString());
+    const valores = dados.map(d => parseFloat(d.rendimento_dia)); // Usando parseFloat para garantir que os valores são numéricos
+
+    if (valores.length === 0) {
+        console.error('Nenhum valor encontrado para o gráfico de rendimentos.'); // Mensagem de erro
+        return; // Encerra a função se não houver valores
+    }
+
+    carteiraRendimentosChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Rendimentos da Carteira (R$)',
+                data: valores,
+                borderColor: 'rgba(160, 212, 124, 1)',
+                borderWidth: 2,
+                fill: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Valor em R$'
+                    },
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Datas'
+                    },
+                }
+            }
+        }
+    });
+}
+
 // Função para gerar o HTML para um cartão de token
 function createTokenCardHTML(token) {
     return `
         <div class="card">
             <h4>${token.razao_social}</h4>
             <p><strong>Risco:</strong> ${token.risco}</p>
-            <p><strong>Quantidade de Tokens:</strong> ${token.quantidade_tokens}</p>
-            <p><strong>Valor do Token:</strong> ${token.valor_token}</p>
-            <p><strong>Rendimento do Token:</strong> ${token.rendimento_token}</p>
+            <p><strong>Quantidade de Tokens:</strong> R$ ${token.quantidade_tokens}</p>
+            <p><strong>Valor do Token:</strong> R$ ${token.valor_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><strong>Rendimento do Token:</strong> R$ ${token.rendimento_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             <p><strong>Vencimento:</strong> ${formatDate(token.vencimento)}</p>
             <p><strong>Dias para Vencimento:</strong> ${token.dias_vencimento}</p>
         </div>
@@ -80,15 +316,12 @@ function generateUserInputFields(data) {
     return `
         <label for="email">E-mail:</label>
         <input type="text" id="email" name="email" value="${data.email ?? ''}" readonly>
-
         <label for="data_criacao">Data de Criação:</label>
         <input type="date" id="created_at" name="created_at" value="${data.created_at ? formatDate(data.created_at) : ''}" readonly>
-
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
-
         <label for="data_ultima_alteracao">Última Alteração:</label>
-        <input type="date" id="data_ultima_alteracao" name="data_ultima_alteracao" value="${data.data_ultima_alteracao ? formatDate(data.data_ultima_alteracao) : ''}" readonly>
+        <input type="date" id="data_ultima_alteracao" name="data_ultima_alteracao" value="${data.data_ultima_alteracao ? formatDate(data.data_ultima_alteracao) : ''}" readonly>    
     `;
 }
 
@@ -110,7 +343,7 @@ function setupEventListenersUsuarios(usuario_id) {
             event.preventDefault();
             const formData = new FormData(form);
             const updatedData = Object.fromEntries(formData.entries());
-            
+
             for (let key in updatedData) {
                 if (updatedData[key] === '') {
                     updatedData[key] = null;
@@ -200,5 +433,4 @@ function resetarSenha(usuario_id) {
         alert('Erro ao redefinir a senha.');
     });
 }
-
 
