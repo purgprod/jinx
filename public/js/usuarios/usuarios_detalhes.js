@@ -302,7 +302,7 @@ function createTokenCardHTML(token) {
         <div class="card">
             <h4>${token.razao_social}</h4>
             <p><strong>Risco:</strong> ${token.risco}</p>
-            <p><strong>Quantidade de Tokens:</strong> R$ ${token.quantidade_tokens}</p>
+            <p><strong>Quantidade de Tokens:</strong> ${token.quantidade_tokens}</p>
             <p><strong>Valor do Token:</strong> R$ ${token.valor_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             <p><strong>Rendimento do Token:</strong> R$ ${token.rendimento_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             <p><strong>Vencimento:</strong> ${formatDate(token.vencimento)}</p>
@@ -316,10 +316,38 @@ function generateUserInputFields(data) {
     return `
         <label for="email">E-mail:</label>
         <input type="text" id="email" name="email" value="${data.email ?? ''}" readonly>
-        <label for="data_criacao">Data de Criação:</label>
-        <input type="date" id="created_at" name="created_at" value="${data.created_at ? formatDate(data.created_at) : ''}" readonly>
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
+        <label for="nome_completo">Nome Completo:</label>
+        <input type="text" id="nome_completo" name="nome_completo" value="${data.nome_completo ?? ''}" readonly>
+	<label for="cpf">CPF:</label>
+	<input type="text" id="cpf" name="cpf" maxlength="14" value="${data.cpf ?? ''}" readonly> 
+        <label for="nome_da_mae">Nome da Mãe:</label>
+        <input type="text" id="nome_da_mae" name="nome_da_mae" value="${data.nome_da_mae ?? ''}" readonly>
+        <label for="genero">Gênero:</label>
+        <input type="text" id="genero" name="genero" value="${data.genero ?? ''}" readonly>
+	<label for="celular">Celular:</label>
+	<input type="text" id="celular" name="celular" maxlength="14" value="${data.celular ?? ''}" readonly>
+        <label for="estado">Estado:</label>
+        <input type="text" id="estado" name="estado" value="${data.estado ?? ''}" readonly>
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" name="cidade" value="${data.cidade ?? ''}" readonly>
+	<label for="cep">CEP:</label>
+	<input type="text" id="cep" name="cep" maxlength="11" value="${data.cep ?? ''}" readonly>
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro" name="bairro" value="${data.bairro ?? ''}" readonly>
+        <label for="logradouro">Logradouro:</label>
+        <input type="text" id="logradouro" name="logradouro" value="${data.logradouro ?? ''}" readonly>
+	<label for="numero_da_rua">Número da Rua:</label>
+	<input type="number" id="numero_da_rua" name="numero_da_rua" maxlength="11" value="${data.numero_da_rua ?? ''}" readonly>
+        <label for="complemento">Complemento:</label>
+        <input type="text" id="complemento" name="complemento" value="${data.complemento ?? ''}" readonly>
+	<label for="termos_de_uso">Termos de Uso:</label>
+	<input type="number" id="termos_de_uso" name="termos_de_uso" maxlength="11" value="${data.termos_de_uso ?? ''}" readonly>
+        <label for="data_criacao">Data de Criação:</label>
+        <input type="date" id="created_at" name="created_at" value="${data.created_at ? formatDate(data.created_at) : ''}" readonly>
+        <label for="data_nascimento">Data de Nascimento:</label>
+        <input type="date" id="data_nascimento" name="data_nascimento" value="${data.data_nascimento ? formatDate(data.data_nascimento) : ''}" readonly>
         <label for="data_ultima_alteracao">Última Alteração:</label>
         <input type="date" id="data_ultima_alteracao" name="data_ultima_alteracao" value="${data.data_ultima_alteracao ? formatDate(data.data_ultima_alteracao) : ''}" readonly>    
     `;
