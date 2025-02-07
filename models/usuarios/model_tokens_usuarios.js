@@ -1,6 +1,6 @@
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); 
-const crowdfundingConnection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
 class UsersTokensModel {
@@ -17,7 +17,7 @@ class UsersTokensModel {
         logger.info(`Recuperando tokens para o usuário com ID: ${usuarioId}`);
 
         try {
-            const [rows] = await crowdfundingConnection.promise().query(query, [usuarioId]);
+            const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Tokens encontrados para o usuário com ID: ${usuarioId}`);
             } else {

@@ -16,7 +16,7 @@ static async createUser(req, res) {
             const usuarioId = await UsuariosNextUserIdModel.getNextUserId();
             await UsuariosCriarModel.createUser({ usuario_id: usuarioId, nome, email, password });
             logger.info('Usuário criado com sucesso', { usuario_id: usuarioId });
-            res.status(201).json({ message: 'Usuário criado com sucesso!' });
+	    res.status(201).json({ message: 'Usuário criado com sucesso!' });
         } catch (error) {
             logger.error('Erro ao criar usuário', error);
             res.status(500).json({ error: 'Erro ao criar usuário' });

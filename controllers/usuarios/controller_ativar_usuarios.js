@@ -12,7 +12,7 @@ class UsuariosAtivarController {
         try {
             await UsuariosAtivarModel.ativarUsuario(id);
             res.status(200).json({ message: 'Usuário ativado com sucesso' });
-        } catch (error) {
+	} catch (error) {
             logger.error('Erro ao ativar o usuário:', error);
             res.status(500).json({ error: 'Erro ao ativar o usuário' });
         }

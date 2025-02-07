@@ -13,7 +13,7 @@ class UsuariosUpdateController {
         try {
             await UsuariosUpdateModel.updateUsuario(id, data);
             res.status(200).json({ message: 'Usuário atualizado com sucesso' });
-        } catch (error) {
+	} catch (error) {
             logger.error('Erro ao atualizar o usuário:', error);
             res.status(500).json({ error: 'Erro ao atualizar o usuário' });
         }

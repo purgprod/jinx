@@ -285,6 +285,39 @@ body {
     background-color: #4682B4; 
 }
 
+
+/* Estilos para o formulário de suitability */
+#suitabilityDetailsForm {
+    display: flex;
+    flex-direction: column; /* Coloca os elementos em uma única coluna */
+    gap: 10px; /* Espaçamento entre os campos */
+    padding: 20px;
+    background-color: #FFFFFF; /* Fundo branco para contraste */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+}
+
+/* Estilos para os rótulos */
+#suitabilityDetailsForm label {
+    font-weight: bold;
+    color: #333333; /* Texto escuro para contraste */
+    margin-bottom: 7px; /* Espaço abaixo da label */
+}
+
+/* Estilos para os campos de entrada */
+#suitabilityDetailsForm input,
+#suitabilityDetailsForm textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #D4D4D4;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: #333333; /* Texto escuro */
+    background-color: #F9F9F9; /* Fundo claro */
+}
+
 /* Estilos para o formulário de detalhes financeiros */
 #financialDetailsForm {
     display: grid;
@@ -304,6 +337,7 @@ body {
     color: #333333; /* Texto escuro para contraste */
     margin-bottom: 7px;
 }
+
 
 /* Estilos para os campos de entrada */
 #financialDetailsForm input,

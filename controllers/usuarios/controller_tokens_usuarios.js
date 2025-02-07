@@ -14,7 +14,7 @@ class UsuariosTokensController {
             const tokens = await UsuariosTokensModel.tokensUsuario(usuarioId);
             if (tokens.length > 0) {
                 logger.info(`Tokens encontrados para o usuário com ID: ${usuarioId}`);
-            } else {
+	    } else {
                 logger.info(`Nenhum token encontrado para o usuário com ID: ${usuarioId}`);
             }
             res.json(tokens);

@@ -13,7 +13,7 @@ class UsuariosSaquesController {
             const dadosSaques = await UsuariosSaquesModel.getSaques(usuarioId);
             if (dadosSaques) {
                 res.status(200).json(dadosSaques);
-            } else {
+	    } else {
                 res.status(404).json({ message: 'Nenhum dado de saque encontrado.' });
             }
         } catch (error) {

@@ -19,18 +19,26 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <div id="carteiraContainer" class="carteira-container"></div>
+                <h3>Suitability</h3>
+                <form id="suitabilityDetailsForm">
+                    ${generateSuitabilitySection(data)}
+                </form>
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
             `;
 
             setupEventListenersUsuarios(usuario_id);
+            // Chama a função para carregar os dados da seção suitability
+            loadSuitability(usuario_id);  
+
+            // Funções para carregar dados financeiros e tokens
             Promise.all([
                 loadUserTokens(usuario_id), 
                 loadUltimosDadosFinanceiros(usuario_id),
                 loadDadosFinanceirosHistoricos(usuario_id), 
                 loadDadosRendimentosHistoricos(usuario_id) 
             ]).then(() => {
-                return loadSaques(usuario_id); // Chame loadSaques após os outros loads
+                return loadSaques(usuario_id);
             }).then(() => {
                 console.log("Todas as chamadas de API foram completadas.");
             }).catch(err => {
@@ -40,7 +48,7 @@ function loadUserDetails(usuario_id) {
             const resetButton = document.getElementById('resetButton');
             if (resetButton) {
                 resetButton.addEventListener('click', () => {
-                    resetarSenha(usuario_id); // Chamando a função de resetar senha
+                    resetarSenha(usuario_id);
                 });
             }
         } else {
@@ -49,6 +57,86 @@ function loadUserDetails(usuario_id) {
     } else {
         console.error('Dados não encontrados para o ID:', usuario_id);
     }
+}
+
+// Função para gerar a nova seção de Suitability
+function generateSuitabilitySection(data) {
+    return `
+        <label for="qual_objetivo">Qual o seu principal objetivo ao investir seu dinheiro?</label>
+        <input type="number" id="qual_objetivo" name="qual_objetivo" value="${data.qual_objetivo ?? ''}" readonly>
+        
+        <label for="quanto_tempo">Por quanto tempo pretende deixar seu dinheiro investido?</label>
+        <input type="number" id="quanto_tempo" name="quanto_tempo" value="${data.quanto_tempo ?? ''}" readonly>
+        
+        <label for="qual_necessidade">Qual é a sua necessidade em relação ao dinheiro que está investindo?</label>
+        <input type="number" id="qual_necessidade" name="qual_necessidade" value="${data.qual_necessidade ?? ''}" readonly>
+        
+        <label for="qual_percentual">Qual percentual da sua renda você investe regularmente?</label>
+        <input type="number" id="qual_percentual" name="qual_percentual" value="${data.qual_percentual ?? ''}" readonly>
+        
+        <label for="oscilacoes_mercado">Por conta de oscilações do mercado, o que você faria?</label>
+        <input type="number" id="oscilacoes_mercado" name="oscilacoes_mercado" value="${data.oscilacoes_mercado ?? ''}" readonly>
+        
+        <label for="formacao">Considerando sua formação, é possível afirmar que:</label>
+        <input type="number" id="formacao" name="formacao" value="${data.formacao ?? ''}" readonly>
+        
+        <label for="experiencia">Considerando sua experiência profissional, é possível afirmar que:</label>
+        <input type="number" id="experiencia" name="experiencia" value="${data.experiencia ?? ''}" readonly>
+        
+        <label for="expectativa_5_anos">Como você descreveria sua expectativa de renda futura para os próximos 5 anos?</label>        
+        <input type="number" id="expectativa_5_anos" name="expectativa_5_anos" value="${data.expectativa_5_anos ?? ''}" readonly>
+        
+        <label for="operacoes_derivativos">Pretende realizar operações com derivativos?</label>
+        <input type="number" id="operacoes_derivativos" name="operacoes_derivativos" value="${data.operacoes_derivativos ?? ''}" readonly>
+        
+        <label for="volume_frequencia_renda_fixa_basica">Volume e frequência de operações em Renda fixa Básica:</label>
+        <input type="number" id="volume_frequencia_renda_fixa_basica" name="volume_frequencia_renda_fixa_basica" value="${data.volume_frequencia_renda_fixa_basica ?? ''}" readonly>
+
+        <label for="volume_frequencia_outros">Volume e frequência de operações em Debêntures e outros fundos:</label>
+        <input type="number" id="volume_frequencia_outros" name="volume_frequencia_outros" value="${data.volume_frequencia_outros ?? ''}" readonly>
+
+        <label for="volume_frequencia_renda_variavel_basica">Volume e frequência de operações em Renda variável básica:</label>
+        <input type="number" id="volume_frequencia_renda_variavel_basica" name="volume_frequencia_renda_variavel_basica" value="${data.volume_frequencia_renda_variavel_basica ?? ''}" readonly>
+
+        <label for="volume_frequencia_derivativos">Volume e frequência de operações em Derivativos:</label>
+        <input type="number" id="volume_frequencia_derivativos" name="volume_frequencia_derivativos" value="${data.volume_frequencia_derivativos ?? ''}" readonly>
+
+       <label for="percentual_aproximado_renda_fixa">Qual o percentual aproximado de seus investimentos em Renda Fixa Básica?</label>
+        <input type="text" id="percentual_aproximado_renda_fixa" name="percentual_aproximado_renda_fixa" value="${data.percentual_aproximado_renda_fixa != null ? (parseFloat(data.percentual_aproximado_renda_fixa).toFixed(0) + '%') : ''}" readonly>
+
+        <label for="percentual_aproximado_outros">Qual o percentual aproximado de seus investimentos em Debêntures e outros fundos?</label>
+        <input type="text" id="percentual_aproximado_outros" name="percentual_aproximado_outros" value="${data.percentual_aproximado_outros != null ? (parseFloat(data.percentual_aproximado_outros).toFixed(0) + '%') : ''}" readonly>
+
+        <label for="percentual_aproximado_renda_variavel">Qual o percentual aproximado de seus investimentos em Renda Variável Básica?</label>
+        <input type="text" id="percentual_aproximado_renda_variavel" name="percentual_aproximado_renda_variavel" value="${data.percentual_aproximado_renda_variavel != null ? (parseFloat(data.percentual_aproximado_renda_variavel).toFixed(0) + '%') : ''}" readonly>
+
+        <label for="percentual_aproximado_derivatios">Qual o percentual aproximado de seus investimentos em Derivativos?</label>
+        <input type="text" id="percentual_aproximado_derivatios" name="percentual_aproximado_derivatios" value="${data.percentual_aproximado_derivatios != null ? (parseFloat(data.percentual_aproximado_derivatios).toFixed(0) + '%') : ''}" readonly>
+    `;
+}
+
+// Função para carregar as informações de suitability
+function loadSuitability(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/suitability`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de suitability');
+            }
+            return response.json();
+        })
+        .then(suitabilityData => {
+            console.log('Suitability Data:', suitabilityData); // Adicione este log para verificar os dados retornados
+            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input');
+            suitabilityInputs.forEach(input => {
+                const key = input.name; // Chave para encontrar o valor no objeto suitabilityData
+                if (suitabilityData[0][key] !== undefined) { // Acessar suitabilityData[0] porque é um array
+                    input.value = suitabilityData[0][key]; // Atualiza o campo com o valor
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de suitability:', error);
+        });
 }
 
 // Função que busca e exibe os tokens do usuário
@@ -320,30 +408,30 @@ function generateUserInputFields(data) {
         <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
         <label for="nome_completo">Nome Completo:</label>
         <input type="text" id="nome_completo" name="nome_completo" value="${data.nome_completo ?? ''}" readonly>
-	<label for="cpf">CPF:</label>
-	<input type="text" id="cpf" name="cpf" maxlength="14" value="${data.cpf ?? ''}" readonly> 
+        <label for="cpf">CPF:</label>
+        <input type="text" id="cpf" name="cpf" maxlength="14" value="${data.cpf ?? ''}" readonly> 
         <label for="nome_da_mae">Nome da Mãe:</label>
         <input type="text" id="nome_da_mae" name="nome_da_mae" value="${data.nome_da_mae ?? ''}" readonly>
         <label for="genero">Gênero:</label>
         <input type="text" id="genero" name="genero" value="${data.genero ?? ''}" readonly>
-	<label for="celular">Celular:</label>
-	<input type="text" id="celular" name="celular" maxlength="14" value="${data.celular ?? ''}" readonly>
+        <label for="celular">Celular:</label>
+        <input type="text" id="celular" name="celular" maxlength="14" value="${data.celular ?? ''}" readonly>
         <label for="estado">Estado:</label>
         <input type="text" id="estado" name="estado" value="${data.estado ?? ''}" readonly>
         <label for="cidade">Cidade:</label>
         <input type="text" id="cidade" name="cidade" value="${data.cidade ?? ''}" readonly>
-	<label for="cep">CEP:</label>
-	<input type="text" id="cep" name="cep" maxlength="11" value="${data.cep ?? ''}" readonly>
+        <label for="cep">CEP:</label>
+        <input type="text" id="cep" name="cep" maxlength="11" value="${data.cep ?? ''}" readonly>
         <label for="bairro">Bairro:</label>
         <input type="text" id="bairro" name="bairro" value="${data.bairro ?? ''}" readonly>
         <label for="logradouro">Logradouro:</label>
         <input type="text" id="logradouro" name="logradouro" value="${data.logradouro ?? ''}" readonly>
-	<label for="numero_da_rua">Número da Rua:</label>
-	<input type="number" id="numero_da_rua" name="numero_da_rua" maxlength="11" value="${data.numero_da_rua ?? ''}" readonly>
+        <label for="numero_da_rua">Número da Rua:</label>
+        <input type="number" id="numero_da_rua" name="numero_da_rua" maxlength="11" value="${data.numero_da_rua ?? ''}" readonly>
         <label for="complemento">Complemento:</label>
         <input type="text" id="complemento" name="complemento" value="${data.complemento ?? ''}" readonly>
-	<label for="termos_de_uso">Termos de Uso:</label>
-	<input type="number" id="termos_de_uso" name="termos_de_uso" maxlength="11" value="${data.termos_de_uso ?? ''}" readonly>
+        <label for="termos_de_uso">Termos de Uso:</label>
+        <input type="number" id="termos_de_uso" name="termos_de_uso" maxlength="11" value="${data.termos_de_uso ?? ''}" readonly>
         <label for="data_criacao">Data de Criação:</label>
         <input type="date" id="created_at" name="created_at" value="${data.created_at ? formatDate(data.created_at) : ''}" readonly>
         <label for="data_nascimento">Data de Nascimento:</label>
@@ -353,6 +441,7 @@ function generateUserInputFields(data) {
     `;
 }
 
+// Organiza os eventos dos botões
 function setupEventListenersUsuarios(usuario_id) {
     const editButton = document.getElementById('editButton');
     if (editButton) {
@@ -387,10 +476,18 @@ function setupEventListenersUsuarios(usuario_id) {
             })
             .then(response => {
                 if (response.ok) {
+                    return response.json(); // Aguarda o retorno JSON
+                } else {
+                    throw new Error('Erro ao atualizar o usuário.');
+                }
+            })
+            .then(data => {
+                // Verifica se a atualização realmente mudou algo
+                if (data.changedRows === 0) {
+                    alert('Nenhuma alteração foi feita nos dados do usuário. Verifique os valores informados.');
+                } else {
                     alert('Usuário atualizado com sucesso!');
                     refreshPage(); // Recarrega a página após a atualização
-                } else {
-                    return response.json().then(data => Promise.reject(data));
                 }
             })
             .catch(error => {
