@@ -19,11 +19,13 @@ class UsersAtualizarSenhaModel {
             if (result.affectedRows === 0) {
                 const message = 'Usuário não encontrado ou senha não alterada.';
                 logger.warn(message);
-                throw new Error(message);
+                logger.info(`Resposta: ${JSON.stringify(rows)}`);
+		throw new Error(message);
             }
             logger.info('Senha atualizada com sucesso.');
         } catch (error) {
             logger.error(`Erro ao atualizar a senha: ${error.message}`);
+ 	    logger.info(`Resposta: ${JSON.stringify(rows)}`);
             throw error;
         }
     }

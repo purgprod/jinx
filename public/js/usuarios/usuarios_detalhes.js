@@ -467,8 +467,6 @@ function setupEventListenersUsuarios(usuario_id) {
                 }
             }
 
-            console.log('Dados do formulário a serem enviados:', updatedData);
-
             fetch(`/api/usuarios/${usuario_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

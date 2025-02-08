@@ -13,19 +13,21 @@ class UsersSaquesModel {
             WHERE usuario_id = ?
         `;
         logger.info(`Recuperando os valor total de saques para o usuário ID: ${usuarioId}`);
-
         try {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Saques encontrados para o usuário ID: ${usuarioId}`);
-                return rows[0];
+                logger.info(`Resposta: ${JSON.stringify(rows)}`);
+		return rows[0];
             } else {
                 logger.warn(`Nenhum saque encontrado para o usuário ID: ${usuarioId}`);
-                return null;
+                logger.info(`Resposta: ${JSON.stringify(rows)}`);
+		return null;
             }
         } catch (error) {
             logger.error(`Erro ao buscar saques para o usuário com ID: ${usuarioId} - ${error.message}`);
-            throw error;
+            logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	    throw error;
         }
     }
 

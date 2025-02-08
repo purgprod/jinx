@@ -14,13 +14,14 @@ class UsersDadosFinanceirosHistoricosModel {
         	ORDER BY data_criacao ASC
     		`;
     	logger.info(`Recuperando dados de valor da carteira históricos para o usuário ID: ${usuarioId}`);
-
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; // Retorna todos os dados financeiros históricos
-    	} catch (error) {
+    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	} catch (error) {
         	logger.error(`Erro ao buscar dados de valor da carteira históricos para o usuário ID: ${usuarioId} - ${error.message}`);
-        	throw error;
+        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
+		throw error;
     	}
 	}
 }

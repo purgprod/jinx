@@ -21,7 +21,7 @@ class UsersAtivarModel {
                     } else {
                         logger.warn(`Nenhum usuario foi ativado para o ID: ${id}. Verifique se este ID existe.`);
                     }
-                    logger.info(`Resultados da query: ${JSON.stringify(results)}`);
+                    logger.info(`Resultados da query: ${JSON.stringify(results)}`); // Loga a resposta aqui, após results ser definido
                     resolve(results);
                 }
             });

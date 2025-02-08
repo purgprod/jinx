@@ -13,13 +13,16 @@ class UsersBuscarUsuarioModel {
             const [rows] = await connection.promise().query(query, [email]);
             if (rows[0]) {
                 logger.info('Usuário encontrado.');
+		logger.info(`Resposta: ${JSON.stringify(rows)}`);
             } else {
                 logger.warn('Usuário não encontrado.');
+		logger.info(`Resposta: ${JSON.stringify(rows)}`);
             }
             return rows[0];
         } catch (error) {
             logger.error(`Erro ao obter usuário pelo e-mail: ${error.message}`);
-            throw error;
+            logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	    throw error;
         }
     }
 }

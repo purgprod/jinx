@@ -5,23 +5,26 @@ const logger = require('../../logger');
 
 class UsersDadosRendimentosHistoricosModel {
     
-	// Método para obter todos os dados de rendimentos históricos de um usuário
-	static async getDadosRendimentosHistoricos(usuarioId) {
-    		const query = `
-        	SELECT data_criacao, rendimento_dia
-        	FROM usuarios_dados_financeiros_diarios
-        	WHERE usuario_id = ?
-        	ORDER BY data_criacao ASC
-    	`;
-    	logger.info(`Recuperando dados de rendimentos históricos para o usuário ID: ${usuarioId}`);
-
-    	try {
-        	const [rows] = await connection.promise().query(query, [usuarioId]);        return rows; // Retorna todos os dados financeiros históricos
-    	} catch (error) {
-        	logger.error(`Erro ao buscar dados de rendimentos  históricos para o usuário ID: ${usuarioId} - ${error.message}`);
-        	throw error;
-    		}
-	}
+    // Método para obter todos os dados de rendimentos históricos de um usuário
+    static async getDadosRendimentosHistoricos(usuarioId) {
+        const query = `
+            SELECT data_criacao, rendimento_dia
+            FROM usuarios_dados_financeiros_diarios
+            WHERE usuario_id = ?
+            ORDER BY data_criacao ASC
+        `;
+        
+        logger.info(`Recuperando dados de rendimentos históricos para o usuário ID: ${usuarioId}`);
+        
+        try {
+            const [rows] = await connection.promise().query(query, [usuarioId]);
+            logger.info(`Resposta: ${JSON.stringify(rows)}`); // Logando a resposta aqui, após `rows` ser definido
+            return rows; // Retorna todos os dados financeiros históricos
+        } catch (error) {
+            logger.error(`Erro ao buscar dados de rendimentos históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+            throw error; // Apenas lançamos o erro
+        }
+    }
 }
 
 module.exports = UsersDadosRendimentosHistoricosModel;

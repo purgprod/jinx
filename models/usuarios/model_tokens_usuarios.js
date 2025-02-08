@@ -20,13 +20,16 @@ class UsersTokensModel {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Tokens encontrados para o usuário com ID: ${usuarioId}`);
-            } else {
+                logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	    } else {
                 logger.warn(`Nenhum token encontrado para o usuário com ID: ${usuarioId}`);
-            }
+                logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	    }
             return rows;
         } catch (error) {
             logger.error(`Erro ao buscar tokens para o usuário com ID: ${usuarioId} - ${error.message}`);
-            throw error;
+            logger.info(`Resposta: ${JSON.stringify(rows)}`);
+	    throw error;
         }
     }
 }

@@ -9,21 +9,24 @@ class UsersUpdateModel {
     static async updateUsuario(id, data) {
         const sqlQuery = `
             UPDATE users
-            SET email = ?, nome = ?
+            SET email = ?, nome = ?, nome_completo = ?, cpf = ?, nome_da_mae = ?, genero = ?, celular = ?, estado = ?, cidade = ?, cep =?, bairro = ?, logradouro = ?, numero_da_rua = ?, complemento = ?, termos_de_uso = ?, data_nascimento = ?
             WHERE usuario_id = ?
         `;
-        const values = [data.email, data.nome, id];
+        const values = [data.email, data.nome, data.nome_completo, data.cpf, data.nome_da_mae, data.genero, data.celular, data.estado, data.cidade, data.cep, data.bairro, data.logradouro, data.numero_da_rua, data.complemento, data.termos_de_uso, data.data_nascimento, id];
 
+        // Logando as informações do usuário que serão atualizadas
         logger.info(`Executando update para usuario com ID: ${id}`);
+        logger.info(`Dados a serem enviados: ${JSON.stringify(data)}`);
 
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, values, (error, results) => {
                 if (error) {
                     logger.error(`Erro ao atualizar usuario com ID: ${id} - ${error.message}`);
-                    reject(error);
+                    logger.info(`Resposta: ${JSON.stringify(rows)}`);
+		    reject(error);
                 } else {
                     logger.info(`Usuário com ID: ${id} atualizado com sucesso.`);
-                    logger.info(`Resultados da query: ${JSON.stringify(results)}`);
+                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });
