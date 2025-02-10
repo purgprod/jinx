@@ -43,21 +43,21 @@ body {
     font-size: 55px;
     color: white;
     font-family: 'Bevan', sans-serif;
-    margin-top: -40px;
-    margin-bottom: 30px;
+    margin-top: -40px; /* Subir o "Purg" em 5 linhas */
+    margin-bottom: 30px; /* Adicionar espaçamento abaixo do "Purg" */
 }
 
 .login-container label {
     color: #D4D4D4;
-    font-size: 13px;
+    font-size: 13px; /* Diminuído o tamanho da fonte */
     text-align: left;
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 5px; /* Espaço entre o label e o input */
 }
 
 .login-container input[type="email"],
 .login-container input[type="password"] {
-    width: 80%;
+    width: 80%; /* Reduzido em 1/5 */
     padding: 10px;
     margin: 10px 0;
     border: 1px solid #4682B4;
@@ -74,7 +74,7 @@ body {
 }
 
 .login-container button {
-    width: 80%;
+    width: 80%; /* Centralizar e ajustar a largura */
     padding: 10px;
     background-color: #4682B4;
     color: #fff;
@@ -84,7 +84,7 @@ body {
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.3s ease;
-    margin-top: 20px;
+    margin-top: 20px; /* Descer o botão em 2 linhas */
 }
 
 .login-container button:hover {
@@ -105,13 +105,13 @@ body {
     }
 
     .login-container h1 {
-        font-size: 45px;
+        font-size: 45px; /* Ajustar o tamanho do "Purg" em telas menores */
     }
 
     .login-container input[type="email"],
     .login-container input[type="password"],
     .login-container button {
-        width: 100%;
+        width: 100%; /* Garantir que os elementos ocupem a largura total */
     }
 }
 
@@ -123,78 +123,84 @@ body {
 }
 
 .left-panel {
-    width: 18%;
+    width: 18%; 
     background-color: #202A37;
     padding: 20px;
     box-sizing: border-box;
-    height: 100vh;
+    height: 100vh; 
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    overflow-y: auto;
+    justify-content: flex-start; 
+    overflow-y: auto; 
 }
 
 .purg-title {
-    font-size: 55px;
-    font-family: 'Bevan', sans-serif;
+    font-size: 55px; 
+    font-family: 'Bevan', sans-serif; 
     color: white;
     display: flex;
-    align-items: flex-end;
-    gap: 5px;
-    margin-top: -5px;
+    align-items: flex-end; 
+    gap: 5px; 
+    margin-top: -5px; 
 }
 
 .beta-box {
-    background-color: #6C737F;
+    background-color: #6C737F; 
     color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-family: 'Libre Baskerville', serif;
-    font-size: 12.8px;
-    font-style: normal;
-    font-weight: 400;
-    transform: translateY(-10px);
+    padding: 4px 8px; 
+    border-radius: 12px; 
+    font-family: 'Libre Baskerville', serif; 
+    font-size: 12.8px; 
+    font-style: normal; 
+    font-weight: 400; 
+    transform: translateY(-10px); 
 }
 
 .center-panel {
-    flex: 1;
+    flex: 1; /* Faz o center-panel ocupar todo o espaço restante */
     padding: 20px;
     box-sizing: border-box;
-    overflow-y: auto;
-    background-color: #F3F3F3;
+    overflow-y: auto; 
+    background-color: #F3F3F3; /* Adicionei uma cor de fundo para visualização */
 }
 
-/* Cards dos Usuários */
+/* ========================================================================== */
+/* Estilos para os Cards dos Usuários */
+/* ========================================================================== */
+
 .cards-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-between;
+    display: flex; 
+    flex-wrap: wrap; /* Permite que os cards quebrem linha */
+    gap: 20px; /* Espaçamento entre os cards */
+    justify-content: space-between; /* Centraliza os cards */
     padding: 20px;
 }
 
+/* Estilo dos cards dos usuários */
 .card {
-    flex: 1;
-    background-color: #FFFFFF;
-    color: #333333;
-    border: 1px solid #D4D4D4;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex:1;
+    background-color: #FFFFFF; /* Fundo branco */
+    color: #333333; /* Texto escuro */
+    border: 1px solid #D4D4D4; /* Borda cinza clara */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
     padding: 20px;
-    width: 300px;
+    width: 300px; /* Largura fixa dos cards */
     box-sizing: border-box;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Animação ao passar o mouse */
 }
 
+/* Título do card dos usuários */
 .card-title {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
-    color: #4682B4;
+    color: #4682B4; /* Azul para o título */
 }
 
+/* Links dentro dos cards */
 .card a {
-    color: #1E90FF;
+    color: #1E90FF; /* Azul para links */
     text-decoration: none;
 }
 
@@ -202,19 +208,22 @@ body {
     text-decoration: underline;
 }
 
+/* Efeito ao passar o mouse sobre o card */
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px); /* Eleva o card */
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Aumenta a sombra */
 }
+
+/* FIM DO ESTILO DOS USUÁRIOS */
 
 .page-title {
     color: #D4D4D4;
-    font-size: 48px;
+    font-size: 48px; 
     text-align: center;
     margin-bottom: 20px;
 }
 
-#usuariosButton, #configButton, #resultadosButton, #tokensButton {
+#usuariosButton, #configButton {
     display: block;
     width: 100%;
     padding: 10px 20px;
@@ -225,45 +234,78 @@ body {
     cursor: pointer;
 }
 
-#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover {
+#usuariosButton:hover, #configButton:hover {
+    background-color: #F3F3F3;
+}
+
+#resultadosButton, #configButton {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #202A37;
+    color: white;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+#resultadosButton:hover, #configButton:hover {
+        background-color: #F3F3F3;
+}
+
+#tokensButton, #configButton {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #202A37;
+    color: white;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+#tokensButton:hover, #configButton:hover {
     background-color: #F3F3F3;
 }
 
 #logoutButton {
-    padding: 5px 10px;
+    padding: 5px 10px; 
     font-size: 14px;
-    border: 1px solid #4682B4;
+    border: 1px solid #4682B4; 
     border-radius: 5px;
-    background-color: #202A37;
-    color: #D4D4D4;
+    background-color: #202A37; 
+    color: #D4D4D4; 
     cursor: pointer;
-    font-weight: bold;
-    margin-top: auto;
+    font-weight: bold; 
+    margin-top: auto; 
     transition: background-color 0.3s;
 }
 
 #logoutButton:hover {
-    background-color: #4682B4;
+    background-color: #4682B4; 
 }
 
-/* Formulário de suitability */
+
+/* Estilos para o formulário de suitability */
 #suitabilityDetailsForm {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column; /* Coloca os elementos em uma única coluna */
+    gap: 10px; /* Espaçamento entre os campos */
     padding: 20px;
-    background-color: #FFFFFF;
+    background-color: #FFFFFF; /* Fundo branco para contraste */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
 }
 
+/* Estilos para os rótulos */
 #suitabilityDetailsForm label {
     font-weight: bold;
-    color: #333333;
-    margin-bottom: 7px;
+    color: #333333; /* Texto escuro para contraste */
+    margin-bottom: 7px; /* Espaço abaixo da label */
 }
 
+/* Estilos para os campos de entrada */
 #suitabilityDetailsForm input,
 #suitabilityDetailsForm textarea {
     width: 100%;
@@ -272,29 +314,32 @@ body {
     border-radius: 4px;
     box-sizing: border-box;
     font-size: 14px;
-    color: #333333;
-    background-color: #F9F9F9;
+    color: #333333; /* Texto escuro */
+    background-color: #F9F9F9; /* Fundo claro */
 }
 
-/* Formulário de detalhes financeiros */
+/* Estilos para o formulário de detalhes financeiros */
 #financialDetailsForm {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 10px;
     padding: 20px;
-    background-color: #FFFFFF;
+    background-color: #FFFFFF; /* Fundo branco para contraste */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
 }
 
+/* Estilos para os rótulos */
 #financialDetailsForm label {
     grid-column: span 1;
     font-weight: bold;
-    color: #333333;
+    color: #333333; /* Texto escuro para contraste */
     margin-bottom: 7px;
 }
 
+
+/* Estilos para os campos de entrada */
 #financialDetailsForm input,
 #financialDetailsForm textarea {
     width: 100%;
@@ -304,10 +349,11 @@ body {
     box-sizing: border-box;
     margin-bottom: 10px;
     font-size: 14px;
-    color: #333333;
-    background-color: #F9F9F9;
+    color: #333333; /* Texto escuro */
+    background-color: #F9F9F9; /* Fundo claro */
 }
 
+/* Estilos comuns para botões */
 #financialDetailsForm button {
     grid-column: span 2;
     padding: 10px 20px;
@@ -319,7 +365,9 @@ body {
     margin-top: 20px;
 }
 
-.center-panel h2, .center-panel h3 {
+
+/* Estilos para o título do formulário */
+.center-panel h2 {
     text-align: center;
     margin-bottom: 20px;
     color: #333333;
@@ -327,19 +375,24 @@ body {
     font-weight: bold;
 }
 
-.button-azul, .button-vermelho, .button-verde {
-    margin: 20px auto;
+.center-panel h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333333;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.button-azul {
+    margin: 20px auto; /* Centraliza o botão horizontalmente */
     padding: 10px 20px;
+    background-color: #4682B4;
+    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
-    color: white;
-}
-
-.button-azul {
-    background-color: #4682B4;
 }
 
 .button-azul:hover {
@@ -347,7 +400,15 @@ body {
 }
 
 .button-vermelho {
+    margin: 20px auto; /* Centraliza o botão horizontalmente */
+    padding: 10px 20px;
     background-color: #DE9A95;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
 .button-vermelho:hover {
@@ -355,7 +416,15 @@ body {
 }
 
 .button-verde {
+    margin: 20px auto; /* Centraliza o botão horizontalmente */
+    padding: 10px 20px;
     background-color: #43992A;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
 .button-verde:hover {
@@ -363,28 +432,9 @@ body {
 }
 
 .cards-basico {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-between;
-    padding: 20px;
+    display: flex; /* Mantém o layout flexível */
+    flex-wrap: wrap; /* Permite que os cards quebrem linha se necessário */
+    gap: 20px; /* Espaçamento entre os cards */
+    justify-content: space-between; /* Alinha os cards com espaço entre eles */
+    padding: 20px; /* Adiciona um padding ao redor da área dos cards */
 }
-
-#chartsContainer {
-    display: flex;
-    justify-content: center; /* Ajusta os gráficos para o centro do contêiner */
-    align-items: center;
-    gap: 20px; /* Espaçamento entre os gráficos */
-}
-
-#chartsContainer canvas {
-    width: 300px !important; /* Ajuste conforme necessário */
-    height: 300px !important;
-    box-sizing: border-box;
-}
-
-#carteiraChart, #carteiraRendimentosChart {
-    width: auto !important;
-    height: auto !important;
-}
-

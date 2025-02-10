@@ -1,3 +1,8 @@
+import dicionarioRespostas from './dicionario_respostas.js';
+
+// Variável para armazenar os dados dos tokens
+let tokensData = [];
+
 function loadUserDetails(usuario_id) {
     const data = userDataMap[usuario_id];
     if (data) {
@@ -19,19 +24,22 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <div id="carteiraContainer" class="carteira-container"></div>
+		<h3>Distribuição da Carteira</h3>
+                <div id="chartsContainer">
+                    <canvas id="risksDistributionChart"></canvas>
+                    <canvas id="risksPercentageChart"></canvas>
+                </div>
+                <h3>Tokens do Usuário</h3>
+                <div id="tokensContainer" class="cards-container"></div>
                 <h3>Suitability</h3>
                 <form id="suitabilityDetailsForm">
                     ${generateSuitabilitySection(data)}
                 </form>
-                <h3>Tokens do Usuário</h3>
-                <div id="tokensContainer" class="cards-container"></div>
             `;
 
             setupEventListenersUsuarios(usuario_id);
-            // Chama a função para carregar os dados da seção suitability
             loadSuitability(usuario_id);  
 
-            // Funções para carregar dados financeiros e tokens
             Promise.all([
                 loadUserTokens(usuario_id), 
                 loadUltimosDadosFinanceiros(usuario_id),
@@ -41,6 +49,8 @@ function loadUserDetails(usuario_id) {
                 return loadSaques(usuario_id);
             }).then(() => {
                 console.log("Todas as chamadas de API foram completadas.");
+                renderizarGraficoDistribuicaoRisco(); 
+                renderizarGraficoPorcentagemRisco();
             }).catch(err => {
                 console.error("Erro ao carregar dados:", err);
             });
@@ -59,63 +69,45 @@ function loadUserDetails(usuario_id) {
     }
 }
 
-// Função para gerar a nova seção de Suitability
 function generateSuitabilitySection(data) {
     return `
         <label for="qual_objetivo">Qual o seu principal objetivo ao investir seu dinheiro?</label>
-        <input type="number" id="qual_objetivo" name="qual_objetivo" value="${data.qual_objetivo ?? ''}" readonly>
-        
+        <input type="text" id="qual_objetivo" name="qual_objetivo" value="${dicionarioRespostas.qual_objetivo[data.qual_objetivo] ?? 'Não especificado'}" readonly>
         <label for="quanto_tempo">Por quanto tempo pretende deixar seu dinheiro investido?</label>
-        <input type="number" id="quanto_tempo" name="quanto_tempo" value="${data.quanto_tempo ?? ''}" readonly>
-        
+        <input type="text" id="quanto_tempo" name="quanto_tempo" value="${dicionarioRespostas.quanto_tempo[data.quanto_tempo] ?? 'Não especificado'}" readonly>
         <label for="qual_necessidade">Qual é a sua necessidade em relação ao dinheiro que está investindo?</label>
-        <input type="number" id="qual_necessidade" name="qual_necessidade" value="${data.qual_necessidade ?? ''}" readonly>
-        
+        <input type="text" id="qual_necessidade" name="qual_necessidade" value="${dicionarioRespostas.qual_necessidade[data.qual_necessidade] ?? 'Não especificado'}" readonly>
         <label for="qual_percentual">Qual percentual da sua renda você investe regularmente?</label>
-        <input type="number" id="qual_percentual" name="qual_percentual" value="${data.qual_percentual ?? ''}" readonly>
-        
+        <input type="text" id="qual_percentual" name="qual_percentual" value="${data.qual_percentual ?? 'Não especificado'}" readonly>
         <label for="oscilacoes_mercado">Por conta de oscilações do mercado, o que você faria?</label>
-        <input type="number" id="oscilacoes_mercado" name="oscilacoes_mercado" value="${data.oscilacoes_mercado ?? ''}" readonly>
-        
+        <input type="text" id="oscilacoes_mercado" name="oscilacoes_mercado" value="${dicionarioRespostas.oscilacoes_mercado[data.oscilacoes_mercado] ?? 'Não especificado'}" readonly>
         <label for="formacao">Considerando sua formação, é possível afirmar que:</label>
-        <input type="number" id="formacao" name="formacao" value="${data.formacao ?? ''}" readonly>
-        
+        <input type="text" id="formacao" name="formacao" value="${dicionarioRespostas.formacao[data.formacao] ?? 'Não especificado'}" readonly>
         <label for="experiencia">Considerando sua experiência profissional, é possível afirmar que:</label>
-        <input type="number" id="experiencia" name="experiencia" value="${data.experiencia ?? ''}" readonly>
-        
+        <input type="text" id="experiencia" name="experiencia" value="${dicionarioRespostas.experiencia[data.experiencia] ?? 'Não especificado'}" readonly>
         <label for="expectativa_5_anos">Como você descreveria sua expectativa de renda futura para os próximos 5 anos?</label>        
-        <input type="number" id="expectativa_5_anos" name="expectativa_5_anos" value="${data.expectativa_5_anos ?? ''}" readonly>
-        
+        <input type="text" id="expectativa_5_anos" name="expectativa_5_anos" value="${dicionarioRespostas.expectativa_5_anos[data.expectativa_5_anos] ?? 'Não especificado'}" readonly>
         <label for="operacoes_derivativos">Pretende realizar operações com derivativos?</label>
-        <input type="number" id="operacoes_derivativos" name="operacoes_derivativos" value="${data.operacoes_derivativos ?? ''}" readonly>
-        
+        <input type="text" id="operacoes_derivativos" name="operacoes_derivativos" value="${dicionarioRespostas.operacoes_derivativos[data.operacoes_derivativos] ?? 'Não especificado'}" readonly>
         <label for="volume_frequencia_renda_fixa_basica">Volume e frequência de operações em Renda fixa Básica:</label>
-        <input type="number" id="volume_frequencia_renda_fixa_basica" name="volume_frequencia_renda_fixa_basica" value="${data.volume_frequencia_renda_fixa_basica ?? ''}" readonly>
-
+        <input type="text" id="volume_frequencia_renda_fixa_basica" name="volume_frequencia_renda_fixa_basica" value="${dicionarioRespostas.volume_frequencia_renda_fixa_basica[data.volume_frequencia_renda_fixa_basica] ?? 'Não especificado'}" readonly>
         <label for="volume_frequencia_outros">Volume e frequência de operações em Debêntures e outros fundos:</label>
-        <input type="number" id="volume_frequencia_outros" name="volume_frequencia_outros" value="${data.volume_frequencia_outros ?? ''}" readonly>
-
+        <input type="text" id="volume_frequencia_outros" name="volume_frequencia_outros" value="${dicionarioRespostas.volume_frequencia_outros[data.volume_frequencia_outros] ?? 'Não especificado'}" readonly>
         <label for="volume_frequencia_renda_variavel_basica">Volume e frequência de operações em Renda variável básica:</label>
-        <input type="number" id="volume_frequencia_renda_variavel_basica" name="volume_frequencia_renda_variavel_basica" value="${data.volume_frequencia_renda_variavel_basica ?? ''}" readonly>
-
+        <input type="text" id="volume_frequencia_renda_variavel_basica" name="volume_frequencia_renda_variavel_basica" value="${dicionarioRespostas.volume_frequencia_renda_variavel_basica[data.volume_frequencia_renda_variavel_basica] ?? 'Não especificado'}" readonly>
         <label for="volume_frequencia_derivativos">Volume e frequência de operações em Derivativos:</label>
-        <input type="number" id="volume_frequencia_derivativos" name="volume_frequencia_derivativos" value="${data.volume_frequencia_derivativos ?? ''}" readonly>
-
-       <label for="percentual_aproximado_renda_fixa">Qual o percentual aproximado de seus investimentos em Renda Fixa Básica?</label>
-        <input type="text" id="percentual_aproximado_renda_fixa" name="percentual_aproximado_renda_fixa" value="${data.percentual_aproximado_renda_fixa != null ? (parseFloat(data.percentual_aproximado_renda_fixa).toFixed(0) + '%') : ''}" readonly>
-
+        <input type="text" id="volume_frequencia_derivativos" name="volume_frequencia_derivativos" value="${dicionarioRespostas.volume_frequencia_derivativos[data.volume_frequencia_derivativos] ?? 'Não especificado'}" readonly>
+        <label for="percentual_aproximado_renda_fixa">Qual o percentual aproximado de seus investimentos em Renda Fixa Básica?</label>
+        <input type="number" id="percentual_aproximado_renda_fixa" name="percentual_aproximado_renda_fixa" value="${data.percentual_aproximado_renda_fixa != null ? parseFloat(data.percentual_aproximado_renda_fixa).toFixed(2) : 'Não especificado'}" readonly>
         <label for="percentual_aproximado_outros">Qual o percentual aproximado de seus investimentos em Debêntures e outros fundos?</label>
-        <input type="text" id="percentual_aproximado_outros" name="percentual_aproximado_outros" value="${data.percentual_aproximado_outros != null ? (parseFloat(data.percentual_aproximado_outros).toFixed(0) + '%') : ''}" readonly>
-
+        <input type="number" id="percentual_aproximado_outros" name="percentual_aproximado_outros" value="${data.percentual_aproximado_outros != null ? parseFloat(data.percentual_aproximado_outros).toFixed(2) : 'Não especificado'}" readonly>
         <label for="percentual_aproximado_renda_variavel">Qual o percentual aproximado de seus investimentos em Renda Variável Básica?</label>
-        <input type="text" id="percentual_aproximado_renda_variavel" name="percentual_aproximado_renda_variavel" value="${data.percentual_aproximado_renda_variavel != null ? (parseFloat(data.percentual_aproximado_renda_variavel).toFixed(0) + '%') : ''}" readonly>
-
-        <label for="percentual_aproximado_derivatios">Qual o percentual aproximado de seus investimentos em Derivativos?</label>
-        <input type="text" id="percentual_aproximado_derivatios" name="percentual_aproximado_derivatios" value="${data.percentual_aproximado_derivatios != null ? (parseFloat(data.percentual_aproximado_derivatios).toFixed(0) + '%') : ''}" readonly>
+        <input type="number" id="percentual_aproximado_renda_variavel" name="percentual_aproximado_renda_variavel" value="${data.percentual_aproximado_renda_variavel != null ? parseFloat(data.percentual_aproximado_renda_variavel).toFixed(2) : 'Não especificado'}" readonly>
+        <label for="percentual_aproximado_derivativos">Qual o percentual aproximado de seus investimentos em Derivativos?</label>
+        <input type="number" id="percentual_aproximado_derivativos" name="percentual_aproximado_derivativos" value="${data.percentual_aproximado_derivativos != null ? parseFloat(data.percentual_aproximado_derivativos).toFixed(2) : 'Não especificado'}" readonly>
     `;
 }
 
-// Função para carregar as informações de suitability
 function loadSuitability(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/suitability`)
         .then(response => {
@@ -125,21 +117,27 @@ function loadSuitability(usuario_id) {
             return response.json();
         })
         .then(suitabilityData => {
-            console.log('Suitability Data:', suitabilityData); // Adicione este log para verificar os dados retornados
-            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input');
+            console.log('Suitability Data:', suitabilityData);
+            
+            const suitability = suitabilityData[0];
+            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
             suitabilityInputs.forEach(input => {
-                const key = input.name; // Chave para encontrar o valor no objeto suitabilityData
-                if (suitabilityData[0][key] !== undefined) { // Acessar suitabilityData[0] porque é um array
-                    input.value = suitabilityData[0][key]; // Atualiza o campo com o valor
+                const key = input.name;
+                if (suitability[key] !== undefined) {
+                    input.value = dicionarioRespostas[key][suitability[key]] || 'Não especificado';
                 }
             });
+
+            document.getElementById('percentual_aproximado_renda_fixa').value = suitability.percentual_aproximado_renda_fixa != null ? parseFloat(suitability.percentual_aproximado_renda_fixa).toFixed(2) : 'Não especificado';
+            document.getElementById('percentual_aproximado_outros').value = suitability.percentual_aproximado_outros != null ? parseFloat(suitability.percentual_aproximado_outros).toFixed(2) : 'Não especificado';
+            document.getElementById('percentual_aproximado_renda_variavel').value = suitability.percentual_aproximado_renda_variavel != null ? parseFloat(suitability.percentual_aproximado_renda_variavel).toFixed(2) : 'Não especificado';
+            document.getElementById('percentual_aproximado_derivativos').value = suitability.percentual_aproximado_derivativos != null ? parseFloat(suitability.percentual_aproximado_derivativos).toFixed(2) : 'Não especificado';
         })
         .catch(error => {
             console.error('Erro ao carregar dados de suitability:', error);
         });
 }
 
-// Função que busca e exibe os tokens do usuário
 function loadUserTokens(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/tokens`)
         .then(response => {
@@ -149,6 +147,11 @@ function loadUserTokens(usuario_id) {
             return response.json();
         })
         .then(tokens => {
+            tokens.forEach(token => {
+                token.quantidade_tokens_formatado = (token.quantidade_tokens * 0.01).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            });
+
+            tokensData = tokens;
             const tokensContainer = document.getElementById('tokensContainer');
             if (tokensContainer) {
                 tokensContainer.innerHTML = tokens.map(createTokenCardHTML).join('');
@@ -159,7 +162,128 @@ function loadUserTokens(usuario_id) {
         });
 }
 
-// Função que busca e exibe os últimos dados financeiros do usuário
+function renderizarGraficoDistribuicaoRisco() {
+    const canvas = document.getElementById('risksDistributionChart');
+    if (!canvas) {
+        console.error('Elemento canvas "risksDistributionChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const labels = [];
+    const data = [];
+
+    const riscoMap = {};
+
+    tokensData.forEach(token => {
+        if (!riscoMap[token.risco]) {
+            riscoMap[token.risco] = 0;
+        }
+        riscoMap[token.risco] += token.quantidade_tokens * 0.01;
+    });
+
+    for (const [risco, quantidade] of Object.entries(riscoMap)) {
+        labels.push(risco);
+        data.push(parseFloat(quantidade.toFixed(2)));
+    }
+
+    const distributionChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribuição Financeira de Risco dos Tokens (R$)',
+                data: data,
+                backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Distribuição Financeira de Risco dos Tokens'
+                },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value, ctx) => {
+                        return `${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Ativa o plugin de Data Labels
+    });
+}
+
+function renderizarGraficoPorcentagemRisco() {
+    const canvas = document.getElementById('risksPercentageChart');
+    if (!canvas) {
+        console.error('Elemento canvas "risksPercentageChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const totalTokens = tokensData.reduce((sum, token) => sum + token.quantidade_tokens, 0);
+    const labels = [];
+    const data = [];
+
+    const riscoMap = {};
+
+    tokensData.forEach(token => {
+        if (!riscoMap[token.risco]) {
+            riscoMap[token.risco] = 0;
+        }
+        riscoMap[token.risco] += token.quantidade_tokens;
+    });
+
+    for (const [risco, quantidade] of Object.entries(riscoMap)) {
+        labels.push(risco);
+        const percentage = (quantidade / totalTokens) * 100;
+        data.push(parseFloat(percentage.toFixed(2)));
+    }
+
+    const percentageChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Porcentagem de Risco dos Tokens (%)',
+                data: data,
+                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Porcentagem de Risco dos Tokens'
+                },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value, ctx) => {
+                        return `${value.toFixed(2)}%`;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Ativa o plugin de Data Labels
+    });
+}
+
 function loadUltimosDadosFinanceiros(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/ultimos-dados-financeiros`)
         .then(response => {
@@ -169,7 +293,7 @@ function loadUltimosDadosFinanceiros(usuario_id) {
             return response.json();
         })
         .then(dados => {
-            console.log('Últimos dados financeiros:', dados); // Log dos dados
+            console.log('Últimos dados financeiros:', dados);
             displayUltimosDadosFinanceiros(dados, usuario_id);
         })
         .catch(error => {
@@ -177,13 +301,12 @@ function loadUltimosDadosFinanceiros(usuario_id) {
         });
 }
 
-// Função para exibir os últimos dados financeiros da carteira em formato de card
 function displayUltimosDadosFinanceiros(dados, usuario_id) {
     const carteiraContainer = document.getElementById('carteiraContainer');
     if (carteiraContainer) {
         carteiraContainer.innerHTML = `
             <h3>Dados Financeiros</h3>
-            <div class="cards-basico"> <!-- Usando a nova classe aqui -->
+            <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
                         <p><strong>Valor da Carteira:</strong> R$ ${parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -206,7 +329,6 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
     }
 }
 
-// Função para carregar e exibir os saques do usuário
 function loadSaques(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-saques`)
         .then(response => {
@@ -217,7 +339,7 @@ function loadSaques(usuario_id) {
         })
         .then(dadosSaques => {
             const totalSaqueElement = document.getElementById('totalSaque');
-            const totalSaque = dadosSaques['SUM(valor_saque)'] || 0; // Verifica se existe a soma
+            const totalSaque = dadosSaques['SUM(valor_saque)'] || 0;
             totalSaqueElement.textContent = parseFloat(totalSaque).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         })
         .catch(error => {
@@ -225,7 +347,6 @@ function loadSaques(usuario_id) {
         });
 }
 
-// Função que busca e exibe os dados financeiros históricos do usuário
 function loadDadosFinanceirosHistoricos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-historicos`)
         .then(response => {
@@ -235,30 +356,27 @@ function loadDadosFinanceirosHistoricos(usuario_id) {
             return response.json();
         })
         .then(dados => {
-            console.log('Dados financeiros históricos:', dados); // Log dos dados
-            // Adicionando timeout aqui para garantir que o canvas esteja disponível
+            console.log('Dados financeiros históricos:', dados);
             setTimeout(() => {
                 renderizarGrafico(dados);
-            }, 100); // Delay de 100 ms, ajuste se necessário
+            }, 100);
         })
         .catch(error => {
             console.error('Erro ao carregar dados financeiros históricos:', error);
         });
 }
 
-// Função para renderizar o gráfico com os dados financeiros
 let carteiraChart;
 
 function renderizarGrafico(dados) {
     const canvas = document.getElementById('carteiraChart');
     if (!canvas) {
         console.error('Elemento canvas "carteiraChart" não encontrado.');
-        return; // Encerra a função se o canvas não existir
+        return;
     }
 
     const ctx = canvas.getContext('2d');
 
-    // Verificar se já existe um gráfico e destruí-lo
     if (carteiraChart) {
         carteiraChart.destroy();
     }
@@ -268,7 +386,7 @@ function renderizarGrafico(dados) {
 
     if (valores.length === 0) {
         console.error('Nenhum valor encontrado para o gráfico de carteira.');
-        return; // Saia se não houver valores
+        return;
     }
 
     carteiraChart = new Chart(ctx, {
@@ -304,7 +422,6 @@ function renderizarGrafico(dados) {
     });
 }
 
-// Função que busca e exibe os dados de rendimentos históricos do usuário
 function loadDadosRendimentosHistoricos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-rendimentos-historicos`)
         .then(response => {
@@ -314,41 +431,37 @@ function loadDadosRendimentosHistoricos(usuario_id) {
             return response.json();
         })
         .then(dados => {
-            console.log('Dados de rendimentos históricos:', dados); // Log dos dados
-            // Adicionando timeout aqui para garantir que o canvas esteja disponível
+            console.log('Dados de rendimentos históricos:', dados);
             setTimeout(() => {
                 renderizarGraficoRendimentos(dados);
-            }, 100); // Delay de 100 ms, ajuste se necessário
+            }, 100);
         })
         .catch(error => {
             console.error('Erro ao carregar dados de rendimentos históricos:', error);
         });
 }
 
-// Função para renderizar o gráfico com os dados de rendimentos
 let carteiraRendimentosChart;
 
 function renderizarGraficoRendimentos(dados) {
     const canvas = document.getElementById('carteiraRendimentosChart');
     if (!canvas) {
         console.error('Elemento canvas "carteiraRendimentosChart" não encontrado.');
-        return; // Encerra a função se o canvas não existir
+        return;
     }
 
     const ctx = canvas.getContext('2d');
 
-    // Verifica se já existe um gráfico e o destrói
     if (carteiraRendimentosChart) {
         carteiraRendimentosChart.destroy();
     }
 
-    // Extraindo labels e valores
     const labels = dados.map(d => new Date(d.data_criacao).toLocaleDateString());
-    const valores = dados.map(d => parseFloat(d.rendimento_dia)); // Usando parseFloat para garantir que os valores são numéricos
+    const valores = dados.map(d => parseFloat(d.rendimento_dia));
 
     if (valores.length === 0) {
-        console.error('Nenhum valor encontrado para o gráfico de rendimentos.'); // Mensagem de erro
-        return; // Encerra a função se não houver valores
+        console.error('Nenhum valor encontrado para o gráfico de rendimentos.');
+        return;
     }
 
     carteiraRendimentosChart = new Chart(ctx, {
@@ -384,7 +497,6 @@ function renderizarGraficoRendimentos(dados) {
     });
 }
 
-// Função para gerar o HTML para um cartão de token
 function createTokenCardHTML(token) {
     return `
         <div class="card">
@@ -399,7 +511,6 @@ function createTokenCardHTML(token) {
     `;
 }
 
-// Função que gera HTML para os campos de entrada baseado nos dados do usuário
 function generateUserInputFields(data) {
     return `
         <label for="email">E-mail:</label>
@@ -441,7 +552,6 @@ function generateUserInputFields(data) {
     `;
 }
 
-// Organiza os eventos dos botões
 function setupEventListenersUsuarios(usuario_id) {
     const editButton = document.getElementById('editButton');
     if (editButton) {
@@ -474,18 +584,17 @@ function setupEventListenersUsuarios(usuario_id) {
             })
             .then(response => {
                 if (response.ok) {
-                    return response.json(); // Aguarda o retorno JSON
+                    return response.json();
                 } else {
                     throw new Error('Erro ao atualizar o usuário.');
                 }
             })
             .then(data => {
-                // Verifica se a atualização realmente mudou algo
                 if (data.changedRows === 0) {
                     alert('Nenhuma alteração foi feita nos dados do usuário. Verifique os valores informados.');
                 } else {
                     alert('Usuário atualizado com sucesso!');
-                    refreshPage(); // Recarrega a página após a atualização
+                    refreshPage();
                 }
             })
             .catch(error => {
@@ -501,12 +610,10 @@ function setupEventListenersUsuarios(usuario_id) {
     setupToggleActivationButton(usuario_id, 'inativar', 'inativar');
 }
 
-// Função para recarregar a página
 function refreshPage() {
-    location.reload(); // Recarrega a página inteira
+    location.reload();
 }
 
-// Configura botão para ativar/inativar
 function setupToggleActivationButton(usuario_id, buttonId, action) {
     const button = document.getElementById(buttonId + 'Button');
     if (button) {
@@ -520,7 +627,7 @@ function setupToggleActivationButton(usuario_id, buttonId, action) {
                 .then(response => {
                     if (response.ok) {
                         alert(`Usuário ${action} com sucesso!`);
-                        refreshPage(); // Recarrega a página após a ativação/inativação
+                        refreshPage();
                     } else {
                         return response.json().then(data => Promise.reject(data));
                     }
@@ -534,9 +641,7 @@ function setupToggleActivationButton(usuario_id, buttonId, action) {
     }
 }
 
-// Você deve garantir que resetarSenha está acessível globalmente
 function resetarSenha(usuario_id) {
-    // Enviar requisição para redefinir a senha do usuário
     fetch(`/api/usuarios/${usuario_id}/resetar-senha`, {
         method: 'POST',
         headers: {
@@ -546,7 +651,7 @@ function resetarSenha(usuario_id) {
     .then(response => {
         if (response.ok) {
             alert('Senha redefinida com sucesso!');
-            location.reload(); // Recarrega a página
+            location.reload();
         } else {
             alert('Erro ao redefinir a senha.');
         }
@@ -556,4 +661,6 @@ function resetarSenha(usuario_id) {
         alert('Erro ao redefinir a senha.');
     });
 }
+
+window.loadUserDetails = loadUserDetails;
 

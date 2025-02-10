@@ -13,12 +13,14 @@ const TokensInativarModel = {
                 if (error) {
                     logger.error(`Erro ao inativar token com ID: ${id} - ${error.message}`);
                     reject(new Error(`Erro ao inativar token com ID: ${id}`));
-                } else {
+		} else {
                     if (results.affectedRows > 0) {
                         logger.info(`Token com ID: ${id} inativado com sucesso.`);
-                    } else {
+                        logger.info(`Resposta: ${JSON.stringify(results)}`);
+		    } else {
                         logger.warn(`Nenhum token foi inativado para o ID: ${id}. Verifique se este ID existe.`);
-                    }
+                        logger.info(`Resposta: ${JSON.stringify(results)}`);
+		    }
                     resolve(results);
                 }
             });

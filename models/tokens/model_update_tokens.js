@@ -23,10 +23,12 @@ const TokensUpdateModel = {
                 if (error) {
                     logger.error(`Erro ao atualizar token com ID: ${id} - ${error.message}`);
                     reject(new Error(`Erro ao atualizar token com ID: ${id}`));
+		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 } else {
                     logger.info(`Token com ID: ${id} atualizado com sucesso.`);
                     resolve(results);
-                }
+                    logger.info(`Resposta: ${JSON.stringify(results)}`);
+		}
             });
         });
     }

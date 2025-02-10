@@ -19,7 +19,7 @@
             <button id="logoutButton" class="logout-button">Sair</button>
         </div>
 
-        <!-- Divisão central para exibir as informações  -->
+        <!-- Divisão central para exibir as informações -->
         <div class="center-panel">
             <h2 class="page-title"></h2>
 
@@ -30,7 +30,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Carregar Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1"></script>
+    <!-- Carregar uma versão compatível do ChartDataLabels com Chart.js 3.x -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
     <script src="js/usuarios/usuarios.js" defer></script>
     <script src="js/tokens/tokens.js" defer></script>
     <script src="js/tokens/tokens_detalhes.js" defer></script>
@@ -39,8 +43,9 @@
     <script type="module" src="js/resultados_financeiros/resultados_financeiros_novo.js" defer></script>
     <script src="js/autenticacao/autenticacao.js" defer></script>
     <script src="js/usuarios/criar_novo_usuario.js" defer></script>
-    <script src="js/usuarios/usuarios_detalhes.js" defer></script>
+    <script type="module" src="js/usuarios/usuarios_detalhes.js" defer></script>
     <script src="script.js" defer></script>
 
 </body>
 </html>
+

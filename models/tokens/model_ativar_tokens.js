@@ -16,9 +16,11 @@ const TokensAtivarModel = {
                 } else {
                     if (results.affectedRows > 0) {
                         logger.info(`Token com ID: ${id} ativado com sucesso.`);
+			logger.info(`Resposta: ${JSON.stringify(results)}`);
                     } else {
                         logger.warn(`Nenhum token foi ativado para o ID: ${id}. Verifique se este ID existe.`);
-                    }
+                        logger.info(`Resposta: ${JSON.stringify(results)}`);
+		    }
                     resolve(results);
                 }
             });

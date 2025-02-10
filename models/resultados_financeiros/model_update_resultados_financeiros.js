@@ -32,10 +32,11 @@ const ResultadosFinanceirosUpdateModel = {
             connection.query(sqlQuery, values, (error, results) => {
                 if (error) {
                     logger.error(`Erro ao atualizar resultado financeiro com ID: ${id} - ${error.message}`);
-                    reject(error);
+                    logger.info(`Resposta: ${JSON.stringify(results)}`);
+		    reject(error);
                 } else {
                     logger.info(`Resultado financeiro com ID: ${id} atualizado com sucesso.`);
-                    logger.info(`Resultados da query: ${JSON.stringify(results)}`);
+                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });
