@@ -24,10 +24,11 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <div id="carteiraContainer" class="carteira-container"></div>
-		<h3>Distribuição da Carteira</h3>
+                <h3>Distribuição da Carteira</h3>
                 <div id="chartsContainer">
                     <canvas id="risksDistributionChart"></canvas>
                     <canvas id="risksPercentageChart"></canvas>
+                    <canvas id="risksRendimentoChart"></canvas> <!-- Novo canvas para o gráfico de rendimento -->
                 </div>
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
@@ -51,6 +52,7 @@ function loadUserDetails(usuario_id) {
                 console.log("Todas as chamadas de API foram completadas.");
                 renderizarGraficoDistribuicaoRisco(); 
                 renderizarGraficoPorcentagemRisco();
+                renderizarGraficoRendimentoPorRisco(); // Chama a nova função
             }).catch(err => {
                 console.error("Erro ao carregar dados:", err);
             });
@@ -147,6 +149,7 @@ function loadUserTokens(usuario_id) {
             return response.json();
         })
         .then(tokens => {
+            console.log("Tokens do usuário:", tokens); // Log dos tokens recebidos
             tokens.forEach(token => {
                 token.quantidade_tokens_formatado = (token.quantidade_tokens * 0.01).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             });
@@ -208,7 +211,7 @@ function renderizarGraficoDistribuicaoRisco() {
                 },
                 title: {
                     display: true,
-                    text: 'Distribuição Financeira de Risco dos Tokens'
+                    text: 'Distribuição Financeira de Risco dos Tokens (R$)'
                 },
                 datalabels: {
                     color: '#333333',
@@ -254,7 +257,7 @@ function renderizarGraficoPorcentagemRisco() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Porcentagem de Risco dos Tokens (%)',
+                label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
                 data: data,
                 backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
                 borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
@@ -270,12 +273,93 @@ function renderizarGraficoPorcentagemRisco() {
                 },
                 title: {
                     display: true,
-                    text: 'Porcentagem de Risco dos Tokens'
+                    text: 'Distribuição em Porcentagem de Risco dos Tokens (%)'
                 },
                 datalabels: {
                     color: '#333333',
                     formatter: (value, ctx) => {
                         return `${value.toFixed(2)}%`;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Ativa o plugin de Data Labels
+    });
+}
+
+// Novo gráfico de rendimento por risco
+function renderizarGraficoRendimentoPorRisco() {
+    const canvas = document.getElementById('risksRendimentoChart');
+    if (!canvas) {
+        console.error('Elemento canvas "risksRendimentoChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const labels = [];
+    const data = [];
+    const riscoMap = {};
+
+    // Calcula o rendimento total por risco
+    tokensData.forEach(token => {
+        const quantidade = Number(token.quantidade_tokens) || 0; // Tratamento para nulo ou indefinido
+        const rendimento = Number(token.rendimento_token) || 0; // Tratamento para nulo ou indefinido
+        const rendimentoTotal = quantidade * rendimento; // Calcula o rendimento total
+        console.log(`Token: ${token.razao_social}, Rendimento Total: ${rendimentoTotal}`); // Log do rendimento total
+        if (!riscoMap[token.risco]) {
+            riscoMap[token.risco] = 0; // Inicializa se o risco ainda não estiver no mapa
+        }
+        riscoMap[token.risco] += rendimentoTotal; // Soma o rendimento ao risco correspondente
+    });
+
+    // Prepara os rótulos e dados para o gráfico
+    for (const [risco, rendimento] of Object.entries(riscoMap)) {
+        labels.push(risco); // Risco como rótulo
+        data.push(parseFloat(rendimento.toFixed(8))); // Rendimento com oito casas decimais
+    }
+
+    // Configura o gráfico
+    const rendimentoPorRiscoChart = new Chart(ctx, {
+        type: 'pie', // Tipo de gráfico
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribuição do Rendimento Diário por Risco (R$)',
+                data: data,
+                backgroundColor: [ // Cores para o gráfico
+                    'rgba(255, 99, 132, 0.2)', 
+                    'rgba(54, 162, 235, 0.2)', 
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)', 
+                    'rgba(54, 162, 235, 1)', 
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Distribuição do Rendimento Diário por Risco (R$)'
+                },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value, ctx) => {
+                        return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
                     }
                 }
             }

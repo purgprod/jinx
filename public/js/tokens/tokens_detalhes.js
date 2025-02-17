@@ -1,4 +1,3 @@
-// public/js/tokens/tokens_detalhes.js
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -8,30 +7,136 @@ function formatDate(dateString) {
     return `${year}-${month}-${day}`;
 }
 
+async function fetchFreeFloatData(idToken) {
+    try {
+        const response = await fetch(`/api/tokens/free-float/${idToken}`);
+        if (!response.ok) {
+            throw new Error('Erro ao buscar dados de free float.');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Erro ao buscar free float token:', error);
+        return [];
+    }
+}
+
+function showFreeFloatPieChart(freeFloatData) {
+    if (!freeFloatData || !freeFloatData.length) {
+        console.error('Nenhum dado de free float disponível.');
+        return;
+    }
+
+    const totalTokens = freeFloatData[0].quantidade_tokens;
+    const freeFloat = freeFloatData[0].freefloat_token;
+    const consumed = totalTokens - freeFloat;
+
+    const ctx = document.getElementById('freeFloatChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+		labels: [`Free Float: ${parseFloat(freeFloat).toLocaleString('pt-BR')}`, `Purg IPO: ${parseFloat(consumed).toLocaleString('pt-BR')}`],
+            datasets: [{
+                data: [consumed, freeFloat],
+                backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                borderWidth: 2,
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Purg IPO x Free Float'
+                }
+            }
+        }
+    });
+}
+
+function showPercentagePieChart(freeFloatData) {
+    if (!freeFloatData || !freeFloatData.length) {
+        console.error('Nenhum dado de free float disponível para porcentagem.');
+        return;
+    }
+
+    const totalTokens = freeFloatData[0].quantidade_tokens;
+    const freeFloat = freeFloatData[0].freefloat_token;
+    const consumed = totalTokens - freeFloat;
+    const percentageConsumed = ((consumed / totalTokens) * 100).toFixed(2);
+    const percentageAvailable = ((freeFloat / totalTokens) * 100).toFixed(2);
+
+    const ctx = document.getElementById('percentageChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [`Free Float: ${percentageConsumed}%`, `Purg IPO: ${percentageAvailable}%`],
+            datasets: [{
+                data: [consumed, freeFloat],
+                backgroundColor: ['rgba(160, 212, 124, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                borderColor: ['rgba(160, 212, 124, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 2,
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Porcentagem de Purg IPO x Free Float'
+                }
+            }
+        }
+    });
+}
+
 function loadTokensDetails(idToken) {
     const data = tokensDataMap[idToken];
     if (data) {
-        const centerPanel = document.querySelector('.center-panel');
-        if (centerPanel) {
-            centerPanel.innerHTML = `
-                <h2>Detalhes do Token ${data.razao_social}</h2>
-                <form id="financialDetailsForm">
-                    ${generateTokensInputFields(data)}
-                    <div class="button-container">
-                        <button type="button" id="editButton" class="button-azul">Editar</button>
-                        <button type="submit" id="saveButton" class="button-azul">Salvar</button>
-                        ${data.status_ativo === 0 ? `
-                            <button type="button" id="ativarButton" class="button-verde">Ativar</button>
-                        ` : `
-                            <button type="button" id="inativarButton" class="button-vermelho">Inativar</button>
-                        `}
+        fetchFreeFloatData(idToken).then(freeFloatData => {
+            if (!freeFloatData.length) {
+                console.error('Dado de free float não encontrado para este token.');
+                return;
+            }
+            const centerPanel = document.querySelector('.center-panel');
+            if (centerPanel) {
+                centerPanel.innerHTML = `
+                    <h2>Detalhes do Token ${data.razao_social}</h2>
+                    <form id="financialDetailsForm">
+                        ${generateTokensInputFields(data)}
+                        <div class="button-container">
+                            <button type="button" id="editButton" class="button-azul">Editar</button>
+                            <button type="submit" id="saveButton" class="button-azul">Salvar</button>
+                            ${data.status_ativo === 0 ? `
+                                <button type="button" id="ativarButton" class="button-verde">Ativar</button>
+                            ` : `
+                                <button type="button" id="inativarButton" class="button-vermelho">Inativar</button>
+                            `}
+                        </div>
+                    </form>
+                    <h3>Distribuição do Token </h3>
+                    <div id="chartsContainer">
+                        <canvas id="freeFloatChart" width="400" height="400"></canvas>
+                        <canvas id="percentageChart" width="400" height="400"></canvas>
                     </div>
-                </form>
-            `;
-            setupEventListenersTokens(idToken);
-        } else {
-            console.error('Elemento center-panel não encontrado.');
-        }
+                `;
+                showFreeFloatPieChart(freeFloatData);
+                showPercentagePieChart(freeFloatData);
+                setupEventListenersTokens(idToken);
+            } else {
+                console.error('Elemento center-panel não encontrado.');
+            }
+        }).catch(error => {
+            console.error('Erro ao carregar detalhes do token:', error);
+        });
     } else {
         console.error('Dados não encontrados para o ID:', idToken);
     }
@@ -92,15 +197,12 @@ function setupEventListenersTokens(idToken) {
             event.preventDefault();
             const formData = new FormData(form);
             const updatedData = Object.fromEntries(formData.entries());
-            
-            // Atualiza valores vazios para null
+
             for (let key in updatedData) {
                 if (updatedData[key] === '') {
                     updatedData[key] = null;
                 }
             }
-
-            console.log('Dados do formulário a serem enviados:', updatedData);
 
             fetch(`/api/tokens/${idToken}`, {
                 method: 'PUT',
@@ -118,7 +220,7 @@ function setupEventListenersTokens(idToken) {
             })
             .catch(error => {
                 console.error('Erro ao atualizar o token:', error);
-                alert(`Erro ao atualizar o token: ${error.message || 'Erro inesperado'}`);
+                alert(`Erro ao atualizar o token: ${error.message||'Erro inesperado'}`);
             });
         });
     } else {
@@ -153,10 +255,9 @@ function setupToggleActivationTokensButton(idToken, buttonId, action) {
                 })
                 .catch(error => {
                     console.error(`Erro ao ${action} o token:`, error);
-                    alert(`Erro ao ${action} o token: ${error.message || 'Erro inesperado'}`);
+                    alert(`Erro ao ${action} o token: ${error.message||'Erro inesperado'}`);
                 });
             }
         });
     }
 }
-
