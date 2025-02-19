@@ -79,7 +79,10 @@ function generateInputFields(data) {
         <label for="prazo">Prazo:</label>
         <input type="number" id="prazo" name="prazo" value="${data.prazo}" readonly>
 
-        <label for="resultado_financeiro">Resultado Financeiro:</label>
+        <label for"ir">Imposto de Renda:</label>
+	<input type="number" id="ir" name="ir" value="${data.ir}" readonly>
+
+	<label for="resultado_financeiro">Resultado Financeiro:</label>
         <input type="number" id="resultado_financeiro" name="resultado_financeiro" value="${data.resultado_financeiro}" readonly>
 
         <label for="motivo_da_captacao">Motivo da Captação:</label>
