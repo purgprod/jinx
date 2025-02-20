@@ -42,9 +42,13 @@ function loadTokensDetails(idToken) {
                         <canvas id="freeFloatChart" width="400" height="400"></canvas>
                         <canvas id="percentageChart" width="400" height="400"></canvas>
                     </div>
+		    <br>
+                    <h3>Consumo do Free Float</h3>
+                    <canvas id="historicoFreeFloatChart" width="400" height="400"></canvas>
                 `;
                 showFreeFloatPieChart(freeFloatData);
                 showPercentagePieChart(freeFloatData);
+                loadFreeFloatHistoricos(idToken);
                 setupEventListenersTokens(idToken);
             } else {
                 console.error('Elemento center-panel não encontrado.');
@@ -71,11 +75,11 @@ function showFreeFloatPieChart(freeFloatData) {
     new Chart(ctx, {
         type: 'pie',
         data: {
-		labels: [`Free Float`, `Purg IPO`],
+            labels: [`Purg IPO`, `Free Float`],
             datasets: [{
                 data: [freeFloat, consumed],
-                backgroundColor: ['rgba(54, 162, 235, 0.5)', 'rgba(255, 99, 132, 0.5)'],
-                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+                backgroundColor: ['#36A2EB', '#64CE68'],
+                borderColor: ['#36A2EB', '#64CE68'],
                 borderWidth: 2,
             }]
         },
@@ -83,18 +87,17 @@ function showFreeFloatPieChart(freeFloatData) {
             responsive: false,
             maintainAspectRatio: false,
             plugins: {
-		legend: { 
-			position: 'top', 
-			labels: { font: { size: 17 }}
-		},
+                legend: { 
+                    position: 'top', 
+                    labels: { font: { size: 17 }}
+                },
                 title: { display: true, text: 'Purg IPO x Free Float', font: { size: 17 }},
                 datalabels: {
                     color: '#000',
-		    font: { size: 17 },
+                    font: { size: 17 },
                     formatter: (value, ctx) => {
-                       // return `${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;    
                         return `${value.toLocaleString('pt-BR')}`;    
-		       }
+                    }
                 }
             }
         },
@@ -119,11 +122,11 @@ function showPercentagePieChart(freeFloatData) {
     new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: [`Free Float`, `Purg IPO`],
+            labels: [`Purg IPO`, `Free Float`],
             datasets: [{
                 data: [percentageAvailable, percentageConsumed],
-                backgroundColor: ['rgba(255, 206, 86, 0.5)', 'rgba(160, 212, 124, 0.5)'],
-                borderColor: ['rgba(255, 206, 86, 1)', 'rgba(160, 212, 124, 1)'],
+                backgroundColor: ['#36A2EB', '#64CE68'],
+                borderColor: ['#36A2EB', '#64C368'],
                 borderWidth: 2
             }]
         },
@@ -132,13 +135,13 @@ function showPercentagePieChart(freeFloatData) {
             maintainAspectRatio: false,
             plugins: {
                 legend: { 
-			position: 'top',  
-			labels: {font: { size: 17 }}
-			},
+                    position: 'top',  
+                    labels: {font: { size: 17 }}
+                },
                 title: { display: true, text: 'Porcentagem de Purg IPO x Free Float', font: { size: 17 }},
                 datalabels: {
                     color: '#000',
-		    font: { size: 17 }, 
+                    font: { size: 17 }, 
                     formatter: (value) => {
                         const numericValue = parseFloat(value);
                         return isNaN(numericValue) ? '0%' : `${numericValue.toFixed(2)}%`;
@@ -147,6 +150,92 @@ function showPercentagePieChart(freeFloatData) {
             }
         },
         plugins: [ChartDataLabels]
+    });
+}
+
+function loadFreeFloatHistoricos(tokenId) {
+    return fetch(`/api/tokens/${tokenId}/free-float-historicos`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de free float históricos');
+            }
+            return response.json();
+        })
+        .then(dados => {
+            console.log('Dados de free float históricos:', dados);
+            renderizarGraficoFreeFloatHistorico(dados);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de free float históricos:', error);
+        });
+}
+
+let historicoChart;
+
+function renderizarGraficoFreeFloatHistorico(dados) {
+    const canvas = document.getElementById('historicoFreeFloatChart');
+    if (!canvas) {
+        console.error('Elemento canvas "historicoFreeFloatChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    if (historicoChart) {
+        historicoChart.destroy();
+    }
+
+    const labels = dados.map(d => new Date(d.data).toLocaleDateString());
+    const tokenIpoValues = dados.map(d => d.token_ipo);
+    const tokenFreeFloatValues = dados.map(d => d.token_freefloat);
+
+    historicoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Purg IPO',
+                    data: tokenIpoValues,
+                    borderColor: '#36A2EB',
+                    fill: false,
+                },
+                {
+                    label: 'Free Float',
+                    data: tokenFreeFloatValues,
+                    borderColor: '#64CE68',
+                    fill: false,
+                }
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Histórico de consumo do token',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantidade de Tokens'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Data'
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -177,4 +266,5 @@ function setupEventListenersTokens(idToken) {
 }
 
 window.loadTokensDetails = loadTokensDetails;
+
 

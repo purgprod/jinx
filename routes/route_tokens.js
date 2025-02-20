@@ -6,6 +6,7 @@ const TokensUpdateController = require('../controllers/tokens/controller_update_
 const TokensInativarController = require('../controllers/tokens/controller_inativar_tokens');
 const TokensAtivarController = require('../controllers/tokens/controller_ativar_tokens');
 const TokensFreeFloatController = require('../controllers/tokens/controller_freefloat_tokens');
+const TokensFreeFloatHistoricosController = require('../controllers/tokens/controller_freefloat_historicos_tokens');
 
 // Rota para carregar tokens
 router.get('/api/tokens', TokensBuscarController.getTokens);
@@ -21,6 +22,9 @@ router.put('/api/tokens/:id/inativar', TokensInativarController.inativarToken);
 
 // Rota para ativar um token
 router.put('/api/tokens/:id/ativar', TokensAtivarController.ativarToken);
+
+// Rota para obter o free float histórico do token
+router.get('/api/tokens/:id/free-float-historicos', TokensFreeFloatHistoricosController.getFreeFloatHistoricos);
 
 module.exports = router;
 
