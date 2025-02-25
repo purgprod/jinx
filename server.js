@@ -6,6 +6,7 @@ const controller_autenticacao = require('./controllers/controller_autenticacao')
 const route_resultados_financeiros = require('./routes/route_resultados_financeiros');
 const route_tokens = require('./routes/route_tokens');
 const route_usuarios = require('./routes/route_usuarios');
+const route_ecossistema = require('./routes/route_ecossistema');
 //const route_autenticacao = require('./routes/route_autenticacao');
 
 const app = express();
@@ -91,6 +92,9 @@ app.use('/', route_tokens); // Prefixo das rotas para tokens
 
 //Usar o roteador para usuarios
 app.use('/', route_usuarios); // Prefixo das rotas para usuarios
+
+//Usar o roteador para ecossistema
+app.use('/', route_ecossistema); // Prefixo das rotas para ecossistema
 
 // Iniciar o servidor
 app.listen(port, () => {

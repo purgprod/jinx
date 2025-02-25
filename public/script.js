@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const usuariosButton = document.getElementById("usuariosButton");
     const resultadosButton = document.getElementById("resultadosButton");
     const tokensButton = document.getElementById("tokensButton");
+    const ecossistemaButton = document.getElementById("ecossistemaButton");
 
     console.log("Element references initialized");
 
@@ -37,6 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Assegure que não faltem chaves ou parênteses no resto do arquivo.
+   // Adiciona evento ao botão "Ecossistema"
+    if (ecossistemaButton) {
+        ecossistemaButton.addEventListener("click", () => {
+            console.log("Botão 'Ecossistema' clicado");
+            loadEcossistemaResults();  // Chama a função no ecossistema.js
+        });
+    }
+
 });
 
