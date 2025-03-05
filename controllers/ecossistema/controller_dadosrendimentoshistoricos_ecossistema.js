@@ -1,9 +1,9 @@
-// controllers/usuarios/controller_dadosrendimentoshistoricos_usuarios.js
+// controllers/purg/controller_dadosrendimentoshistoricos_ecossistema.js
 
-const UsuariosDadosRendimentosHistoricosModel = require('../../models/usuarios/model_dadosrendimentoshistoricos_usuarios');
+const EcossistemaDadosRendimentosHistoricosModel = require('../../models/ecossistema/model_dadosrendimentoshistoricos_ecossistema');
 const logger = require('../../logger');
 
-class UsuariosDadosRendimentosHistoricosController {
+class EcossistemaDadosRendimentosHistoricosController {
 
 
 // Endpoint para obter todos os dados de rendimentos históricos
@@ -11,14 +11,14 @@ class UsuariosDadosRendimentosHistoricosController {
     	const usuarioId = req.params.id;
 
     	try {
-        	const dadosHistoricos = await UsuariosDadosRendimentosHistoricosModel.getDadosRendimentosHistoricos(usuarioId);
+        	const dadosHistoricos = await EcossistemaDadosRendimentosHistoricosModel.getDadosRendimentosHistoricos(usuarioId);
         	res.status(200).json(dadosHistoricos);
     	} catch (error) {
-        	logger.error(`Erro ao buscar dados de rendimentos históricos para o usuário ID: ${usuarioId} - ${error.message}`);
+        	logger.error(`Erro ao buscar dados de rendimentos históricos para o Ecossistema: ${error.message}`);
         	res.status(500).json({ error: 'Erro ao buscar dados de rendimentos históricos.' });    }
 	}
 
 }
 
-module.exports = UsuariosDadosRendimentosHistoricosController;
+module.exports = EcossistemaDadosRendimentosHistoricosController;
 

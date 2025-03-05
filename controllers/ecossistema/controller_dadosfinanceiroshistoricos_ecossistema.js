@@ -1,9 +1,9 @@
-// controllers/usuarios/controller_dadosfinanceiroshistoricos_usuarios.js
+// controllers/ecossistema/controller_dadosfinanceiroshistoricos_ecossistema.js
 
-const UsuariosDadosFinanceirosHistoricosModel = require('../../models/usuarios/model_dadosfinanceiroshistoricos_usuarios');
+const EcossistemaDadosFinanceirosHistoricosModel = require('../../models/ecossistema/model_dadosfinanceiroshistoricos_ecossistema');
 const logger = require('../../logger');
 
-class UsuariosDadosFinanceirosHistoricosController {
+class EcossistemaDadosFinanceirosHistoricosController {
 
 
 // Endpoint para obter todos os dados de valor de carteira históricos
@@ -11,7 +11,7 @@ class UsuariosDadosFinanceirosHistoricosController {
 	    const usuarioId = req.params.id;
 
     	try {
-        	const dadosHistoricos = await UsuariosDadosFinanceirosHistoricosModel.getDadosFinanceirosHistoricos(usuarioId);
+        	const dadosHistoricos = await EcossistemaDadosFinanceirosHistoricosModel.getDadosFinanceirosHistoricos(usuarioId);
         	res.status(200).json(dadosHistoricos);
     	} catch (error) {
         	logger.error(`Erro ao buscar dados de valor de carteira históricos para o usuário ID: ${usuarioId} - ${error.message}`);
@@ -20,5 +20,5 @@ class UsuariosDadosFinanceirosHistoricosController {
 	}
 }
 
-module.exports = UsuariosDadosFinanceirosHistoricosController;
+module.exports = EcossistemaDadosFinanceirosHistoricosController;
 

@@ -5,7 +5,7 @@ const logger = require('../../logger');
 
 class EcossistemaUltimosDadosFinanceirosModel {
     
-// Método para obter o valor mais recente da carteira e rendimento do ecossistema
+// Método para obter o valor mais recente da carteira do ecossistema
     static async getUltimosDadosFinanceiros(usuarioId) {
         const query = `
             SELECT carteira_dia, rendimento_dia 

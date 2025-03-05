@@ -2,74 +2,134 @@ let tokensData = [];
 let tokensEcossistemaData = [];
 
 // Função principal para carregar os resultados e ajustar o painel
-function loadEcossistemaResults() {
+async function loadEcossistemaResults() {
     const usuario_id = 1;
     const data = userDataMap[usuario_id];
-    
-    if (data) {
-        const centerPanel = document.querySelector('.center-panel');
-        if (centerPanel) {
-            centerPanel.innerHTML = `
-                <h2>Purg x Usuários</h2>
-                <div id="carteiraContainer" class="carteira-container">
-                    <h3>Dados Financeiros</h3>
-                    <div class="cards-basico">
-                        <div class="card"><div class="card-content"><p><strong>Valor da Carteira (Purg):</strong> R$ <span id="valorCarteira">0,00</span></p></div></div>
-                        <div class="card"><div class="card-content"><p><strong>Rendimento diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00</span></p></div></div>
-                        <div class="card"><div class="card-content"><p><strong>Total de Saques:</strong> R$ <span id="totalSaque">0,00</span></p></div></div>
+
+    if (!data) {
+        console.error('Dados não encontrados para o ID:', usuario_id);
+        return;
+    }
+
+    const centerPanel = document.querySelector('.center-panel');
+    if (!centerPanel) {
+        console.error('Elemento center-panel não encontrado.');
+        return;
+    }
+
+    centerPanel.innerHTML = `
+        <div id="carteiraContainer" class="carteira-container">
+            <h3>Fluxo de Caixa</h3>
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Total de Depósitos:</strong> R$ <span id="totalDeposito">0,00</span></p>
                     </div>
                 </div>
-                <canvas id="carteiraChart" width="400" height="200"></canvas>
-                <canvas id="carteiraRendimentosChart" width="400" height="200"></canvas>
-                <h3>Distribuição da Carteira Purg</h3>
-            	<div id="chartsContainer">    
-			<canvas id="risksDistributionChart"></canvas>
-                	<canvas id="risksPercentageChart"></canvas>
-                	<canvas id="risksRendimentoChart"></canvas>
-		</div>
-                <h3>Distribuição da Carteira Ecossistema</h3>
-            	<div id="chartsContainer">    
-			<canvas id="risksDistributionEcossistemaChart"></canvas>
-                	<canvas id="risksPercentageEcossistemaChart"></canvas>
-                	<canvas id="risksRendimentoEcossistemaChart"></canvas>
-		</div>
-		
-		<h3>Tokens da Purg</h3>
-                <div id="tokensContainer" class="cards-container"></div>
-            `;
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Total de Saques:</strong> R$ <span id="totalSaque">0,00</span></p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Fluxo de Caixa Líquido:</strong> R$ <span id="totalBalanca">0,00</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="carteiraContainer" class="carteira-container">
+            <h3>Evolução das Carteiras</h3>
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Valor da Carteira (Purg):</strong> R$ <span id="valorCarteira">0,00</span></p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Valor da Carteira (Ecossistema):</strong> R$ <span id="valorCarteiraEcossistema">0,00</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <canvas id="carteiraChart" width="400" height="200"></canvas>
+        <div id="carteiraContainer" class="carteira-container">
+            <h3>Evolução dos Rendimentos</h3>
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Rendimento diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00</span></p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Rendimento diário (Ecossistema):</strong> R$ <span id="rendimentoDiarioEcossistema">0,00</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <canvas id="carteiraRendimentosChart" width="400" height="200"></canvas>
+        <h3>Distribuição da Carteira Purg</h3>
+        <div id="chartsContainer">    
+            <canvas id="risksDistributionChart"></canvas>
+            <canvas id="risksPercentageChart"></canvas>
+            <canvas id="risksRendimentoChart"></canvas>
+        </div>
+        <br>
+        <h3>Distribuição da Carteira Ecossistema</h3>
+        <div id="chartsContainer">    
+            <canvas id="risksDistributionEcossistemaChart"></canvas>
+            <canvas id="risksPercentageEcossistemaChart"></canvas>
+            <canvas id="risksRendimentoEcossistemaChart"></canvas>
+        </div>
+        <br>
+        <h3>Tokens da Purg</h3>
+        <div id="tokensContainer" class="cards-container"></div>
+        <br>
+        <h3>Tokens do Ecossistema</h3>
+        <div id="tokensContainer" class="cards-container"></div>
+    `;
 
-            // Carregar dados
-            Promise.all([
-                loadUserTokens(usuario_id), 
-                loadEcossistemaTokens(usuario_id), 
-                loadUltimosDadosFinanceiros(usuario_id),
-                loadDadosFinanceirosHistoricos(usuario_id), 
-                loadDadosRendimentosHistoricos(usuario_id)
-            ])
-            .then(([tokens, tokensEcossistema, ultimosDados, dadosFinanceirosHistoricos, dadosRendimentosHistoricos]) => {
-                return loadSaques(usuario_id).then(() => {
-                    // Renderizar gráficos após o carregamento de dados
-                    renderizarGraficoDistribuicaoRisco();
-                    renderizarGraficoDistribuicaoRiscoEcossistema();
-                    renderizarGraficoPorcentagemRisco();
-                    renderizarGraficoPorcentagemRiscoEcossistema();
-                    renderizarGraficoRendimentoPorRisco();
-                    renderizarGraficoRendimentoPorRiscoEcossistema();
-                    renderizarGrafico(dadosFinanceirosHistoricos);
-                    renderizarGraficoRendimentos(dadosRendimentosHistoricos);
-                });
-            })
-            .then(() => {
-                console.log("Todas as chamadas de API foram completadas.");
-            })
-            .catch(err => {
-                console.error("Erro ao carregar dados:", err);
-            });
-        } else {
-            console.error('Elemento center-panel não encontrado.');
-        }
-    } else {
-        console.error('Dados não encontrados para o ID:', usuario_id);
+    // Carregar dados
+    try {
+        const [
+            tokens,
+            tokensEcossistema,
+            ultimosDados,
+            ultimosDadosEcossistema,
+            dadosFinanceirosHistoricos,
+            dadosRendimentosHistoricos,
+            dadosRendimentosEcossistema, // Chamada para rendimentos do ecossistema
+            dadosFinanceirosHistoricosEcossistema // Nova chamada para dados financeiros do Ecossistema
+        ] = await Promise.all([
+            loadUserTokens(usuario_id),
+            loadEcossistemaTokens(usuario_id),
+            loadUltimosDadosFinanceiros(usuario_id),
+            loadUltimosDadosFinanceirosEcossistema(usuario_id),
+            loadDadosFinanceirosHistoricos(usuario_id),
+            loadDadosRendimentosHistoricos(usuario_id),
+            loadDadosRendimentosHistoricosEcossistema(usuario_id), // Aqui está a chamada para os rendimentos do ecossistema
+            loadDadosFinanceirosHistoricosEcossistema(usuario_id) // Aqui está a chamada para dados financeiros históricos do ecossistema
+        ]);
+
+        await loadSaques(usuario_id);
+        await loadDepositos(usuario_id);
+        await loadBalanca(usuario_id); // Chama a nova função
+
+        // Renderizar gráficos com dados que foram carregados
+        renderizarGraficoDistribuicaoRisco();
+        renderizarGraficoDistribuicaoRiscoEcossistema();
+        renderizarGraficoPorcentagemRisco();
+        renderizarGraficoPorcentagemRiscoEcossistema();
+        renderizarGraficoRendimentoPorRisco();
+        renderizarGraficoRendimentoPorRiscoEcossistema();
+        renderizarGrafico(dadosFinanceirosHistoricos, dadosFinanceirosHistoricosEcossistema); // Ajuste para múltiplos gráficos
+        renderizarGraficoRendimentos(dadosRendimentosHistoricos, dadosRendimentosEcossistema); // Ajuste para múltiplos gráficos
+
+        console.log("Todas as chamadas de API foram completadas.");
+    } catch (err) {
+        console.error("Erro ao carregar dados:", err);
     }
 }
 
@@ -195,7 +255,7 @@ function renderizarGraficoRendimentoPorRisco() {
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(8)));
+    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(2)));
 
     new Chart(ctx, {
         type: 'pie',
@@ -238,7 +298,6 @@ function renderizarGraficoRendimentoPorRisco() {
         plugins: [ChartDataLabels]
     });
 }
-
 
 function loadEcossistemaTokens(usuario_id) {
     return fetch(`/api/ecossistema/${usuario_id}/tokens`)
@@ -362,7 +421,7 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(8)));
+    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(2)));
 
     new Chart(ctx, {
         type: 'pie',
@@ -406,12 +465,11 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
     });
 }
 
-
 function loadUltimosDadosFinanceiros(usuario_id) {
     return fetch(`/api/purg/${usuario_id}/ultimos-dados-financeiros`)
         .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar últimos dados financeiros'))
         .then(dados => {
-            console.log('Últimos dados financeiros:', dados);
+            console.log('Últimos dados financeiros Purg:', dados);
             const valorCarteira = document.getElementById('valorCarteira');
             const rendimentoDiario = document.getElementById('rendimentoDiario');
             if (valorCarteira) {
@@ -422,7 +480,25 @@ function loadUltimosDadosFinanceiros(usuario_id) {
             }
             return dados;
         })
-        .catch(error => console.error('Erro ao carregar últimos dados financeiros:', error));
+        .catch(error => console.error('Erro ao carregar últimos dados financeiros da purg:', error));
+}
+
+function loadUltimosDadosFinanceirosEcossistema(usuario_id) {
+    return fetch(`/api/ecossistema/${usuario_id}/ultimos-dados-financeiros`)
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar últimos dados financeiros do ecossistema'))
+        .then(dados => {
+            console.log('Últimos dados financeiros Ecossistema:', dados);
+            const valorCarteiraEcossistema = document.getElementById('valorCarteiraEcossistema');
+            const rendimentoDiarioEcossistema = document.getElementById('rendimentoDiarioEcossistema');
+            if (valorCarteiraEcossistema) {
+                valorCarteiraEcossistema.textContent = parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            }
+            if (rendimentoDiarioEcossistema) {
+                rendimentoDiarioEcossistema.textContent = parseFloat(dados.rendimento_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            }
+            return dados;
+        })
+        .catch(error => console.error('Erro ao carregar últimos dados financeiros do ecossistema:', error));
 }
 
 function loadSaques(usuario_id) {
@@ -440,6 +516,51 @@ function loadSaques(usuario_id) {
         .catch(error => console.error('Erro ao carregar saques do usuário:', error));
 }
 
+function loadDepositos(usuario_id) {
+    return fetch(`/api/ecossistema/${usuario_id}/dados-depositos`)
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar Depositos'))
+        .then(dadosDepositos => {
+            const totalDepositoElement = document.getElementById('totalDeposito');
+            if (totalDepositoElement) {
+                const totalDeposito = dadosDepositos['SUM(valor_deposito)'] || 0;
+                totalDepositoElement.textContent = parseFloat(totalDeposito).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            } else {
+                console.error('Elemento totalDeposito não encontrado no DOM.');
+            }
+        })
+        .catch(error => console.error('Erro ao carregar Depositos do usuário:', error));
+}
+
+// Nova função: Calcula a balança (depósitos - saques)
+async function loadBalanca(usuario_id) {
+    try {
+        const [depositosResponse, saquesResponse] = await Promise.all([
+            fetch(`/api/ecossistema/${usuario_id}/dados-depositos`),
+            fetch(`/api/ecossistema/${usuario_id}/dados-saques`)
+        ]);
+
+        if (!depositosResponse.ok || !saquesResponse.ok) {
+            throw new Error('Erro ao buscar dados de depósitos ou saques');
+        }
+
+        const dadosDepositos = await depositosResponse.json();
+        const dadosSaques = await saquesResponse.json();
+
+        const totalDeposito = dadosDepositos['SUM(valor_deposito)'] || 0;
+        const totalSaque = dadosSaques['SUM(valor_saque)'] || 0;
+        const balanca = totalDeposito - totalSaque;
+
+        const totalBalancaElement = document.getElementById('totalBalanca');
+        if (totalBalancaElement) {
+            totalBalancaElement.textContent = parseFloat(balanca).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        } else {
+            console.error('Elemento totalBalanca não encontrado no DOM.');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar Balança do usuário:', error);
+    }
+}
+
 function loadDadosFinanceirosHistoricos(usuario_id) {
     return fetch(`/api/purg/${usuario_id}/dados-financeiros-historicos`)
         .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar dados financeiros históricos'))
@@ -450,9 +571,41 @@ function loadDadosFinanceirosHistoricos(usuario_id) {
         .catch(error => console.error('Erro ao carregar dados financeiros históricos:', error));
 }
 
-let carteiraChart;
+// Nova função para carregar os dados financeiros históricos do Ecossistema
+function loadDadosFinanceirosHistoricosEcossistema(usuario_id) {
+    return fetch(`/api/ecossistema/${usuario_id}/dados-financeiros-historicos`)
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar dados financeiros históricos do ecossistema'))
+        .then(dados => {
+            console.log('Dados financeiros históricos do ecossistema:', dados);
+            return dados;
+        })
+        .catch(error => console.error('Erro ao carregar dados financeiros históricos do ecossistema:', error));
+}
 
-function renderizarGrafico(dados) {
+function loadDadosRendimentosHistoricos(usuario_id) {
+    return fetch(`/api/purg/${usuario_id}/dados-financeiros-rendimentos-historicos`)
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar dados de rendimentos históricos'))
+        .then(dados => {
+            console.log('Dados de rendimentos históricos:', dados);
+            return dados;
+        })
+        .catch(error => console.error('Erro ao carregar dados de rendimentos históricos:', error));
+}
+
+function loadDadosRendimentosHistoricosEcossistema(usuario_id) {
+    return fetch(`/api/ecossistema/${usuario_id}/dados-financeiros-rendimentos-historicos`)
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar dados de rendimentos históricos do ecossistema'))
+        .then(dados => {
+            console.log('Dados de rendimentos históricos do ecossistema:', dados);
+            return dados;
+        })
+        .catch(error => console.error('Erro ao carregar dados de rendimentos históricos do ecossistema:', error));
+}
+
+let carteiraChart;
+let carteiraRendimentosChart;
+
+function renderizarGrafico(dadosPurg, dadosEcossistema) {
     const canvas = document.getElementById('carteiraChart');
     if (!canvas) {
         console.error('Elemento canvas "carteiraChart" não encontrado.');
@@ -465,17 +618,35 @@ function renderizarGrafico(dados) {
         carteiraChart.destroy();
     }
 
-    const labels = dados.map(d => new Date(d.data_criacao).toLocaleDateString());
-    const valores = dados.map(d => parseFloat(d.carteira_dia));
+    const labels = [...new Set([
+        ...dadosPurg.map(d => new Date(d.data_criacao).toLocaleDateString()),
+        ...dadosEcossistema.map(d => new Date(d.data_criacao).toLocaleDateString())
+    ])].sort(); // Obtém labels únicas e ordenadas
+
+    const valoresPurg = labels.map(label => {
+        const valorPurg = dadosPurg.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
+        return valorPurg ? parseFloat(valorPurg.carteira_dia) : 0;
+    });
+
+    const valoresEcossistema = labels.map(label => {
+        const valorEco = dadosEcossistema.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
+        return valorEco ? parseFloat(valorEco.carteira_dia) : 0;
+    });
 
     carteiraChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Valor da Carteira (R$)',
-                data: valores,
+                label: 'Valor da Carteira Purg (R$)',
+                data: valoresPurg,
                 borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+            }, {
+                label: 'Valor da Carteira Ecossistema (R$)',
+                data: valoresEcossistema,
+                borderColor: 'rgba(160, 212, 124, 1)',
                 borderWidth: 2,
                 fill: false
             }]
@@ -496,19 +667,7 @@ function renderizarGrafico(dados) {
     });
 }
 
-function loadDadosRendimentosHistoricos(usuario_id) {
-    return fetch(`/api/purg/${usuario_id}/dados-financeiros-rendimentos-historicos`)
-        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar dados de rendimentos históricos'))
-        .then(dados => {
-            console.log('Dados de rendimentos históricos:', dados);
-            return dados;
-        })
-        .catch(error => console.error('Erro ao carregar dados de rendimentos históricos:', error));
-}
-
-let carteiraRendimentosChart;
-
-function renderizarGraficoRendimentos(dados) {
+function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
     const canvas = document.getElementById('carteiraRendimentosChart');
     if (!canvas) {
         console.error('Elemento canvas "carteiraRendimentosChart" não encontrado.');
@@ -521,16 +680,34 @@ function renderizarGraficoRendimentos(dados) {
         carteiraRendimentosChart.destroy();
     }
 
-    const labels = dados.map(d => new Date(d.data_criacao).toLocaleDateString());
-    const valores = dados.map(d => parseFloat(d.rendimento_dia));
+    const labels = [...new Set([
+        ...rendimentosPurg.map(d => new Date(d.data_criacao).toLocaleDateString()),
+        ...rendimentosEcossistema.map(d => new Date(d.data_criacao).toLocaleDateString())
+    ])].sort(); // Obtém labels únicas e ordenadas
+
+    const valoresPurg = labels.map(label => {
+        const rendimento = rendimentosPurg.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
+        return rendimento ? parseFloat(rendimento.rendimento_dia) : 0; // Retorna 0 se não houver rendimento para a data
+    });
+
+    const valoresEcossistema = labels.map(label => {
+        const rendimento = rendimentosEcossistema.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
+        return rendimento ? parseFloat(rendimento.rendimento_dia) : 0; // Retorna 0 se não houver rendimento para a data
+    });
 
     carteiraRendimentosChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Rendimentos da Carteira (R$)',
-                data: valores,
+                label: 'Rendimentos da Carteira Purg (R$)',
+                data: valoresPurg,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+            }, {
+                label: 'Rendimentos da Carteira Ecossistema (R$)',
+                data: valoresEcossistema,
                 borderColor: 'rgba(160, 212, 124, 1)',
                 borderWidth: 2,
                 fill: false
@@ -571,5 +748,6 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('pt-BR', options);
 }
 
+// Torna a função `loadEcossistemaResults` acessível globalmente
 window.loadEcossistemaResults = loadEcossistemaResults;
 
