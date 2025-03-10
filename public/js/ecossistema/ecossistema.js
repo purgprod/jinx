@@ -1,5 +1,7 @@
 let tokensData = [];
 let tokensEcossistemaData = [];
+let saquesHistoricosData = [];
+let depositosHistoricosData = [];
 
 // Função principal para carregar os resultados e ajustar o painel
 async function loadEcossistemaResults() {
@@ -38,7 +40,9 @@ async function loadEcossistemaResults() {
                 </div>
             </div>
         </div>
-        <div id="carteiraContainer" class="carteira-container">
+        <canvas id="depositosHistoricosChart" width="400" height="200"></canvas>
+        <canvas id="saquesHistoricosChart" width="400" height="200"></canvas>
+	<div id="carteiraContainer" class="carteira-container">
             <h3>Evolução das Carteiras</h3>
             <div class="cards-basico">
                 <div class="card">
@@ -88,7 +92,7 @@ async function loadEcossistemaResults() {
         <div id="tokensContainer" class="cards-container"></div>
         <br>
         <h3>Tokens do Ecossistema</h3>
-        <div id="tokensContainer" class="cards-container"></div>
+        <div id="tokensContainerEcossistema" class="cards-container"></div>
     `;
 
     // Carregar dados
@@ -116,6 +120,8 @@ async function loadEcossistemaResults() {
         await loadSaques(usuario_id);
         await loadDepositos(usuario_id);
         await loadBalanca(usuario_id); // Chama a nova função
+	await loadSaquesHistoricos(usuario_id);
+	await loadDepositosHistoricos(usuario_id);
 
         // Renderizar gráficos com dados que foram carregados
         renderizarGraficoDistribuicaoRisco();
@@ -126,7 +132,8 @@ async function loadEcossistemaResults() {
         renderizarGraficoRendimentoPorRiscoEcossistema();
         renderizarGrafico(dadosFinanceirosHistoricos, dadosFinanceirosHistoricosEcossistema); // Ajuste para múltiplos gráficos
         renderizarGraficoRendimentos(dadosRendimentosHistoricos, dadosRendimentosEcossistema); // Ajuste para múltiplos gráficos
-
+        renderizarGraficoSaquesHistóricos(saquesHistoricosData);
+        renderizarGraficoDepositosHistóricos(depositosHistoricosData);
         console.log("Todas as chamadas de API foram completadas.");
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -303,15 +310,34 @@ function loadEcossistemaTokens(usuario_id) {
     return fetch(`/api/ecossistema/${usuario_id}/tokens`)
         .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar tokens'))
         .then(tokens => {
-            console.log("Tokens do usuário:", tokens);
-            tokensEcossistemaData = tokens;
-            const tokensContainer = document.getElementById('tokensContainer');
-            if (tokensContainer) {
-                tokensContainer.innerHTML = tokens.map(createTokenCardHTML).join('');
+            console.log("Tokens do ecossistema:", tokens);
+            
+            // Consolidar valores por token utilizando id_token como identificador
+            const tokenSoma = tokens.reduce((acc, token) => {
+                // Verifica se o token já está no acumulador
+                const existing = acc.find(t => t.token_id === token.token_id);
+                if (existing) {
+                    // Se o token já existe, soma a quantidade
+                    existing.quantidade_tokens += token.quantidade_tokens;
+                } else {
+                    // Se não existe, adiciona o token ao array com a quantidade inicial
+                    acc.push({ id_token: token.token_id, quantidade_tokens: token.quantidade_tokens, ...token });
+                }
+                return acc;
+            }, []);
+
+            // Atualiza a variável global com os dados consolidados
+            tokensEcossistemaData = tokenSoma;
+
+            const tokensContainerEcossistema = document.getElementById('tokensContainerEcossistema');
+            if (tokensContainerEcossistema) {
+                // Mostra o resultado da soma em cards
+                tokensContainerEcossistema.innerHTML = tokenSoma.map(createTokenCardHTML).join('');
             }
         })
-        .catch(error => console.error('Erro ao carregar tokens do usuário:', error));
+        .catch(error => console.error('Erro ao carregar tokens do ecossistema:', error));
 }
+
 
 function renderizarGraficoDistribuicaoRiscoEcossistema() {
     const canvas = document.getElementById('risksDistributionEcossistemaChart');
@@ -719,6 +745,110 @@ function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
             scales: {
                 y: {
                     beginAtZero: false,
+                    title: { display: true, text: 'Valor em R$' }
+                },
+                x: {
+                    title: { display: true, text: 'Datas' }
+                }
+            }
+        }
+    });
+}
+
+// Função para carregar os saques históricos
+async function loadSaquesHistoricos(usuario_id) {
+    try {
+        const response = await fetch(`/api/ecossistema/${usuario_id}/dados-saques-historicos`);
+        if (!response.ok) throw new Error('Erro ao buscar saques históricos');
+        saquesHistoricosData = await response.json();
+    } catch (error) {
+        console.error('Erro ao carregar dados de saques históricos:', error);
+    }
+}
+
+function renderizarGraficoSaquesHistóricos(dadosSaques) {
+    const canvas = document.getElementById('saquesHistoricosChart');
+    if (!canvas) {
+        console.error('Elemento canvas "saquesHistoricosChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    const labels = dadosSaques.map(d => new Date(d.data_criacao).toLocaleDateString());
+    const valores = dadosSaques.map(d => parseFloat(d.valor_saque));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Saques Históricos (R$)',
+                data: valores,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Valor em R$' }
+                },
+                x: {
+                    title: { display: true, text: 'Datas' }
+                }
+            }
+        }
+    });
+}
+
+async function loadDepositosHistoricos(usuario_id) {
+    try {
+        const response = await fetch(`/api/ecossistema/${usuario_id}/dados-depositos-historicos`);
+        if (!response.ok) throw new Error('Erro ao buscar depositos históricos');
+        depositosHistoricosData = await response.json(); // Armazena os dados na variável global
+
+        // Chama a função para renderizar o gráfico após carregar os dados
+        renderizarGraficoDepositosHistóricos(depositosHistoricosData);
+    } catch (error) {
+        console.error('Erro ao carregar dados de depositos históricos:', error);
+    }
+}
+
+function renderizarGraficoDepositosHistóricos(dadosDepositos) {
+    const canvas = document.getElementById('depositosHistoricosChart');
+    if (!canvas) {
+        console.error('Elemento canvas "depositosHistoricosChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    const labels = dadosDepositos.map(d => new Date(d.data_criacao).toLocaleDateString());
+    const valores = dadosDepositos.map(d => parseFloat(d.valor_deposito));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Depósitos Históricos (R$)',
+                data: valores,
+                borderColor: 'rgba(160, 212, 124, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
                     title: { display: true, text: 'Valor em R$' }
                 },
                 x: {
