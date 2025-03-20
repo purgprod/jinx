@@ -3,6 +3,13 @@ let tokensEcossistemaData = [];
 let saquesHistoricosData = [];
 let depositosHistoricosData = [];
 
+let carteiraChart;
+let carteiraRendimentosChart;
+let transacoesChart;
+let saquesHistoricosChart;
+let depositosHistoricosChart;
+let fluxoCaixaChart;
+
 // Função principal para carregar os resultados e ajustar o painel
 async function loadEcossistemaResults() {
     const usuario_id = 1;
@@ -35,14 +42,15 @@ async function loadEcossistemaResults() {
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Fluxo de Caixa Líquido:</strong> R$ <span id="totalBalanca">0,00</span></p>
+                        <p><strong>Fluxo de Caixa:</strong> R$ <span id="totalBalanca">0,00</span></p>
                     </div>
                 </div>
             </div>
         </div>
         <canvas id="depositosHistoricosChart" width="400" height="200"></canvas>
         <canvas id="saquesHistoricosChart" width="400" height="200"></canvas>
-	<div id="carteiraContainer" class="carteira-container">
+        <canvas id="fluxoCaixaHistoricosChart" width="400" height="200"></canvas>
+        <div id="carteiraContainer" class="carteira-container">
             <h3>Evolução das Carteiras</h3>
             <div class="cards-basico">
                 <div class="card">
@@ -63,17 +71,19 @@ async function loadEcossistemaResults() {
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00</span></p>
+                        <p><strong>Rendimento Diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00</span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento diário (Ecossistema):</strong> R$ <span id="rendimentoDiarioEcossistema">0,00</span></p>
+                        <p><strong>Rendimento Diário (Ecossistema):</strong> R$ <span id="rendimentoDiarioEcossistema">0,00</span></p>
                     </div>
                 </div>
             </div>
         </div>
         <canvas id="carteiraRendimentosChart" width="400" height="200"></canvas>
+        <h3>Transações de Compra e Venda de Tokens</h3>
+        <canvas id="transacoesChart" width="400" height="200"></canvas>
         <h3>Distribuição da Carteira Purg</h3>
         <div id="chartsContainer">    
             <canvas id="risksDistributionChart"></canvas>
@@ -104,8 +114,8 @@ async function loadEcossistemaResults() {
             ultimosDadosEcossistema,
             dadosFinanceirosHistoricos,
             dadosRendimentosHistoricos,
-            dadosRendimentosEcossistema, // Chamada para rendimentos do ecossistema
-            dadosFinanceirosHistoricosEcossistema // Nova chamada para dados financeiros do Ecossistema
+            dadosRendimentosEcossistema,
+            dadosFinanceirosHistoricosEcossistema
         ] = await Promise.all([
             loadUserTokens(usuario_id),
             loadEcossistemaTokens(usuario_id),
@@ -113,15 +123,15 @@ async function loadEcossistemaResults() {
             loadUltimosDadosFinanceirosEcossistema(usuario_id),
             loadDadosFinanceirosHistoricos(usuario_id),
             loadDadosRendimentosHistoricos(usuario_id),
-            loadDadosRendimentosHistoricosEcossistema(usuario_id), // Aqui está a chamada para os rendimentos do ecossistema
-            loadDadosFinanceirosHistoricosEcossistema(usuario_id) // Aqui está a chamada para dados financeiros históricos do ecossistema
+            loadDadosRendimentosHistoricosEcossistema(usuario_id),
+            loadDadosFinanceirosHistoricosEcossistema(usuario_id)
         ]);
 
         await loadSaques(usuario_id);
         await loadDepositos(usuario_id);
-        await loadBalanca(usuario_id); // Chama a nova função
-	await loadSaquesHistoricos(usuario_id);
-	await loadDepositosHistoricos(usuario_id);
+        await loadBalanca(usuario_id);
+        await loadSaquesHistoricos(usuario_id);
+        await loadDepositosHistoricos(usuario_id);
 
         // Renderizar gráficos com dados que foram carregados
         renderizarGraficoDistribuicaoRisco();
@@ -130,10 +140,12 @@ async function loadEcossistemaResults() {
         renderizarGraficoPorcentagemRiscoEcossistema();
         renderizarGraficoRendimentoPorRisco();
         renderizarGraficoRendimentoPorRiscoEcossistema();
-        renderizarGrafico(dadosFinanceirosHistoricos, dadosFinanceirosHistoricosEcossistema); // Ajuste para múltiplos gráficos
-        renderizarGraficoRendimentos(dadosRendimentosHistoricos, dadosRendimentosEcossistema); // Ajuste para múltiplos gráficos
+        renderizarGrafico(dadosFinanceirosHistoricos, dadosFinanceirosHistoricosEcossistema);
+        renderizarGraficoRendimentos(dadosRendimentosHistoricos, dadosRendimentosEcossistema);
         renderizarGraficoSaquesHistóricos(saquesHistoricosData);
-        renderizarGraficoDepositosHistóricos(depositosHistoricosData);
+        renderizarGraficoDepositosHistoricos(depositosHistoricosData);
+        renderizarGraficoTransacoes(usuario_id);
+        renderizarGraficoFluxoCaixaHistoricos();
         console.log("Todas as chamadas de API foram completadas.");
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -628,9 +640,6 @@ function loadDadosRendimentosHistoricosEcossistema(usuario_id) {
         .catch(error => console.error('Erro ao carregar dados de rendimentos históricos do ecossistema:', error));
 }
 
-let carteiraChart;
-let carteiraRendimentosChart;
-
 function renderizarGrafico(dadosPurg, dadosEcossistema) {
     const canvas = document.getElementById('carteiraChart');
     if (!canvas) {
@@ -778,12 +787,16 @@ function renderizarGraficoSaquesHistóricos(dadosSaques) {
     const labels = dadosSaques.map(d => new Date(d.data_criacao).toLocaleDateString());
     const valores = dadosSaques.map(d => parseFloat(d.valor_saque));
 
-    new Chart(ctx, {
+    if (saquesHistoricosChart) { // Destruir gráfico existente se já estiver presente
+        saquesHistoricosChart.destroy();
+    }
+
+    saquesHistoricosChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Saques Históricos (R$)',
+                label: 'Fluxo de Saques (R$)',
                 data: valores,
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 2,
@@ -813,13 +826,13 @@ async function loadDepositosHistoricos(usuario_id) {
         depositosHistoricosData = await response.json(); // Armazena os dados na variável global
 
         // Chama a função para renderizar o gráfico após carregar os dados
-        renderizarGraficoDepositosHistóricos(depositosHistoricosData);
+        renderizarGraficoDepositosHistoricos(depositosHistoricosData);
     } catch (error) {
         console.error('Erro ao carregar dados de depositos históricos:', error);
     }
 }
 
-function renderizarGraficoDepositosHistóricos(dadosDepositos) {
+function renderizarGraficoDepositosHistoricos(dadosDepositos) {
     const canvas = document.getElementById('depositosHistoricosChart');
     if (!canvas) {
         console.error('Elemento canvas "depositosHistoricosChart" não encontrado.');
@@ -831,12 +844,16 @@ function renderizarGraficoDepositosHistóricos(dadosDepositos) {
     const labels = dadosDepositos.map(d => new Date(d.data_criacao).toLocaleDateString());
     const valores = dadosDepositos.map(d => parseFloat(d.valor_deposito));
 
-    new Chart(ctx, {
+    if (depositosHistoricosChart) { // Destruir gráfico existente se já estiver presente
+        depositosHistoricosChart.destroy();
+    }
+
+    depositosHistoricosChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Depósitos Históricos (R$)',
+                label: 'Fluxo de Depósitos (R$)',
                 data: valores,
                 borderColor: 'rgba(160, 212, 124, 1)',
                 borderWidth: 2,
@@ -854,6 +871,161 @@ function renderizarGraficoDepositosHistóricos(dadosDepositos) {
                 x: {
                     title: { display: true, text: 'Datas' }
                 }
+            }
+        }
+    });
+}
+
+function renderizarGraficoTransacoes(usuario_id) {
+    const canvas = document.getElementById('transacoesChart');
+    if (!canvas) {
+        console.error('Elemento canvas "transacoesChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Carrega os dados de transações usando o caminho correto da API
+    fetch(`/api/ecossistema/${usuario_id}/transacao`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao buscar transações');
+            return response.json();
+        })
+        .then(transacoes => {
+            // Verifica se transacoes é um array
+            if (!Array.isArray(transacoes)) {
+                throw new Error('Formato de dados de transação inválido. Esperado um array.');
+            }
+
+            const transacoesData = {
+                C: [],
+                V: []
+            };
+
+            transacoes.forEach(transacao => {
+                const data = new Date(transacao.data_criacao).toLocaleDateString();
+                const valorTransacao = parseFloat(transacao.valor_transacao); // Converte para float
+
+                if (transacao.tipo_transacao === 'C') {
+                    transacoesData.C.push({ data, valor: valorTransacao });
+                } else if (transacao.tipo_transacao === 'V') {
+                    transacoesData.V.push({ data, valor: valorTransacao });
+                }
+            });
+
+            const labels = [...new Set([...transacoesData.C.map(t => t.data), ...transacoesData.V.map(t => t.data)])].sort();
+            const valoresC = labels.map(label => {
+                const valor = transacoesData.C.reduce((acc, t) => t.data === label ? acc + t.valor : acc, 0);
+                return valor;
+            });
+            const valoresV = labels.map(label => {
+                const valor = transacoesData.V.reduce((acc, t) => t.data === label ? acc + t.valor : acc, 0);
+                return valor;
+            });
+
+            if (transacoesChart) { // Destruir gráfico existente se já estiver presente
+                transacoesChart.destroy();
+            }
+
+            transacoesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Transações de Compra (R$)',
+                        data: valoresC,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }, {
+                        label: 'Transações de Venda (R$)',
+                        data: valoresV,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: { display: true, text: 'Valor em R$' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Datas' }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar transações:', error);
+        });
+}
+
+function renderizarGraficoFluxoCaixaHistoricos() {
+    const canvasId = 'fluxoCaixaHistoricosChart';
+    let canvas = document.getElementById(canvasId);
+
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.setAttribute('id', canvasId);
+        document.getElementById('carteiraContainer').appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Obter datas únicas em formato ISO primeiro (para ordenar corretamente depois)
+    const labelsISO = [...new Set([
+        ...depositosHistoricosData.map(d => new Date(d.data_criacao).toISOString().split('T')[0]),
+        ...saquesHistoricosData.map(d => new Date(d.data_criacao).toISOString().split('T')[0])
+    ])];
+
+    // Ordenar as datas corretamente
+    labelsISO.sort((a, b) => new Date(a) - new Date(b));
+
+    // Converter as datas ISO ordenadas para o padrão local brasileiro
+    const labels = labelsISO.map(isoDate => new Date(isoDate + 'T00:00:00Z').toLocaleDateString('pt-BR'));
+
+    // Calcula os valores de depósitos e saques para cada data
+    const valoresFluxoCaixa = labelsISO.map(isoLabel => {
+        const totalDepositos = depositosHistoricosData.reduce((acc, d) => {
+            const dataISO = new Date(d.data_criacao).toISOString().split('T')[0];
+            return dataISO === isoLabel ? acc + parseFloat(d.valor_deposito) : acc;
+        }, 0);
+
+        const totalSaques = saquesHistoricosData.reduce((acc, d) => {
+            const dataISO = new Date(d.data_criacao).toISOString().split('T')[0];
+            return dataISO === isoLabel ? acc + parseFloat(d.valor_saque) : acc;
+        }, 0);
+
+        return totalDepositos - totalSaques;
+    });
+
+    if (fluxoCaixaChart) { 
+        fluxoCaixaChart.destroy();
+    }
+
+    fluxoCaixaChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Fluxo de Caixa (R$)',
+                data: valoresFluxoCaixa,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Valor em R$' } },
+                x: { title: { display: true, text: 'Datas' } }
             }
         }
     });

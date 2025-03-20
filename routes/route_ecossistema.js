@@ -11,6 +11,7 @@ const EcossistemaDadosFinanceirosController = require('../controllers/ecossistem
 const EcossistemaDadosFinanceirosHistoricosController = require('../controllers/ecossistema/controller_dadosfinanceiroshistoricos_ecossistema');
 const EcossistemaDadosRendimentosHistoricosController = require('../controllers/ecossistema/controller_dadosrendimentoshistoricos_ecossistema');
 const EcossistemaSaquesController = require('../controllers/ecossistema/controller_saques_ecossistema');
+const EcossistemaTransacaoController = require('../controllers/ecossistema/controller_transacao_ecossistema');
 const EcossistemaDepositosController = require('../controllers/ecossistema/controller_depositos_ecossistema');
 const EcossistemaSaquesHistoricosController = require('../controllers/ecossistema/controller_saqueshistoricos_ecossistema');
 const EcossistemaDepositosHistoricosController = require('../controllers/ecossistema/controller_depositoshistoricos_ecossistema');
@@ -39,6 +40,9 @@ router.get('/api/ecossistema/:id/dados-saques-historicos', EcossistemaSaquesHist
 
 // Rota para obter os dados de depositos históricos do ecossistema
 router.get('/api/ecossistema/:id/dados-depositos-historicos', EcossistemaDepositosHistoricosController.getDepositosHistoricos);
+
+// Rota para obter os dados de transação do ecossistema
+router.get('/api/ecossistema/:id/transacao', EcossistemaTransacaoController.getTransacao);
 
 // Rota para obter tokens da Purg
 router.get('/api/purg/:id/tokens', PurgTokensController.getUserTokens);
