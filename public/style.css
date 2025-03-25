@@ -214,7 +214,7 @@ body {
     margin-bottom: 20px;
 }
 
-#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton {
+#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton, #receitasButton {
     display: block;
     width: 100%;
     padding: 10px 20px;
@@ -225,7 +225,7 @@ body {
     cursor: pointer;
 }
 
-#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover {
+#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover, #receitasButton:hover {
     background-color: #657BB4;
 }
 
