@@ -14,6 +14,7 @@ const UsuariosDadosFinanceirosController = require('../controllers/usuarios/cont
 const UsuariosDadosFinanceirosHistoricosController = require('../controllers/usuarios/controller_dadosfinanceiroshistoricos_usuarios');
 const UsuariosDadosRendimentosHistoricosController = require('../controllers/usuarios/controller_dadosrendimentoshistoricos_usuarios');
 const UsuariosSaquesController = require('../controllers/usuarios/controller_saques_usuarios');
+const UsuariosDepositosController = require('../controllers/usuarios/controller_depositos_usuarios');
 const UsuariosSuitabilityController = require('../controllers/usuarios/controller_suitability_usuarios');
 
 // Rota para criar um novo usuário
@@ -51,6 +52,9 @@ router.get('/api/usuarios/:id/dados-financeiros-rendimentos-historicos', Usuario
 
 // Rota para obter o total de saques do usuário 
 router.get('/api/usuarios/:id/dados-saques', UsuariosSaquesController.getSaques);
+
+// Rota para obter o total de depositos do usuário 
+router.get('/api/usuarios/:id/dados-depositos', UsuariosDepositosController.getDepositos);
 
 // Rota para obter o suitability do usuário
 router.get('/api/usuarios/:id/suitability', UsuariosSuitabilityController.getSuitability);

@@ -24,11 +24,15 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <div id="carteiraContainer" class="carteira-container"></div>
-                <h3>Distribuição da Carteira</h3>
+                <h3>Distribuição da Carteira por Perfil</h3>
+                <div id="chartsContainer">
+                </div>
+		
+		<h3>Distribuição da Carteira por Tokens</h3>
                 <div id="chartsContainer">
                     <canvas id="risksDistributionChart"></canvas>
                     <canvas id="risksPercentageChart"></canvas>
-                    <canvas id="risksRendimentoChart"></canvas> <!-- Novo canvas para o gráfico de rendimento -->
+                    <canvas id="risksRendimentoChart"></canvas>
                 </div>
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
@@ -47,7 +51,12 @@ function loadUserDetails(usuario_id) {
                 loadDadosFinanceirosHistoricos(usuario_id), 
                 loadDadosRendimentosHistoricos(usuario_id) 
             ]).then(() => {
-                return loadSaques(usuario_id);
+                return Promise.all([
+		loadSaques(usuario_id),
+		loadDepositos(usuario_id)
+		]);
+	    //    return loadSaques(usuario_id);
+            //    return loadDepositos(usuario_id);
             }).then(() => {
                 console.log("Todas as chamadas de API foram completadas.");
                 renderizarGraficoDistribuicaoRisco(); 
@@ -406,6 +415,11 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
                         <p><strong>Total de Saques:</strong> R$ <span id="totalSaque">0.00</span></p>
                     </div>
                 </div>
+	        <div class="card">
+                    <div class="card-content">
+                        <p><strong>Total de Depositos:</strong> R$ <span id="totalDeposito">0.00</span></p>
+                    </div>
+                </div>
             </div>
             <canvas id="carteiraChart"></canvas>
             <canvas id="carteiraRendimentosChart"></canvas>
@@ -430,6 +444,25 @@ function loadSaques(usuario_id) {
             console.error('Erro ao carregar saques do usuário:', error);
         });
 }
+
+function loadDepositos(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/dados-depositos`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar depositos');
+            }
+            return response.json();
+        })
+        .then(dadosDepositos => {
+            const totalDepositoElement = document.getElementById('totalDeposito');
+            const totalDeposito = dadosDepositos['SUM(valor_deposito)'] || 0;
+            totalDepositoElement.textContent = parseFloat(totalDeposito).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar depositos do usuário:', error);
+        });
+}
+
 
 function loadDadosFinanceirosHistoricos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-historicos`)
