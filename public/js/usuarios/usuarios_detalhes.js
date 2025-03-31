@@ -26,7 +26,10 @@ function loadUserDetails(usuario_id) {
                 <div id="carteiraContainer" class="carteira-container"></div>
                 <h3>Distribuição da Carteira por Perfil</h3>
                 <div id="chartsContainer">
-                </div>
+                    <canvas id="genericRisksDistributionChart"></canvas>
+                    <canvas id="genericRisksPercentageChart"></canvas>
+                    <canvas id="genericRisksRendimentoChart"></canvas>
+		</div>
 		
 		<h3>Distribuição da Carteira por Tokens</h3>
                 <div id="chartsContainer">
@@ -61,7 +64,10 @@ function loadUserDetails(usuario_id) {
                 console.log("Todas as chamadas de API foram completadas.");
                 renderizarGraficoDistribuicaoRisco(); 
                 renderizarGraficoPorcentagemRisco();
-                renderizarGraficoRendimentoPorRisco(); // Chama a nova função
+                renderizarGraficoRendimentoPorRisco();
+		renderizarGraficoDistribuicaoRiscoGenerico();
+		renderizarGraficoPorcentagemRiscoGenerico();
+		renderizarGraficoRendimentoPorRiscoGenerico();
             }).catch(err => {
                 console.error("Erro ao carregar dados:", err);
             });
@@ -613,6 +619,189 @@ function renderizarGraficoRendimentos(dados) {
         }
     });
 }
+
+function renderizarGraficoDistribuicaoRiscoGenerico() {
+    const canvas = document.getElementById('genericRisksDistributionChart');
+    if (!canvas) {
+        console.error('Elemento canvas "genericRisksDistributionChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const riscoGenMap = {
+        'Conservador': ['AA', 'AR1', 'AR2', 'A1', 'A2', 'A3', 'BBR1', 'BBR2', 'BB'],
+        'Moderado': ['B1', 'B2', 'B3', 'BR1', 'BR2'],
+        'Agressivo': ['B4', 'B5', 'B6', 'CR1', 'CR2', 'C1', 'C2', 'C3']
+    };
+
+    const distribGenMap = {};
+
+    tokensData.forEach(token => {
+        for (const [key, values] of Object.entries(riscoGenMap)) {
+            if (values.includes(token.risco)) {
+                distribGenMap[key] = (distribGenMap[key] || 0) + token.quantidade_tokens * 0.01;
+                break;
+            }
+        }
+    });
+
+    const labels = Object.keys(distribGenMap);
+    const data = Object.values(distribGenMap).map(val => parseFloat(val.toFixed(2)));
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribuição Genérica de Risco dos Tokens (R$)',
+                data: data,
+                backgroundColor: ['rgba(102, 187, 106, 0.2)', 'rgba(255, 202, 40, 0.2)', 'rgba(239, 83, 80, 0.2)'],
+                borderColor: ['rgba(102, 187, 106, 1)', 'rgba(255, 202, 40, 1)', 'rgba(239, 83, 80, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Distribuição Genérica de Risco dos Tokens (R$)' },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+
+function renderizarGraficoPorcentagemRiscoGenerico() {
+    const canvas = document.getElementById('genericRisksPercentageChart');
+    if (!canvas) {
+        console.error('Elemento canvas "genericRisksPercentageChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const totalTokens = tokensData.reduce((sum, token) => sum + token.quantidade_tokens, 0);
+
+    const riscoGenMap = {
+        'Conservador': ['AA', 'AR1', 'AR2', 'A1', 'A2', 'A3', 'BBR1', 'BBR2', 'BB'],
+        'Moderado': ['B1', 'B2', 'B3', 'BR1', 'BR2'],
+        'Agressivo': ['B4', 'B5', 'B6', 'CR1', 'CR2', 'C1', 'C2', 'C3']
+    };
+
+    const distribGenMap = {};
+
+    tokensData.forEach(token => {
+        for (const [key, values] of Object.entries(riscoGenMap)) {
+            if (values.includes(token.risco)) {
+                distribGenMap[key] = (distribGenMap[key] || 0) + token.quantidade_tokens;
+                break;
+            }
+        }
+    });
+
+    const labels = Object.keys(distribGenMap);
+    const data = Object.values(distribGenMap).map(qtd => parseFloat(((qtd / totalTokens) * 100).toFixed(2)));
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribuição Genérica em Porcentagem de Risco dos Tokens (%)',
+                data: data,
+                backgroundColor: ['rgba(102, 187, 106, 0.2)', 'rgba(255, 202, 40, 0.2)', 'rgba(239, 83, 80, 0.2)'],
+                borderColor: ['rgba(102, 187, 106, 1)', 'rgba(255, 202, 40, 1)', 'rgba(239, 83, 80, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Distribuição Genérica em Porcentagem de Risco dos Tokens (%)' },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value) => `${value.toFixed(2)}%`
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+	
+function renderizarGraficoRendimentoPorRiscoGenerico() {
+    const canvas = document.getElementById('genericRisksRendimentoChart');
+    if (!canvas) {
+        console.error('Elemento canvas "genericRisksRendimentoChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    const riscoGenMap = {
+        'Conservador': ['AA', 'AR1', 'AR2', 'A1', 'A2', 'A3', 'BBR1', 'BBR2', 'BB'],
+        'Moderado': ['B1', 'B2', 'B3', 'BR1', 'BR2'],
+        'Agressivo': ['B4', 'B5', 'B6', 'CR1', 'CR2', 'C1', 'C2', 'C3']
+    };
+
+    const distribGenMap = {};
+
+    tokensData.forEach(token => {
+        const quantidade = token.quantidade_tokens || 0;
+        const rendimento = token.rendimento_token || 0;
+        for (const [key, values] of Object.entries(riscoGenMap)) {
+            if (values.includes(token.risco)) {
+                distribGenMap[key] = (distribGenMap[key] || 0) + (quantidade * rendimento);
+                break;
+            }
+        }
+    });
+
+    const labels = Object.keys(distribGenMap);
+    const data = Object.values(distribGenMap).map(rend => parseFloat(rend.toFixed(8)));
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribuição Genérica do Rendimento Diário por Risco (R$)',
+                data: data,
+                backgroundColor: [
+                    'rgba(102, 187, 106, 0.2)',
+                    'rgba(255, 202, 40, 0.2)',
+                    'rgba(239, 83, 80, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(102, 187, 106, 1)',
+                    'rgba(255, 202, 40, 1)',
+                    'rgba(239, 83, 80, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Distribuição Genérica do Rendimento Diário por Risco (R$)' },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
 
 function createTokenCardHTML(token) {
     return `
