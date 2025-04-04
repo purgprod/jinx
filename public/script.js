@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tokensButton = document.getElementById("tokensButton");
     const ecossistemaButton = document.getElementById("ecossistemaButton");
     const receitasButton = document.getElementById("receitasButton");
+    const rotinasButton = document.getElementById("rotinasButton");
 
     console.log("Element references initialized");
 
@@ -52,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
         receitasButton.addEventListener("click", () => {
             console.log("Botão 'Receitas' clicado");
             loadReceitasResults();  // Chama a função no receitas.js
+        });
+    }
+
+   // Adiciona evento ao botão "Rotinas"
+    if (rotinasButton) {
+        rotinasButton.addEventListener("click", () => {
+            console.log("Botão 'Rotinas' clicado");
+            loadRotinasResults();  // Chama a função no rotinas.js
         });
     }
 
