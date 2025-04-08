@@ -48,8 +48,7 @@ async function loadRotinasResults() {
             // Adiciona cada rotina na tabela
             rotinas.forEach(rotina => {
                 const dateOptions = {
-                //  timeZone: 'America/Sao_Paulo',
-                    timeZone: 'UTC',
+                    timeZone: 'America/Sao_Paulo',
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -71,7 +70,7 @@ async function loadRotinasResults() {
                     <td>${formattedDate}</td>
                     <td>${status}</td>
                     <td>
-                        <button onclick="executarRotina(${rotina.id}, '${rotina.descricao}')">
+                        <button onclick="RotinaTokensHistoricoFreeFloat(${rotina.id})">
                             Executar
                         </button>
                     </td>
@@ -91,62 +90,6 @@ async function loadRotinasResults() {
     }
 }
 
-// Função para executar as rotinas
-async function executarRotina(rotinaId, rotinaDescricao) {
-    try {
-        // Verifica se a descrição da rotina está definida
-        if (!rotinaDescricao) {
-            alert('Erro: Descrição da rotina não identificada.');
-            return;
-        }
-
-        // Mostra no console a descrição recebida
-        console.log('Descrição da rotina recebida:', rotinaDescricao);
-
-        if (rotinaDescricao === 'Histórico do Free Float dos Tokens') {
-            await RotinaTokensHistoricoFreeFloat(rotinaId);
-        } else {
-            // Verifica se existe uma rotina criada na cron do Node.js
-            const cronRotinas = [
-                'Histórico do Free Float dos Tokens'
-                // Adicione aqui mais nomes de rotinas que estão configuradas na cron do Node.js
-            ];
-
-            if (!cronRotinas.includes(rotinaDescricao)) {
-                alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
-                return;
-            }
-	}
-
-            const dataAgora = getDataFormatada();
-
-            // Executa a rotina específica
-            const rotinaResponse = await fetch(`/api/rotinas/${rotinaId}/executar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (rotinaResponse.ok) {
-                // Atualiza a ultima_execucao
-                await fetch(`/api/rotinas/${rotinaId}/atualizar-execucao`, {
-                    method: 'PUT'
-                });
-
-                // Atualiza a tabela
-                loadRotinasResults();
-            } else {
-                throw new Error('Erro ao executar rotina específica');
-            }
-        
-    } catch (error) {
-        console.error('Erro ao executar rotina:', error);
-        alert('Erro ao executar a rotina. Detalhes: ' + error.message);
-    }
-}
-
-
 // Função para executar a rotina de histórico do free float e executar rotina específica
 async function RotinaTokensHistoricoFreeFloat(rotinaId) {
     try {
@@ -160,7 +103,7 @@ async function RotinaTokensHistoricoFreeFloat(rotinaId) {
         if (response.ok) {
             console.log('Rotina de histórico do free float executada com sucesso');
             // Executa a rotina específica após o sucesso
-           // await executarRotina(rotinaId, rotinaDescricao);
+            await executarRotina(rotinaId);
             return true;
         } else {
             console.error('Erro ao executar rotina de histórico do free float:', await response.text());
@@ -172,8 +115,38 @@ async function RotinaTokensHistoricoFreeFloat(rotinaId) {
     }
 }
 
+// Função para executar uma rotina específica
+async function executarRotina(rotinaId) {
+    try {
+        const dataAgora = getDataFormatada();
+
+        // Executa a rotina específica
+        const rotinaResponse = await fetch(`/api/rotinas/${rotinaId}/executar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (rotinaResponse.ok) {
+            // Atualiza a ultima_execucao
+            await fetch(`/api/rotinas/${rotinaId}/atualizar-execucao`, {
+                method: 'PUT'
+            });
+
+            // Atualiza a tabela
+            loadRotinasResults();
+        } else {
+            throw new Error('Erro ao executar rotina específica');
+        }
+    } catch (error) {
+        console.error('Erro ao executar rotina:', error);
+    }
+}
 
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
 window.RotinaTokensHistoricoFreeFloat = RotinaTokensHistoricoFreeFloat;
+
+
