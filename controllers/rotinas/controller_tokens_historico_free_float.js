@@ -1,6 +1,6 @@
-// controllers/rotinas/controller_tokens_historico_free_float.js
 const TokensHistoricoFreeFloatModel = require('../../models/rotinas/model_tokens_historico_free_float');
 const TokensHistoricoFreeFloatValoresModel = require('../../models/rotinas/model_tokens_historico_free_float_valores');
+const TokensHistoricoFreeFloatInsertModel = require('../../models/rotinas/model_tokens_historico_free_float_insert');
 const logger = require('../../logger');
 
 /**
@@ -24,6 +24,18 @@ const TokensHistoricoFreeFloatController = {
                 return res.status(200).json({ message: 'Nenhum token ativo encontrado' });
             }
 
+            // Função para sanitizar os valores (converte null para 0)
+            const sanitizeValues = (values) => {
+                // Se os valores forem nulos ou undefinidos, retorna um objeto vazio
+                if (!values) return { total_tokens: 0, free_float_tokens: 0 };
+                
+                // Garante que as propriedades existam
+                return {
+                    total_tokens: values.total_tokens || 0,
+                    free_float_tokens: values.free_float_tokens || 0
+                };
+            };
+
             // Processa cada token e busca os valores adicionais
             const processedTokens = await Promise.all(
                 activeTokens.map(async (token) => {
@@ -31,17 +43,34 @@ const TokensHistoricoFreeFloatController = {
                         // Busca os valores adicionais para o token atual
                         const tokenValues = await TokensHistoricoFreeFloatValoresModel.getValoresByTokenId(token.id_token);
                         
+                        // Sanitiza os valores
+                        const sanitizedValues = sanitizeValues(tokenValues);
+
+                        // Verifica se os valores são válidos
+                        if (sanitizedValues) {
+                            // Prepara os dados para insert
+                            const insertData = {
+                                data: new Date().toISOString().split('T')[0],
+                                token_id: token.id_token,
+                                token_ipo: sanitizedValues.total_tokens,
+                                token_freefloat: sanitizedValues.free_float_tokens
+                            };
+
+                            // Realiza o insert histórico
+                            await TokensHistoricoFreeFloatInsertModel.insertHistorico(insertData);
+                            logger.info(`Histórico inserido com sucesso para token ${token.id_token}`);
+                        }
+
                         // Cria um objeto combinando as informações do token e seus valores
                         return {
                             token: token,
-                            valores: tokenValues
+                            valores: sanitizedValues
                         };
                     } catch (error) {
                         logger.error(`Erro ao processar token ${token.id_token}:`, error);
-                        // Pode optar por retornar um objeto parcialmente preenchido ou excluir o token com erro
                         return {
                             token: token,
-                            error: 'Erro ao buscar valores adicionais'
+                            error: 'Erro ao buscar ou salvar valores adicionais'
                         };
                     }
                 })

@@ -1,4 +1,3 @@
-// models/rotinas/model_tokens_historico_free_float_valores.js
 const connection = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 

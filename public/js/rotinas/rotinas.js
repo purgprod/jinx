@@ -48,8 +48,8 @@ async function loadRotinasResults() {
             // Adiciona cada rotina na tabela
             rotinas.forEach(rotina => {
                 const dateOptions = {
-                //  timeZone: 'America/Sao_Paulo',
-                    timeZone: 'UTC',
+                    timeZone: 'America/Sao_Paulo',
+              //    timeZone: 'UTC',
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -103,21 +103,22 @@ async function executarRotina(rotinaId, rotinaDescricao) {
         // Mostra no console a descrição recebida
         console.log('Descrição da rotina recebida:', rotinaDescricao);
 
-        if (rotinaDescricao === 'Histórico do Free Float dos Tokens') {
-            await RotinaTokensHistoricoFreeFloat(rotinaId);
-        } else {
-            // Verifica se existe uma rotina criada na cron do Node.js
-            const cronRotinas = [
-                'Histórico do Free Float dos Tokens'
-                // Adicione aqui mais nomes de rotinas que estão configuradas na cron do Node.js
-            ];
+	if (rotinaDescricao === 'Histórico do free float dos tokens') {
+	    await RotinaTokensHistoricoFreeFloat(rotinaId);
+	} else if (rotinaDescricao === 'Histórico do valor investido e rendimentos por usuário') {
+	    await RotinaInvestimentoERendimento(rotinaId);
+	} else {
+	    // Verifica se existe uma rotina criada na cron do Node.js
+	    const cronRotinas = [
+	        'Histórico do free float dos tokens',
+	        'Histórico do valor investido e rendimentos por usuário'
+	    ];
 
-            if (!cronRotinas.includes(rotinaDescricao)) {
-                alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
-                return;
-            }
+	    if (!cronRotinas.includes(rotinaDescricao)) {
+	        alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
+	        return;
+	    }
 	}
-
             const dataAgora = getDataFormatada();
 
             // Executa a rotina específica
@@ -150,7 +151,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
 // Função para executar a rotina de histórico do free float e executar rotina específica
 async function RotinaTokensHistoricoFreeFloat(rotinaId) {
     try {
-        const response = await fetch('/api/rotinas/tokens_historico_free_float', {
+        const response = await fetch('/api/rotinas/tokens-historico-free-float', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -159,8 +160,6 @@ async function RotinaTokensHistoricoFreeFloat(rotinaId) {
 
         if (response.ok) {
             console.log('Rotina de histórico do free float executada com sucesso');
-            // Executa a rotina específica após o sucesso
-           // await executarRotina(rotinaId, rotinaDescricao);
             return true;
         } else {
             console.error('Erro ao executar rotina de histórico do free float:', await response.text());
@@ -172,8 +171,30 @@ async function RotinaTokensHistoricoFreeFloat(rotinaId) {
     }
 }
 
+async function RotinaInvestimentoERendimento(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/investimento-rendimento-historico', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('Rotina de histórico de investimentos e rendimentos executada com sucesso');
+            return true;
+        } else {
+            console.error('Erro ao executar rotina de histórico de investimentos e rendimentos:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('Erro ao executar rotina de histórico de investimentos e rendimentos:', error);
+        return false;
+    }
+}
 
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
 window.RotinaTokensHistoricoFreeFloat = RotinaTokensHistoricoFreeFloat;
+window.RotinaInvestimentoERendimento = RotinaInvestimentoERendimento;

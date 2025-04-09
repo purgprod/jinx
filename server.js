@@ -2,16 +2,21 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const logger = require('./logger');
+const cron = require('node-cron');
+const axios = require('axios');
 const controller_autenticacao = require('./controllers/controller_autenticacao');
 const route_resultados_financeiros = require('./routes/route_resultados_financeiros');
 const route_tokens = require('./routes/route_tokens');
 const route_usuarios = require('./routes/route_usuarios');
 const route_ecossistema = require('./routes/route_ecossistema');
 const route_rotinas = require('./routes/route_rotinas');
-//const route_autenticacao = require('./routes/route_autenticacao');
 
 const app = express();
 const port = 3000;
+
+// Executa as crons
+const cronPath = path.join(__dirname, 'controllers/rotinas/cron.js');
+require(cronPath);
 
 // Configuração do store de sessão
 const sessionStore = new session.MemoryStore();
@@ -56,7 +61,6 @@ app.use((req, res, next) => {
     logger.info('Body:', req.body);
     next();
 });
-
 
 // Endpoints de autenticação
 app.post('/auth/login', (req, res, next) => {

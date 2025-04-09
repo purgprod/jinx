@@ -4,7 +4,10 @@ const logger = require('../../logger');
 
 const RotinasAtualizarModel = {
     async atualizarUltimaExecucao(rotinaId) {
-        const sqlQuery = 'UPDATE rotinas SET ultima_execucao = CURRENT_TIMESTAMP WHERE id = ?';
+        const sqlQuery = `UPDATE rotinas 
+		SET ultima_execucao = CURRENT_TIMESTAMP 
+		WHERE id = ?;
+	`;
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, [rotinaId], (error, results) => {
                 if (error) {
