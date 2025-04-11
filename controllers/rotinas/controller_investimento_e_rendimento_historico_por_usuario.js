@@ -23,8 +23,16 @@ const InvestimentoRendimentoHistoricoController = {
                 return res.status(200).json({ message: 'Nenhum usuário ativo encontrado' });
             }
 
-            // Data e hora atuais para registro
-            const currentDateTime = new Date().toISOString().replace('T', ' ').slice(0, -5);
+            // Cria uma data no formato correto para o Banco de Dados
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const hour = String(currentDate.getHours()).padStart(2, '0');
+            const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+            const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+            
+            const formattedDate = `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`;
 
             // Processa cada usuário para buscar os valores e inserir no histórico
             const processedUsers = await Promise.all(
@@ -44,7 +52,7 @@ const InvestimentoRendimentoHistoricoController = {
 
                         // Prepara os dados para insert
                         const insertData = {
-                            data: currentDateTime,
+                            data: formattedDate,
                             usuario_id: user.usuario_id,
                             carteira_dia: userValues.carteira_dia,
                             rendimento_dia: userValues.rendimento_dia
