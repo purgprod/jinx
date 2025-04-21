@@ -32,10 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Adiciona evento ao botão "Tokens"
+    // Adiciona evento ao botão "Pins"
     if (tokensButton) {
         tokensButton.addEventListener("click", () => {
-            console.log("Botão 'Tokens' clicado");
+            console.log("Botão 'Pins' clicado");
             loadTokensResults();  // Chama a função no tokens.js
         });
     }

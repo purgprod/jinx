@@ -80,7 +80,7 @@ const InvestimentoRendimentoHistoricoController = {
             );
 
             res.status(200).json({
-                message: 'Histórico processado com sucesso',
+                message: 'Rotinas executadas com sucesso',
                 results: processedUsers
             });
 

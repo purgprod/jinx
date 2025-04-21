@@ -2,15 +2,15 @@ const cron = require('node-cron');
 const axios = require('axios');
 const logger = require('../../logger');
 
-// Agendar execução da rotina de histórico de free float dos tokens às 00:01:00 todos os dias
+// Agendar execução da rotina de histórico de free float dos Pins às 00:01:00 todos os dias
 cron.schedule('01 00 * * *', async () => {
     try {
-        logger.info('Iniciando execução da rotina de histórico de free float dos tokens agendada às 00:01:00');
+        logger.info('Iniciando execução da rotina de histórico de free float dos Pins agendada às 00:01:00');
         
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/tokens-historico-free-float';
         
-        // Chamar o endpoint principal
+        // Chamar o endpoint principal (POST)
         const mainResponse = await axios.post(mainUrl);
         
         logger.info(`Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
@@ -41,7 +41,7 @@ cron.schedule('30 0 * * *', async () => {
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/investimento-rendimento-historico';
         
-        // Chamar o endpoint principal
+        // Chamar o endpoint principal (POST)
         const mainResponse = await axios.post(mainUrl);
         
         logger.info(`Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
@@ -55,6 +55,37 @@ cron.schedule('30 0 * * *', async () => {
             
             // Chamar o segundo endpoint adicional (POST)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/2/atualizar-execucao';
+            const atualizarResponse = await axios.put(atualizarUrl);
+            
+            logger.info(`Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
+        }
+    } catch (error) {
+        logger.error(`Erro ao executar tarefa agendada:`, error);
+    }
+});
+
+// Agendar execução da rotina para gerenciamento do Sinistro dos Pins às 01:00:00 todos os dias
+cron.schedule('0 1 * * *', async () => {
+    try {
+        logger.info('Iniciando execução da rotina de gerenciamento do Sinistro dos Pins agendada às 01:00:00');
+        
+        // Configurar o endpoint principal
+        const mainUrl = 'http://localhost:3000/api/rotinas/checagem-pins-sinistro';
+        
+        // Chamar o endpoint principal (PUT)
+        const mainResponse = await axios.put(mainUrl);
+        
+        logger.info(`Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
+        
+        if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
+            // Chamar o primeiro endpoint adicional (POST)
+            const executarUrl = 'http://localhost:3000/api/rotinas/3/executar';
+            const executarResponse = await axios.post(executarUrl);
+            
+            logger.info(`Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
+            
+            // Chamar o segundo endpoint adicional (POST)
+            const atualizarUrl = 'http://localhost:3000/api/rotinas/3/atualizar-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
             
             logger.info(`Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);

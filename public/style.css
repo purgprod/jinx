@@ -18,7 +18,7 @@ body {
     width: 100%;
     justify-content: center; /* Centralizar o conteúdo horizontalmente */
     align-items: center; /* Centralizar o conteúdo verticalmente */
-    background-image: url('/images/login-background.jpg'); /* Definir a imagem de fundo */
+/*    background-image: url('/images/login-background.jpg'); */ /* Definir a imagem de fundo */
     background-size: cover; /* Cobrir toda a tela */
     background-position: center; /* Centralizar a imagem de fundo */
 }

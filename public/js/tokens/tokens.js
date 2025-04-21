@@ -45,9 +45,9 @@ function showTokenCards() {
     const centerPanel = document.querySelector('.center-panel');
     if (centerPanel) {
         centerPanel.innerHTML = `
-            <h2 class="page-title">Tokens</h2>
+            <h2 class="page-title">Pins</h2>
             <div class="button-container">
-                <button id="inativosButton" class="button-vermelho">${showInactiveTokens ? "Ocultar Tokens Ativos" : "Mostrar Tokens Inativos"}</button>
+                <button id="inativosButton" class="button-vermelho">${showInactiveTokens ? "Ocultar Pins Ativos" : "Mostrar Pins Inativos"}</button>
             </div>
             <div id="cardsContainer" class="cards-container"></div>
         `;

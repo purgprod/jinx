@@ -103,15 +103,21 @@ async function executarRotina(rotinaId, rotinaDescricao) {
         // Mostra no console a descrição recebida
         console.log('Descrição da rotina recebida:', rotinaDescricao);
 
-	if (rotinaDescricao === 'Histórico do free float dos tokens') {
+	if (rotinaDescricao === 'Histórico do free float dos Pins') {
 	    await RotinaTokensHistoricoFreeFloat(rotinaId);
 	} else if (rotinaDescricao === 'Histórico do valor investido e rendimentos por usuário') {
 	    await RotinaInvestimentoERendimento(rotinaId);
+	} else if (rotinaDescricao === 'Checagem de Pins em modo sinistro') {
+	    await RotinaChecagemPinsSinistro(rotinaId);
+	} else if (rotinaDescricao === 'Recompra de Pins em modo sinistro') {
+	    await RotinaRecompraPinsSinistro(rotinaId);
 	} else {
 	    // Verifica se existe uma rotina criada na cron do Node.js
 	    const cronRotinas = [
-	        'Histórico do free float dos tokens',
-	        'Histórico do valor investido e rendimentos por usuário'
+	        'Histórico do free float dos Pins',
+	        'Histórico do valor investido e rendimentos por usuário',
+	        'Checagem de Pins em modo sinistro',
+	        'Recompra de Pins em modo sinistro'
 	    ];
 
 	    if (!cronRotinas.includes(rotinaDescricao)) {
@@ -193,8 +199,55 @@ async function RotinaInvestimentoERendimento(rotinaId) {
     }
 }
 
+async function RotinaChecagemPinsSinistro(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/checagem-pins-sinistro', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('Rotina para inativar pins em modo sinistro executada com sucesso');
+            return true;
+        } else {
+            console.error('Erro ao executar rotina para inativar pins em modo sinistro:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('Erro ao executar rotina para inativar pins em modo sinistro:', error);
+        return false;
+    }
+}
+
+async function RotinaRecompraPinsSinistro(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/recompra-pins-sinistro', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('Rotina para recompra de pins em modo sinistro executada com sucesso');
+            return true;
+        } else {
+            console.error('Erro ao executar rotina para recompra de pins em modo sinistro:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('Erro ao executar rotina para recompra pins em modo sinistro:', error);
+        return false;
+    }
+}
+
+
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
 window.RotinaTokensHistoricoFreeFloat = RotinaTokensHistoricoFreeFloat;
 window.RotinaInvestimentoERendimento = RotinaInvestimentoERendimento;
+window.RotinaChecagemPinsSinistro = RotinaChecagemPinsSinistro;
+window.RotinaRecompraPinsSinistro = RotinaRecompraPinsSinistro;

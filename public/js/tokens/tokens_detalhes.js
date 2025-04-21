@@ -32,9 +32,9 @@ function loadTokensDetails(idToken) {
                         <div class="button-container">
                             <button type="button" id="editButton" class="button-azul">Editar</button>
                             <button type="submit" id="saveButton" class="button-azul">Salvar</button>
-                            ${data.status_ativo === 0 
-                                ? `<button type="button" id="ativarButton" class="button-verde">Ativar</button>` 
-                                : `<button type="button" id="inativarButton" class="button-vermelho">Inativar</button>`}
+                          <!--  ${data.status_ativo === 0 
+                                ? `<button type="button" id="ativarButton" class="button-verde">Ativar</button>`
+                                : `<button type="button" id="inativarButton" class="button-vermelho">Inativar</button>`} -->
                         </div>
                     </form>
                     <h3>Distribuição do Token</h3>
