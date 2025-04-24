@@ -16,7 +16,7 @@ const BuscarUsuariosPinsSinistroModel = {
       logger.info(`Token ID processado: ${token_Id} (${typeof token_Id})`);
 
       const sqlQuery = `
-        SELECT token_id, usuario_id, quantidade_tokens
+        SELECT token_id, usuario_id, quantidade_tokens, rendimento_token
         FROM usuario_tokens
         WHERE token_id = ?
         AND quantidade_tokens > 0;

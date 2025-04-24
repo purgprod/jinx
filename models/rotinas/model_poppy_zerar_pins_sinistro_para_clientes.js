@@ -5,16 +5,16 @@ const logger = require('../../logger');
 const ZerarPinsSinistroModel = {
     async zerarPinsSinistro(id_token) {
         try {
-            logger.info(`Iniciando o zeramento de tokens para o token ${id_token}`);
+            logger.info(`Iniciando o zeramento de pins para o pin ${id_token}`);
 
             // Validação do token_Id
             if (typeof id_token !== 'number' || isNaN(id_token)) {
-                logger.error(`Token ID inválido: ${id_token}`);
-                throw new Error('Token ID deve ser um número válido');
+                logger.error(`id_token inválido: ${id_token}`);
+                throw new Error('id_token deve ser um número válido');
             }
 
             const token_Id = parseInt(id_token, 10);
-            logger.info(`Token ID processado: ${token_Id} (${typeof token_Id})`);
+            logger.info(`token_id processado: ${token_Id} (${typeof token_Id})`);
 
             const sqlQuery = `
                 UPDATE usuario_tokens 
@@ -34,7 +34,7 @@ const ZerarPinsSinistroModel = {
 
             return results;
         } catch (error) {
-            logger.error(`Erro ao zerar os tokens para o token ${id_token}:`, error);
+            logger.error(`Erro ao zerar os pins para o pin ${id_token}:`, error);
             logger.error(`Mensagem do erro: ${error.message}`);
             logger.error(`Consulta SQL: ${error.sql || 'SQL não disponível'}`);
             throw error;

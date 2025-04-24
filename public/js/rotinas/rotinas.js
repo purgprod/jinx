@@ -62,7 +62,7 @@ async function loadRotinasResults() {
                     ? '<span style="color: green;">✓ Sucesso</span>' 
                     : rotina.status_execucao === 'FALHA' 
                         ? '<span style="color: red;">✗ Falha</span>' 
-                        : '<span style="color: yellow;">⚠️ Pendente</span>';
+                        : '<span style="color: #D9AA1C;">⚠️ Pendente</span>';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -103,21 +103,24 @@ async function executarRotina(rotinaId, rotinaDescricao) {
         // Mostra no console a descrição recebida
         console.log('Descrição da rotina recebida:', rotinaDescricao);
 
-	if (rotinaDescricao === 'Histórico do free float dos Pins') {
-	    await RotinaTokensHistoricoFreeFloat(rotinaId);
-	} else if (rotinaDescricao === 'Histórico do valor investido e rendimentos por usuário') {
-	    await RotinaInvestimentoERendimento(rotinaId);
-	} else if (rotinaDescricao === 'Checagem de Pins em modo sinistro') {
-	    await RotinaChecagemPinsSinistro(rotinaId);
-	} else if (rotinaDescricao === 'Recompra de Pins em modo sinistro') {
-	    await RotinaRecompraPinsSinistro(rotinaId);
+	if (rotinaDescricao === '[Manutenção] - Histórico do free float dos Pins') {
+	    await ManutentacaoRotinaTokensHistoricoFreeFloat(rotinaId);
+	} else if (rotinaDescricao === '[Manutenção] - Histórico do valor investido e rendimentos por usuário') {
+	    await ManutentacaoRotinaInvestimentoERendimento(rotinaId);
+	} else if (rotinaDescricao === '[Manutenção] - Checagem de Pins em modo sinistro') {
+	    await ManutentacaoRotinaChecagemPinsSinistro(rotinaId);
+	} else if (rotinaDescricao === '[Manutenção] - Atualizar o status execução para Pendente') {
+	    await ManutencaoUpdateStatusExecucaoPendente(rotinaId);
+	} else if (rotinaDescricao === '[Poppy] - Recompra de Pins em modo sinistro') {
+	    await PoppyRotinaRecompraPinsSinistro(rotinaId);
 	} else {
 	    // Verifica se existe uma rotina criada na cron do Node.js
 	    const cronRotinas = [
-	        'Histórico do free float dos Pins',
-	        'Histórico do valor investido e rendimentos por usuário',
-	        'Checagem de Pins em modo sinistro',
-	        'Recompra de Pins em modo sinistro'
+	        '[Manutenção] - Histórico do free float dos Pins',
+	        '[Manutenção] - Histórico do valor investido e rendimentos por usuário',
+	        '[Manutenção] - Checagem de Pins em modo sinistro',
+	        '[Manutenção] - Atualizar o status execução para Pendente',
+	        '[Poppy] - Recompra de Pins em modo sinistro'
 	    ];
 
 	    if (!cronRotinas.includes(rotinaDescricao)) {
@@ -149,13 +152,17 @@ async function executarRotina(rotinaId, rotinaDescricao) {
         
     } catch (error) {
         console.error('Erro ao executar rotina:', error);
-        alert('Erro ao executar a rotina. Detalhes: ' + error.message);
+        alert('[Manutenção] - Erro ao executar a rotina. Detalhes: ' + error.message);
     }
 }
 
 
+//----------------------------------------------
+// ROTINAS EXCLUSIVAS DE MANUTENÇÃO DO ECOSSISTEMA
+// ---------------------------------------------
+
 // Função para executar a rotina de histórico do free float e executar rotina específica
-async function RotinaTokensHistoricoFreeFloat(rotinaId) {
+async function ManutentacaoRotinaTokensHistoricoFreeFloat(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/tokens-historico-free-float', {
             method: 'POST',
@@ -165,19 +172,19 @@ async function RotinaTokensHistoricoFreeFloat(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('Rotina de histórico do free float executada com sucesso');
+            console.log('[Manutenção] - Rotina de histórico do free float executada com sucesso');
             return true;
         } else {
-            console.error('Erro ao executar rotina de histórico do free float:', await response.text());
+            console.error('[Manutenção] - Erro ao executar rotina de histórico do free float:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('Erro ao executar rotina de histórico do free float:', error);
+        console.error('[Manutenção] - Erro ao executar rotina de histórico do free float:', error);
         return false;
     }
 }
 
-async function RotinaInvestimentoERendimento(rotinaId) {
+async function ManutentacaoRotinaInvestimentoERendimento(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/investimento-rendimento-historico', {
             method: 'POST',
@@ -187,19 +194,19 @@ async function RotinaInvestimentoERendimento(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('Rotina de histórico de investimentos e rendimentos executada com sucesso');
+            console.log('[Manutenção] - Rotina de histórico de investimentos e rendimentos executada com sucesso');
             return true;
         } else {
-            console.error('Erro ao executar rotina de histórico de investimentos e rendimentos:', await response.text());
+            console.error('[Manutenção] - Erro ao executar rotina de histórico de investimentos e rendimentos:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('Erro ao executar rotina de histórico de investimentos e rendimentos:', error);
+        console.error('[Manutenção] - Erro ao executar rotina de histórico de investimentos e rendimentos:', error);
         return false;
     }
 }
 
-async function RotinaChecagemPinsSinistro(rotinaId) {
+async function ManutentacaoRotinaChecagemPinsSinistro(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/checagem-pins-sinistro', {
             method: 'PUT',
@@ -209,21 +216,48 @@ async function RotinaChecagemPinsSinistro(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('Rotina para inativar pins em modo sinistro executada com sucesso');
+            console.log('[Manutenção] - Rotina para inativar pins em modo sinistro executada com sucesso');
             return true;
         } else {
-            console.error('Erro ao executar rotina para inativar pins em modo sinistro:', await response.text());
+            console.error('[Manutenção] - Erro ao executar rotina para inativar pins em modo sinistro:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('Erro ao executar rotina para inativar pins em modo sinistro:', error);
+        console.error('[Manutenção] - Erro ao executar rotina para inativar pins em modo sinistro:', error);
         return false;
     }
 }
 
-async function RotinaRecompraPinsSinistro(rotinaId) {
+async function ManutencaoUpdateStatusExecucaoPendente(rotinaId) {
     try {
-        const response = await fetch('/api/rotinas/recompra-pins-sinistro', {
+        const response = await fetch('/api/rotinas/manutencao-update-status-execucao-pendente', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Manutenção] - Rotina para fazer update em todas as rotinas para status_execucao Pendente executada com sucesso');
+            return true;
+        } else {
+            console.error('[Manutenção] - Erro ao executar rotina para fazer update em todas as rotinas para status_execucao Pendente:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Manutenção] - Erro ao executar rotina para update em todas as rotinas para status_execucao Pendente:', error);
+        return false;
+    }
+}
+
+
+//----------------------------------------------
+// ROTINAS EXCLUSIVAS DA POPPY
+// ---------------------------------------------
+
+async function PoppyRotinaRecompraPinsSinistro(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-recompra-pins-sinistro', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -231,14 +265,14 @@ async function RotinaRecompraPinsSinistro(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('Rotina para recompra de pins em modo sinistro executada com sucesso');
+            console.log('[Poppy] - Rotina para recompra de pins em modo sinistro executada com sucesso');
             return true;
         } else {
-            console.error('Erro ao executar rotina para recompra de pins em modo sinistro:', await response.text());
+            console.error('[Poppy] - Erro ao executar rotina para recompra de pins em modo sinistro:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('Erro ao executar rotina para recompra pins em modo sinistro:', error);
+        console.error('[Poppy] - Erro ao executar rotina para recompra pins em modo sinistro:', error);
         return false;
     }
 }
@@ -247,7 +281,8 @@ async function RotinaRecompraPinsSinistro(rotinaId) {
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
-window.RotinaTokensHistoricoFreeFloat = RotinaTokensHistoricoFreeFloat;
-window.RotinaInvestimentoERendimento = RotinaInvestimentoERendimento;
-window.RotinaChecagemPinsSinistro = RotinaChecagemPinsSinistro;
-window.RotinaRecompraPinsSinistro = RotinaRecompraPinsSinistro;
+window.ManutentacaoRotinaTokensHistoricoFreeFloat = ManutentacaoRotinaTokensHistoricoFreeFloat;
+window.ManutentacaoRotinaInvestimentoERendimento = ManutentacaoRotinaInvestimentoERendimento;
+window.ManutentacaoRotinaChecagemPinsSinistro = ManutentacaoRotinaChecagemPinsSinistro;
+window.ManutentacaoUpdateStatusExecucaoPendente = ManutentacaoUpdateStatusExecucaoPendente;
+window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;
