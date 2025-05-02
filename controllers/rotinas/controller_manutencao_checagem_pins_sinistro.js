@@ -1,5 +1,5 @@
 const BuscarPinsSinistroModel = require('../../models/rotinas/model_buscar_pins_sinistro');
-const RotinasInativarPinsSinistroModel = require('../../models/rotinas/model_inativar_pins_sinistro');
+const RotinasInativarPinsModel = require('../../models/rotinas/model_manutencao_inativar_pins');
 const BuscarResultadosSinistroModel = require('../../models/rotinas/model_buscar_resultados_financeiros_sinistro');
 const FlagSinistroResultadoModel = require('../../models/rotinas/model_gerenciamento_resultados_financeiros_sinistro');
 const logger = require('../../logger');
@@ -82,7 +82,7 @@ const ChecagemPinsSinistroController = {
                 pinsSinistro.map(async (pin) => {
                     try {
                         // Chama o model para inativar o pin
-                        await RotinasInativarPinsSinistroModel.inativarPinsSinistro(pin.id_token);
+                        await RotinasInativarPinsModel.inativarPins(pin.id_token);
                         
                         return {
                             id_token: pin.id_token,

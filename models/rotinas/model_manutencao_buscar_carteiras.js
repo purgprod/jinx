@@ -1,19 +1,19 @@
-// models/rotinas/model_poppy_buscar_saldos_carteiras.js
+// models/rotinas/model_manutencao_buscar_carteiras.js
 const connection = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const BuscarSaldosCarteirasModel = {
-    async getSaldosCarteiras() {
-        const sqlQuery = `SELECT usuario_id, saldo
+const BuscarCarteirasModel = {
+    async getCarteiras() {
+        const sqlQuery = `SELECT *
 	FROM carteiras
 	WHERE status_ativo = 1
 	;`
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
-                    logger.error('Erro ao buscar saldos das carteiras:', error);
+                    logger.error('Erro ao buscar dados das carteiras:', error);
                     logger.info(`Resposta: ${JSON.stringify(results)}`);
-		    reject(new Error('Erro ao buscar saldos das carteiras'));
+		    reject(new Error('Erro ao buscar dados das carteiras'));
                 } else {
                     resolve(results);
 		    logger.info(`Resposta: ${JSON.stringify(results)}`);
@@ -23,5 +23,5 @@ const BuscarSaldosCarteirasModel = {
     }
 };
 
-module.exports = BuscarSaldosCarteirasModel;
+module.exports = BuscarCarteirasModel;
 

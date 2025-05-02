@@ -1,8 +1,8 @@
 const connection = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const RotinasInativarPinsSinistroModel = {
-    async inativarPinsSinistro(id_token) {
+const RotinasInativarPinsModel = {
+    async inativarPins(id_token) {
         const sqlQuery = `UPDATE tokens 
                 SET status_ativo = 0 
                 WHERE id_token = ?;`;
@@ -20,5 +20,5 @@ const RotinasInativarPinsSinistroModel = {
     }
 };
 
-module.exports = RotinasInativarPinsSinistroModel;
+module.exports = RotinasInativarPinsModel;
 

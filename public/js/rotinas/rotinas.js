@@ -12,7 +12,6 @@ function getDataFormatada() {
     return new Intl.DateTimeFormat('pt-BR', options).format(data);
 }
 
-
 // Carrega as rotinas do banco de dados e atualiza a tabela
 async function loadRotinasResults() {
     const centerPanel = document.querySelector('.center-panel');
@@ -49,7 +48,6 @@ async function loadRotinasResults() {
             rotinas.forEach(rotina => {
                 const dateOptions = {
                     timeZone: 'America/Sao_Paulo',
-              //    timeZone: 'UTC',
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -103,66 +101,126 @@ async function executarRotina(rotinaId, rotinaDescricao) {
         // Mostra no console a descrição recebida
         console.log('Descrição da rotina recebida:', rotinaDescricao);
 
-	if (rotinaDescricao === '[Manutenção] - Histórico do free float dos Pins') {
-	    await ManutentacaoRotinaTokensHistoricoFreeFloat(rotinaId);
-	} else if (rotinaDescricao === '[Manutenção] - Histórico do valor investido e rendimentos por usuário') {
-	    await ManutentacaoRotinaInvestimentoERendimento(rotinaId);
-	} else if (rotinaDescricao === '[Manutenção] - Checagem de Pins em modo sinistro') {
-	    await ManutentacaoRotinaChecagemPinsSinistro(rotinaId);
-	} else if (rotinaDescricao === '[Manutenção] - Atualizar o status execução para Pendente') {
-	    await ManutencaoUpdateStatusExecucaoPendente(rotinaId);
-	} else if (rotinaDescricao === '[Poppy] - Recompra de Pins em modo sinistro') {
-	    await PoppyRotinaRecompraPinsSinistro(rotinaId);
-	} else {
-	    // Verifica se existe uma rotina criada na cron do Node.js
-	    const cronRotinas = [
-	        '[Manutenção] - Histórico do free float dos Pins',
-	        '[Manutenção] - Histórico do valor investido e rendimentos por usuário',
-	        '[Manutenção] - Checagem de Pins em modo sinistro',
-	        '[Manutenção] - Atualizar o status execução para Pendente',
-	        '[Poppy] - Recompra de Pins em modo sinistro'
-	    ];
+        // Define os endpoints para executar após a rotina
+        const endpointSucesso = `/api/rotinas/${rotinaId}/manutencao-status-execucao-sucesso`;
+        const endpointFalha = `/api/rotinas/${rotinaId}/manutencao-status-execucao-falha`;
+        const endpointAtualizarExecucao = `/api/rotinas/${rotinaId}/manutencao-atualizar-ultima-execucao`;
 
-	    if (!cronRotinas.includes(rotinaDescricao)) {
-	        alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
-	        return;
-	    }
-	}
-            const dataAgora = getDataFormatada();
+        let execucao;
 
+        try {
             // Executa a rotina específica
-            const rotinaResponse = await fetch(`/api/rotinas/${rotinaId}/executar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            switch(rotinaDescricao) {
+                case '[Manutenção] - Histórico do free float dos Pins':
+                    execucao = await ManutencaoRotinaTokensHistoricoFreeFloat(rotinaId);
+                    break;
+                case '[Manutenção] - Histórico do valor investido e rendimentos por usuário':
+                    execucao = await ManutencaoRotinaInvestimentoERendimento(rotinaId);
+                    break;
+                case '[Manutenção] - Checagem de Pins em modo sinistro':
+                    execucao = await ManutencaoRotinaChecagemPinsSinistro(rotinaId);
+                    break;
+                case '[Manutenção] - Checagem de Resultados Financeiros vencidos':
+                    execucao = await ManutencaoRotinaChecagemResultadosFinanceirosVencimento(rotinaId);
+                    break;
+                case '[Manutenção] - Atualizar o status execução para Pendente':
+                    execucao = await ManutencaoUpdateStatusExecucaoPendente(rotinaId);
+                    break;
+                case '[Manutenção] - Atualizar o ranking dos usuários':
+                    execucao = await ManutencaoRankingUsuarios(rotinaId);
+                    break;
+                case '[Poppy] - Recompra de Pins em modo sinistro':
+                    execucao = await PoppyRotinaRecompraPinsSinistro(rotinaId);
+                    break;
+                case '[Poppy] - Recompra de Pins vencidos':
+                    execucao = await PoppyRotinaRecompraPinsVencidos(rotinaId);
+                    break;
+                case '[Poppy] - Pagamento dos rendimentos diário':
+                    execucao = await PoppyRotinaPagamentoRendimentoDiario(rotinaId);
+                    break;
+                default:
+                    // Verifica se existe uma rotina criada na cron do Node.js
+                    const cronRotinas = [
+                        '[Manutenção] - Histórico do free float dos Pins',
+                        '[Manutenção] - Histórico do valor investido e rendimentos por usuário',
+                        '[Manutenção] - Checagem de Pins em modo sinistro',
+                        '[Manutenção] - Checagem de Resultados Financeiros vencidos',
+                        '[Manutenção] - Atualizar o status execução para Pendente',
+                        '[Manutenção] - Atualizar o ranking dos usuários',
+                        '[Poppy] - Recompra de Pins em modo sinistro',
+                        '[Poppy] - Recompra de Pins vencidos',
+                        '[Poppy] - Pagamento dos rendimentos diário'
+                    ];
 
-            if (rotinaResponse.ok) {
-                // Atualiza a ultima_execucao
-                await fetch(`/api/rotinas/${rotinaId}/atualizar-execucao`, {
-                    method: 'PUT'
+                    if (!cronRotinas.includes(rotinaDescricao)) {
+                        alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
+                        return;
+                    }
+                    // Adicione aqui a lógica para rotinas adicionais se necessário
+                    break;
+            }
+
+		console.log('Valor de execucao:', execucao);
+		
+            // Verifica se a execução foi bem-sucedida
+            if (execucao) {
+                // Executa os endpoints de sucesso
+                const responseSucesso = await fetch(endpointSucesso, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                // Atualiza a tabela
-                loadRotinasResults();
+                if (responseSucesso.status === 200) {
+                    // Atualiza a última execução
+                    const responseAtualizacao = await fetch(endpointAtualizarExecucao, {
+                        method: 'PUT'
+                    });
+
+                    if (responseAtualizacao.status === 200) {
+                        console.info('[Manutenção] - Execução finalizada com sucesso.');
+                        loadRotinasResults();
+                    } else {
+                        console.error('[Manutenção] - Erro ao atualizar a última execução.');
+                        throw new Error('Erro ao atualizar a última execução.');
+                    }
+                } else {
+                    console.error('[Manutenção] - Erro ao executar endpoint de sucesso.');
+                    throw new Error('Erro ao executar endpoint de sucesso.');
+                }
             } else {
-                throw new Error('Erro ao executar rotina específica');
+                // Executa os endpoints de falha
+                const responseFalha = await fetch(endpointFalha, {
+                    method: 'POST'
+                });
+
+                if (responseFalha.status === 200) {
+                    console.info('[Manutenção] - Status atualizado com sucesso.');
+                    loadRotinasResults();
+                } else {
+                    console.error('[Manutenção] - Erro ao executar endpoint de falha.');
+                    throw new Error('Erro ao executar endpoint de falha.');
+                }
             }
-        
+
+        } catch (error) {
+            console.error('Erro ao executar rotina:', error);
+            alert('[Manutenção] - Erro ao executar a rotina. Detalhes: ' + error.message);
+        }
+
     } catch (error) {
         console.error('Erro ao executar rotina:', error);
         alert('[Manutenção] - Erro ao executar a rotina. Detalhes: ' + error.message);
     }
 }
 
-
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DE MANUTENÇÃO DO ECOSSISTEMA
 // ---------------------------------------------
 
 // Função para executar a rotina de histórico do free float e executar rotina específica
-async function ManutentacaoRotinaTokensHistoricoFreeFloat(rotinaId) {
+async function ManutencaoRotinaTokensHistoricoFreeFloat(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/tokens-historico-free-float', {
             method: 'POST',
@@ -184,7 +242,7 @@ async function ManutentacaoRotinaTokensHistoricoFreeFloat(rotinaId) {
     }
 }
 
-async function ManutentacaoRotinaInvestimentoERendimento(rotinaId) {
+async function ManutencaoRotinaInvestimentoERendimento(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/investimento-rendimento-historico', {
             method: 'POST',
@@ -206,7 +264,7 @@ async function ManutentacaoRotinaInvestimentoERendimento(rotinaId) {
     }
 }
 
-async function ManutentacaoRotinaChecagemPinsSinistro(rotinaId) {
+async function ManutencaoRotinaChecagemPinsSinistro(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/checagem-pins-sinistro', {
             method: 'PUT',
@@ -228,6 +286,28 @@ async function ManutentacaoRotinaChecagemPinsSinistro(rotinaId) {
     }
 }
 
+async function ManutencaoRotinaChecagemResultadosFinanceirosVencimento(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/manutencao-inativar-resultado-financeiro-vencido', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Manutenção] - Rotina para inativar resultados financeiros vencidos executada com sucesso');
+            return true;
+        } else {
+            console.error('[Manutenção] - Erro ao executar rotina para inativar resultados financeiros vencidos:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Manutenção] - Erro ao executar rotina para inativar resultados financeiros vencidos:', error);
+        return false;
+    }
+}
+
 async function ManutencaoUpdateStatusExecucaoPendente(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/manutencao-update-status-execucao-pendente', {
@@ -245,11 +325,32 @@ async function ManutencaoUpdateStatusExecucaoPendente(rotinaId) {
             return false;
         }
     } catch (error) {
-        console.error('[Manutenção] - Erro ao executar rotina para update em todas as rotinas para status_execucao Pendente:', error);
+        console.error('[Manutenção] - Erro ao executar rotina para update em todas as rotinas para status_execuço Pendente:', error);
         return false;
     }
 }
 
+async function ManutencaoRankingUsuarios(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/manutencao-ranking-usuarios', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Manutenção] - Rotina para fazer o ranking dos usuários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Manutenção] - Erro ao executar rotina para fazer o ranking dos usuários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Manutenção] - Erro ao executar rotina para fazer o ranking dos usuários:', error);
+        return false;
+    }
+}
 
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DA POPPY
@@ -277,12 +378,60 @@ async function PoppyRotinaRecompraPinsSinistro(rotinaId) {
     }
 }
 
+async function PoppyRotinaRecompraPinsVencidos(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-recompra-pins-vencidos', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Poppy] - Rotina para recompra de pins vencidos executada com sucesso');
+            return true;
+        } else {
+            console.error('[Poppy] - Erro ao executar rotina para recompra de pins vencidos:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Poppy] - Erro ao executar rotina para recompra pins vencidos:', error);
+        return false;
+    }
+}
+
+async function PoppyRotinaPagamentoRendimentoDiario(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-pagamento-rendimento-diario', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Poppy] - Rotina para pagamento dos rendimentos diários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Poppy] - Erro ao executar rotina para pagamento dos rendimentos diários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Poppy] - Erro ao executar rotina para pagamento dos rendimentos diários:', error);
+        return false;
+    }
+}
 
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
-window.ManutentacaoRotinaTokensHistoricoFreeFloat = ManutentacaoRotinaTokensHistoricoFreeFloat;
-window.ManutentacaoRotinaInvestimentoERendimento = ManutentacaoRotinaInvestimentoERendimento;
-window.ManutentacaoRotinaChecagemPinsSinistro = ManutentacaoRotinaChecagemPinsSinistro;
-window.ManutentacaoUpdateStatusExecucaoPendente = ManutentacaoUpdateStatusExecucaoPendente;
+window.ManutencaoRotinaTokensHistoricoFreeFloat = ManutencaoRotinaTokensHistoricoFreeFloat;
+window.ManutencaoRotinaInvestimentoERendimento = ManutencaoRotinaInvestimentoERendimento;
+window.ManutencaoRotinaChecagemPinsSinistro = ManutencaoRotinaChecagemPinsSinistro;
+window.ManutencaoRotinaChecagemResultadosFinanceirosVencimento = ManutencaoRotinaChecagemResultadosFinanceirosVencimento;
+window.ManutencaoUpdateStatusExecucaoPendente = ManutencaoUpdateStatusExecucaoPendente;
+window.ManutencaoRankingUsuarios = ManutencaoRankingUsuarios;
 window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;
+window.PoppyRotinaRecompraPinsVencidos = PoppyRotinaRecompraPinsVencidos;
+window.PoppyRotinaPagamentoRendimentoDiario = PoppyRotinaPagamentoRendimentoDiario;
+

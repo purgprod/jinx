@@ -1,19 +1,19 @@
-// models/rotinas/model_buscar_usuarios_com_pins_sinistro.js
+// models/rotinas/model_buscar_usuarios_quantidade_rendimento_pins.js
 const pool = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const BuscarUsuariosPinsSinistroModel = {
+const BuscarUsuariosQuantidadeRendimentoPinsModel = {
   /**
-   * Retorna os usuários que possuem pins de um token sinistrado.
+   * Retorna os usuários que possuem pins vencidos.
    * @param {number} id_token - ID do token
    */
-  async getUsuariosPinsSinistro(id_token) {
+  async getUsuariosQuantidadeRendimentoPins(id_token) {
     try {
-      logger.info(`Iniciando busca de usuários para o token ${id_token}`);
+      logger.info(`Iniciando busca de usuários para o Pins ${id_token}`);
 
       // Garanta que o id_token seja um número
       const token_Id = parseInt(id_token, 10);
-      logger.info(`Token ID processado: ${token_Id} (${typeof token_Id})`);
+      logger.info(`token_id processado: ${token_Id} (${typeof token_Id})`);
 
       const sqlQuery = `
         SELECT token_id, usuario_id, quantidade_tokens, rendimento_token
@@ -32,7 +32,7 @@ const BuscarUsuariosPinsSinistroModel = {
 
       return results;
     } catch (error) {
-      logger.error(`Erro ao buscar usuários com pins em sinistro para o token ${id_token}:`, error);
+      logger.error(`Erro ao buscar usuários com Pins vencidos para o token_id ${id_token}:`, error);
       logger.error(`Mensagem do erro: ${error.message}`);
       logger.error(`Consulta SQL: ${error.sql || 'SQL não disponível'}`);
       throw error;
@@ -40,5 +40,5 @@ const BuscarUsuariosPinsSinistroModel = {
   },
 };
 
-module.exports = BuscarUsuariosPinsSinistroModel;
+module.exports = BuscarUsuariosQuantidadeRendimentoPinsModel;
 

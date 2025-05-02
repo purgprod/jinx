@@ -1,9 +1,9 @@
-// models/rotinas/model_mover_pins_sinistro_para_purg.js
+// models/rotinas/model_mover_pins_para_purg.js
 const pool = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const MoverPinsSinistroModel = {
-    async moverPinsSinistro(tokenId, totalQuantidade, totalRendimento) {
+const MoverPinsModel = {
+    async moverPins(tokenId, totalQuantidade, totalRendimento) {
         try {
             logger.info(`Iniciando a movimentação de pins para o token ${tokenId}`);
 
@@ -53,5 +53,5 @@ const MoverPinsSinistroModel = {
     }
 };
 
-module.exports = MoverPinsSinistroModel;
+module.exports = MoverPinsModel;
 

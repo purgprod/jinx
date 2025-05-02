@@ -1,9 +1,9 @@
-// models/rotinas/model_zerar_pins_sinistro_para_clientes.js
+// models/rotinas/model_zerar_pins_para_clientes.js
 const pool = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const ZerarPinsSinistroModel = {
-    async zerarPinsSinistro(id_token) {
+const ZerarPinsModel = {
+    async zerarPins(id_token) {
         try {
             logger.info(`Iniciando o zeramento de pins para o pin ${id_token}`);
 
@@ -42,5 +42,5 @@ const ZerarPinsSinistroModel = {
     }
 };
 
-module.exports = ZerarPinsSinistroModel;
+module.exports = ZerarPinsModel;
 

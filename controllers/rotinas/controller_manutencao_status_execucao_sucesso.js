@@ -1,5 +1,5 @@
-// controllers/rotinas/controller_executar_rotina.js
-const RotinasExecutarModel = require('../../models/rotinas/model_executar_rotina');
+// controllers/rotinas/controller_manutencao_status_execucao_sucesso.js
+const RotinasExecutarModel = require('../../models/rotinas/model_manutencao_status_execucao_sucesso');
 const logger = require('../../logger');
 
 const RotinasExecutarController = {

@@ -1,8 +1,8 @@
 const pool = require('../../database/database_crowdfunding');
 const logger = require('../../logger');
 
-const CarteiraPinsSinistroModel = {
-    async transacoesPinsSinistro(usuario_id, novoSaldo) {
+const AtualizarCarteiraUsuarioModel = {
+    async atualizarCarteiraUsuario(usuario_id, novoSaldo) {
         try {
             const dataAtual = new Date();
             logger.info(`Iniciando o registro da transação de pins para o usuário ${usuario_id}`);
@@ -48,5 +48,5 @@ const CarteiraPinsSinistroModel = {
     }
 };
 
-module.exports = CarteiraPinsSinistroModel;
+module.exports = AtualizarCarteiraUsuarioModel;
 

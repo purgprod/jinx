@@ -138,10 +138,8 @@ body {
     font-size: 55px;
     font-family: 'Bevan', sans-serif;
     color: white;
-    display: flex;
-    align-items: flex-end;
-    gap: 5px;
     margin-top: -5px;
+    text-align: center;
 }
 
 .beta-box {

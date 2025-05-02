@@ -1,5 +1,5 @@
 const logger = require('../../logger');
-const BuscarPinsSinistroModel = require('../../models/rotinas/model_poppy_buscar_pins_sinistro');
+const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const ZerarPinsModel = require('../../models/rotinas/model_poppy_zerar_pins_para_clientes');
 const MoverPinsModel = require('../../models/rotinas/model_poppy_mover_pins_para_purg');
@@ -9,26 +9,26 @@ const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_
 
 const MAX_USUARIOS_LOG = process.env.MAX_USUARIOS_LOG || 100;
 
-const RecompraPinsSinistroController = {
-    async executeRecompraPinsSinistro(req, res) {
-        logger.info('Iniciando recompra‑pins‑sinistro');
+const RecompraPinsVencidosController = {
+    async executeRecompraPinsVencidos(req, res) {
+        logger.info('Iniciando recompra de Pins vencidos');
 
         try {
-            // Etapa 1: Buscar tokens em sinistro
-            const pinsSinistro = await BuscarPinsSinistroModel.getPinsSinistro();
+            // Etapa 1: Buscar Pins vencidos
+            const pinsAtivos = await BuscarPinsModel.getPins();
 
-            if (!pinsSinistro.length) {
-                logger.warn('Nenhum Pin em sinistro encontrado');
+            if (!pinsAtivos.length) {
+                logger.warn('Nenhum Pin ativo encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum Pin em sinistro.',
-                    pinsSinistro: [],
+                    message: 'Nenhum Pin ativo encontrado.',
+                    pinsAtivos: [],
                     usuariosPorToken: {},
                 });
             }
 
             // Etapa 2: Buscar usuários por token
             const idTokens = [];
-            for (const pin of pinsSinistro) {
+            for (const pin of pinsAtivos) {
                 const tokenId = parseInt(pin.id_token, 10);
                 if (!isNaN(tokenId)) {
                     idTokens.push(tokenId);
@@ -36,10 +36,10 @@ const RecompraPinsSinistroController = {
             }
 
             if (idTokens.length === 0) {
-                logger.warn('Nenhum token válido encontrado');
+                logger.warn('Nenhum Pin válido encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum token válido encontrado.',
-                    pinsSinistro: pinsSinistro,
+                    message: 'Nenhum Pim válido encontrado.',
+                    pins: pinsAtivos,
                     usuariosPorToken: {},
                 });
             }
@@ -64,7 +64,7 @@ const RecompraPinsSinistroController = {
                 logger.warn('Nenhum usuário encontrado para os tokens');
                 return res.status(200).json({
                     message: 'Nenhum usuário encontrado.',
-                    pinsSinistro: pinsSinistro,
+                    pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                 });
             }
@@ -117,7 +117,7 @@ const RecompraPinsSinistroController = {
                 logger.warn('Nenhum total válido encontrado');
                 return res.status(200).json({
                     message: 'Nenhum total válido encontrado.',
-                    pinsSinistro: pinsSinistro,
+                    pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: {},
                 });
@@ -194,7 +194,7 @@ const RecompraPinsSinistroController = {
                 }
             }
 
-            // Etapa 5: Movimentação dos pins para Purg
+            // Etapa 5: Movimentação dos tokens para Purg
             for (const tokenId in tokensTotais) {
                 const { totalQuantidade, totalRendimento } = tokensTotais[tokenId];
                 
@@ -223,7 +223,7 @@ const RecompraPinsSinistroController = {
                 logger.warn('Nenhum usuário para zerar tokens');
                 return res.status(200).json({
                     message: 'Nenhum usuário para zerar tokens.',
-                    pinsSinistro: pinsSinistro,
+                    pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,
                 });
@@ -250,7 +250,7 @@ const RecompraPinsSinistroController = {
                     return res.status(500).json({
                         error: 'Erro ao zerar tokens',
                         message: `Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`,
-                        pinsSinistro: pinsSinistro,
+                        pinsAtivos: pinsAtivos,
                         usuariosPorToken: {},
                         tokensTotais: tokensTotais,
                     });
@@ -268,7 +268,7 @@ const RecompraPinsSinistroController = {
                 logger.warn('Nenhum saldo encontrado nas carteiras');
                 return res.status(200).json({
                     message: 'Nenhum saldo encontrado nas carteiras.',
-                    pinsSinistro: pinsSinistro,
+                    pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,
                 });
@@ -306,7 +306,7 @@ const RecompraPinsSinistroController = {
                     return res.status(500).json({
                         error: 'Erro ao atualizar o saldo da carteira',
                         message: `Erro ao processar o usuário ${usuario_id}: ${error.message}`,
-                        pinsSinistro: pinsSinistro,
+                        pinsAtivos: pinsAtivos,
                         usuariosPorToken: {},
                         tokensTotais: tokensTotais,
                     });
@@ -317,7 +317,7 @@ const RecompraPinsSinistroController = {
             logger.info('Rotina concluída com sucesso');
             return res.status(200).json({
                 message: 'Rotinas executadas com sucesso',
-                pinsSinistro: pinsSinistro,
+                pinsAtivos: pinsAtivos,
                 usuariosPorToken: usuariosPorToken,
                 tokensTotais: tokensTotais,
             });
@@ -332,5 +332,5 @@ const RecompraPinsSinistroController = {
     },
 };
 
-module.exports = RecompraPinsSinistroController;
+module.exports = RecompraPinsVencidosController;
 
