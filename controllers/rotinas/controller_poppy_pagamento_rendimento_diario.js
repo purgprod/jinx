@@ -3,7 +3,7 @@ const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const BuscarSaldosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_saldos_carteiras');
 const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_atualizar_carteiras');
-const RendimentosPinsModel = require('../../models/rotinas/model_poppy_historico_rendimentos'); // Novo model importado
+const RendimentosPinsModel = require('../../models/rotinas/model_poppy_historico_rendimentos');
 
 const MAX_USUARIOS_LOG = process.env.MAX_USUARIOS_LOG || 100;
 
@@ -77,7 +77,7 @@ const PagamentoRendimentoDiarioController = {
                 for (const usuario of usuarios) {
                     try {
                         // Garantir que o rendimento_token é um número válido
-                        const rendimento = typeof usuario.rendimento_token === 'number' ?
+                        const rendimento = typeof usuario.rendimento_token === 'number' ? 
                             usuario.rendimento_token : parseFloat(usuario.rendimento_token);
 
                         if (isNaN(rendimento)) {
@@ -143,7 +143,6 @@ const PagamentoRendimentoDiarioController = {
 
                     // Calcular o novo saldo
                     const novoSaldo = parseFloat(saldoAtual.saldo) + rendimentoTotal;
-
                     // Atualizar o saldo da carteira
                     const resultadoAtualizacao = await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
                         parseInt(usuarioId),
@@ -178,6 +177,41 @@ const PagamentoRendimentoDiarioController = {
                 }
             }
 
+            // Etapa 6: Executar a manutenção do ranking dos usuários
+            logger.info('Iniciando manutenção do ranking dos usuários');
+            let responseManutencaoRanking = null;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/rotinas/manutencao-ranking-usuarios', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                responseManutencaoRanking = {
+                    status: response.ok,
+                    dados: await response.json()
+                };
+
+                if (!response.ok) {
+                    logger.warn('Erro ao executar manutenção do ranking dos usuários');
+                    logger.warn(`Resposta do servidor: ${response.status} ${response.statusText}`);
+                } else {
+                    logger.info('Manutenção do ranking dos usuários executada com sucesso');
+                    logger.info(`Resposta da API: ${JSON.stringify(responseManutencaoRanking.dados)}`);
+                }
+
+            } catch (error) {
+                logger.error(`Erro ao executar manutenção do ranking dos usuários:`, error);
+                logger.error(`Mensagem do erro: ${error.message}`);
+                responseManutencaoRanking = {
+                    status: false,
+                    dados: {},
+                    error: error.message
+                };
+            }
+
             // Resposta final
             logger.info('Rotina concluída com sucesso');
             return res.status(200).json({
@@ -185,7 +219,8 @@ const PagamentoRendimentoDiarioController = {
                 pinsAtivos: pinsAtivos,
                 usuariosPorToken: usuariosPorToken,
                 totalRendimentos: totalRendimentosPorUsuario,
-                atualizacoes: atualizacoes
+                atualizacoes: atualizacoes,
+                manutencaoRanking: responseManutencaoRanking
             });
 
         } catch (error) {

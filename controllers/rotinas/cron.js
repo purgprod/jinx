@@ -271,7 +271,7 @@ cron.schedule('0 15 * * *', async () => {
 });
 
 // Agendar execução da rotina para recompra dos Pins vencidos 15:10:00 todos os dias
-cron.schedule('50 16 * * *', async () => {
+cron.schedule('10 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Recompra de Pins vencidos agendada às 15:10:00');
         

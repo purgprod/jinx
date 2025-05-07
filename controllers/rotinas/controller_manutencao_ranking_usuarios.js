@@ -106,7 +106,7 @@ const ManutencaoRankingUsuariosController = {
 
                     // Resposta final com os dados processados
                     return res.status(200).json({
-                        message: 'Manutenção de ranking de usuários concluída com sucesso',
+                        message: 'Rotinas executadas com sucesso',
                         carteiras: carteiras,
                         usuarios_processados: usuariosProcessados
                     });

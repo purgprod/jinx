@@ -1,4 +1,7 @@
 import dicionarioRespostas from './dicionario_respostas.js';
+import dicionarioRespostasConservador from './dicionario_respostas_conservador.js';
+import dicionarioRespostasModerado from './dicionario_respostas_moderado.js';
+import dicionarioRespostasAgressivo from './dicionario_respostas_agressivo.js';
 
 // Variável para armazenar os dados dos tokens
 let tokensData = [];
@@ -23,6 +26,8 @@ function loadUserDetails(usuario_id) {
                         `}
                     </div>
                 </form>
+                <h3>Dados Financeiros</h3>
+                <div id="rankingContainer" class="ranking-container"></div>
                 <div id="carteiraContainer" class="carteira-container"></div>
                 <h3>Distribuição da Carteira por Perfil</h3>
                 <div id="chartsContainer">
@@ -40,19 +45,28 @@ function loadUserDetails(usuario_id) {
                 <h3>Tokens do Usuário</h3>
                 <div id="tokensContainer" class="cards-container"></div>
                 <h3>Suitability</h3>
-                <form id="suitabilityDetailsForm">
+                <div id="suitabilityContainer" class="suitability-container"></div>
+                <h3>Respostas Principais</h3>
+		<form id="suitabilityDetailsForm">
                     ${generateSuitabilitySection(data)}
+                </form>
+                <h3>Respostas Complementares</h3>
+		<form id="suitabilityDetailsForm">
+                    ${generateSuitabilityComplementarSection(data)}
                 </form>
             `;
 
             setupEventListenersUsuarios(usuario_id);
             loadSuitability(usuario_id);  
+            loadSuitabilityComplementar(usuario_id);  
 
             Promise.all([
                 loadUserTokens(usuario_id), 
                 loadUltimosDadosFinanceiros(usuario_id),
                 loadDadosFinanceirosHistoricos(usuario_id), 
-                loadDadosRendimentosHistoricos(usuario_id) 
+                loadDadosRendimentosHistoricos(usuario_id),
+		loadSuitabilityCompleto(usuario_id),
+		loadRanking(usuario_id)
             ]).then(() => {
                 return Promise.all([
 		loadSaques(usuario_id),
@@ -133,10 +147,10 @@ function loadSuitability(usuario_id) {
             }
             return response.json();
         })
-        .then(suitabilityData => {
-            console.log('Suitability Data:', suitabilityData);
+        .then(dadosSuitability => {
+            console.log('Suitability Data:', dadosSuitability);
             
-            const suitability = suitabilityData[0];
+            const suitability = dadosSuitability[0];
             const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
             suitabilityInputs.forEach(input => {
                 const key = input.name;
@@ -149,6 +163,52 @@ function loadSuitability(usuario_id) {
             document.getElementById('percentual_aproximado_outros').value = suitability.percentual_aproximado_outros != null ? parseFloat(suitability.percentual_aproximado_outros).toFixed(2) : 'Não especificado';
             document.getElementById('percentual_aproximado_renda_variavel').value = suitability.percentual_aproximado_renda_variavel != null ? parseFloat(suitability.percentual_aproximado_renda_variavel).toFixed(2) : 'Não especificado';
             document.getElementById('percentual_aproximado_derivativos').value = suitability.percentual_aproximado_derivativos != null ? parseFloat(suitability.percentual_aproximado_derivativos).toFixed(2) : 'Não especificado';
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de suitability:', error);
+        });
+}
+
+function generateSuitabilityComplementarSection(data) {
+    return `
+        <label for="tolerancia_risco">Se você tivesse que escolher entre duas opções de investimento, uma com baixo risco e retorno modesto e outra com risco moderado e retorno potencialmente alto, qual você escolheria?</label>
+        <input type="text" id="tolerancia_risco" name="tolerancia_risco" value="${dicionarioRespostasConservador.tolerancia_risco[data.tolerancia_risco] ?? 'Não especificado'}" readonly>
+        <label for="expectativa_retorno">Qual é a sua expectativa de retorno anual em seus investimentos?</label>
+        <input type="text" id="expectativa_retorno" name="expectativa_retorno" value="${dicionarioRespostasConservador.expectativa_retorno[data.expectativa_retorno] ?? 'Não especificado'}" readonly>
+        <label for="reacao_mudanca_mercado">Quando você ouve notícias sobre quedas significativas no mercado, qual é sua primeira reação?</label>
+        <input type="text" id="reacao_mudanca_mercado" name="reacao_mudanca_mercado" value="${dicionarioRespostasConservador.reacao_mudanca_mercado[data.reacao_mudanca_mercado] ?? 'Não especificado'}" readonly>
+        <label for="abordagem_diversificacao">Como você vê a diversificação em seus investimentos?</label>
+        <input type="text" id="abordagem_diversificacao" name="abordagem_diversificacao" value="${data.abordagem_diversificacao ?? 'Não especificado'}" readonly>
+        <label for="influencia_oscilacoes_mercado">Com que frequência você revisa sua carteira de investimentos e considera fazer ajustes?</label>
+        <input type="text" id="influencia_oscilacoes_mercado" name="influencia_oscilacoes_mercado" value="${dicionarioRespostasConservador.influencia_oscilacoes_mercado[data.influencia_oscilacoes_mercado] ?? 'Não especificado'}" readonly>
+        <label for="nivel_conforto_renda_variavel">Qual é seu nível de conforto ao investir em produtos de renda variável (ações, ETFs, etc.)?</label>
+        <input type="text" id="nivel_conforto_renda_variavel" name="nivel_conforto_renda_variavel" value="${dicionarioRespostasConservador.nivel_conforto_renda_variavel[data.nivel_conforto_renda_variavel] ?? 'Não especificado'}" readonly>
+        <label for="tempo_resiliencia_perdas">Se seus investimentos fossem perdendo valor, como você reagiria?</label>
+        <input type="text" id="tempo_resiliencia_perdas" name="tempo_resiliencia_perdas" value="${dicionarioRespostasConservador.tempo_resiliencia_perdas[data.tempo_resiliencia_perdas] ?? 'Não especificado'}" readonly>
+        <label for="busca_novas_oportunidades">Com que frequência você busca novas oportunidades de investimento?</label>        
+        <input type="text" id="busca_novas_oportunidades" name="busca_novas_oportunidades" value="${dicionarioRespostasConservador.busca_novas_oportunidades[data.busca_novas_oportunidades] ?? 'Não especificado'}" readonly>
+    `;
+}
+
+function loadSuitabilityComplementar(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/suitability-complementar`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de suitability complementar');
+            }
+            return response.json();
+        })
+        .then(dadosSuitability => {
+            console.log('Suitability Data:', dadosSuitability);
+            
+            const suitability = dadosSuitability[0];
+            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
+            suitabilityInputs.forEach(input => {
+                const key = input.name;
+                if (suitability[key] !== undefined) {
+                    input.value = dicionarioRespostasConservador[key][suitability[key]] || 'Não especificado';
+                }
+            });
         })
         .catch(error => {
             console.error('Erro ao carregar dados de suitability:', error);
@@ -404,7 +464,6 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
     const carteiraContainer = document.getElementById('carteiraContainer');
     if (carteiraContainer) {
         carteiraContainer.innerHTML = `
-            <h3>Dados Financeiros</h3>
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
@@ -429,6 +488,121 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
             </div>
             <canvas id="carteiraChart"></canvas>
             <canvas id="carteiraRendimentosChart"></canvas>
+        `;
+    }
+}
+
+function loadSuitabilityCompleto(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/perfil-suitability-usuario-completo`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de suitability');
+            }
+            return response.json();
+        })
+        .then(dadosSuitability => {
+            console.log('Suitability Data:', dadosSuitability);
+            
+            // Ensure the data is an object
+            if (dadosSuitability && typeof dadosSuitability === 'object') {
+                // Rename 'suitability_complementar' to 'suitability_completo'
+                const suitabilityData = {
+                    ...dadosSuitability,
+                    suitability_completo: dadosSuitability.suitability_complementar
+                };
+                
+                displaySuitability(suitabilityData, usuario_id);
+            } else {
+                console.warn('Não foi encontrado dados de Suitability ou os dados não estão no formato esperado.');
+                const defaultSuitability = {
+                    suitability: 'Não especificado',
+                    suitability_completo: 'Não especificado'
+                };
+                displaySuitability(defaultSuitability, usuario_id);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de suitability:', error);
+            const defaultSuitability = {
+                suitability: 'Não especificado',
+                suitability_completo: 'Não especificado'
+            };
+            displaySuitability(defaultSuitability, usuario_id);
+        });
+}
+
+
+function displaySuitability(dados, usuario_id) {
+    const suitabilityContainer = document.getElementById('suitabilityContainer');
+    if (suitabilityContainer) {
+        const data = dados || {};
+        
+        suitabilityContainer.innerHTML = `
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Perfil:</strong> ${data.suitability || 'Não especificado'}</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Sub-perfil:</strong> ${data.suitability_completo || 'Não especificado'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function loadRanking(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/ranking-usuarios`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados de ranking');
+            }
+            return response.json();
+        })
+        .then(dadosRanking => {
+            console.log('Ranking Data:', dadosRanking);
+            
+            // Ensure the data is an object
+            if (dadosRanking && typeof dadosRanking === 'object') {
+                const rankingData = {
+                    ...dadosRanking
+                };
+                
+                displayRanking(rankingData, usuario_id);
+            } else {
+                console.warn('Não foi encontrado dados de Ranking ou os dados não estão no formato esperado.');
+                const defaultRanking = {
+                    ranking: 'Não especificado'
+                };
+                displayRanking(defaultRanking, usuario_id);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de ranking:', error);
+            const defaultRanking = {
+                ranking: 'Não especificado',
+            };
+            displayRanking(defaultRanking, usuario_id);
+        });
+}
+
+
+function displayRanking(dados, usuario_id) {
+    const rankingContainer = document.getElementById('rankingContainer');
+    if (rankingContainer) {
+        const data = dados || {};
+        
+        rankingContainer.innerHTML = `
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Ranking:</strong> ${data.ranking || 'Não especificado'}</p>
+                    </div>
+                </div>
+            </div>
         `;
     }
 }

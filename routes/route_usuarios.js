@@ -16,6 +16,11 @@ const UsuariosDadosRendimentosHistoricosController = require('../controllers/usu
 const UsuariosSaquesController = require('../controllers/usuarios/controller_saques_usuarios');
 const UsuariosDepositosController = require('../controllers/usuarios/controller_depositos_usuarios');
 const UsuariosSuitabilityController = require('../controllers/usuarios/controller_suitability_usuarios');
+const UsuariosSuitabilityUpdateController = require('../controllers/usuarios/controller_calculo_suitability_update');
+const UsuariosSuitabilityComplementarUpdateController = require('../controllers/usuarios/controller_calculo_suitability_complementar_update');
+const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usuarios/controller_perfil_suitability_completo_usuario');
+const UsuariosRankingController = require('../controllers/usuarios/controller_ranking_usuario');
+const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
 
 // Rota para criar um novo usuário
 router.post('/api/usuarios', UsuariosCriarController.createUser);
@@ -58,6 +63,21 @@ router.get('/api/usuarios/:id/dados-depositos', UsuariosDepositosController.getD
 
 // Rota para obter o suitability do usuário
 router.get('/api/usuarios/:id/suitability', UsuariosSuitabilityController.getSuitability);
+
+// Rota para fazer o calculo e update do suitability do usuário
+router.put('/api/usuarios/:id/calculo-suitability-update', UsuariosSuitabilityUpdateController.calcularSuitability);
+
+// Rota para fazer o calculo e update do suitability complementar do usuário
+router.put('/api/usuarios/:id/calculo-suitability-complementar-update', UsuariosSuitabilityComplementarUpdateController.calcularSuitabilityComplementar);
+
+// Rota para obter qual o suitability e suitability_complementar de cada usuário
+router.get('/api/usuarios/:id/perfil-suitability-usuario-completo', UsuariosPerfilSuitabilityCompletoController.getSuitability);
+
+// Rota para obter qual o ranking de cada usuário
+router.get('/api/usuarios/:id/ranking-usuarios', UsuariosRankingController.getRanking);
+
+// Rota para obter o suitability complementar do usuário
+router.get('/api/usuarios/:id/suitability-complementar', UsuariosSuitabilityComplementarController.getSuitabilityComplementar);
 
 module.exports = router;
 
