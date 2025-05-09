@@ -13,6 +13,7 @@ const UsuariosResetarSenhaController = require('../controllers/usuarios/controll
 const UsuariosDadosFinanceirosController = require('../controllers/usuarios/controller_dadosfinanceiros_usuarios');
 const UsuariosDadosFinanceirosHistoricosController = require('../controllers/usuarios/controller_dadosfinanceiroshistoricos_usuarios');
 const UsuariosDadosRendimentosHistoricosController = require('../controllers/usuarios/controller_dadosrendimentoshistoricos_usuarios');
+const UsuariosSaldosController = require('../controllers/usuarios/controller_saldos_usuarios');
 const UsuariosSaquesController = require('../controllers/usuarios/controller_saques_usuarios');
 const UsuariosDepositosController = require('../controllers/usuarios/controller_depositos_usuarios');
 const UsuariosSuitabilityController = require('../controllers/usuarios/controller_suitability_usuarios');
@@ -54,6 +55,9 @@ router.get('/api/usuarios/:id/dados-financeiros-historicos', UsuariosDadosFinanc
 
 // Rota para obter os dados de rendimentos históricos do usuário
 router.get('/api/usuarios/:id/dados-financeiros-rendimentos-historicos', UsuariosDadosRendimentosHistoricosController.getDadosRendimentosHistoricos);
+
+// Rota para obter o saldo do usuário 
+router.get('/api/usuarios/:id/dados-saldo', UsuariosSaldosController.getSaldos);
 
 // Rota para obter o total de saques do usuário 
 router.get('/api/usuarios/:id/dados-saques', UsuariosSaquesController.getSaques);

@@ -18,6 +18,7 @@ const ManutencaoRankingUsuariosController = require('../controllers/rotinas/cont
 const PoppyRecompraPinsSinistroController = require('../controllers/rotinas/controller_poppy_recompra_pins_sinistro.js');
 const PoppyRecompraPinsVencidosController = require('../controllers/rotinas/controller_poppy_recompra_pins_vencidos.js');
 const PoppyPagamentoRendimentoDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js');
+const PoppyPagamentoAssinaturaDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js');
 
 
 //----------------------------------------------
@@ -66,6 +67,9 @@ router.put('/api/rotinas/poppy-recompra-pins-vencidos', PoppyRecompraPinsVencido
 
 // Rota para pagamento do rendimento diário dos Pins
 router.put('/api/rotinas/poppy-pagamento-rendimento-diario', PoppyPagamentoRendimentoDiarioController.executePagamentoRendimentoDiario);
+
+// Rota para pagamento da assinatura diário em X% dos rendimentos
+router.put('/api/rotinas/poppy-pagamento-assinatura-diario', PoppyPagamentoAssinaturaDiarioController.executePagamentoAssinatura);
 
 module.exports = router;
 

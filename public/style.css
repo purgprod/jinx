@@ -135,7 +135,7 @@ body {
 }
 
 .purg-title {
-    font-size: 55px;
+    font-size: 75px;
     font-family: 'Bevan', sans-serif;
     color: white;
     margin-top: -5px;
@@ -212,18 +212,20 @@ body {
     margin-bottom: 20px;
 }
 
-#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton, #receitasButton, #rotinasButton {
+#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton, #receitasButton, #rotinasButton, #assinaturasButton {
     display: block;
     width: 100%;
+    font-size: 18px;
     padding: 10px 20px;
     background-color: #202A37;
     color: white;
     border: none;
     text-align: center;
+    margin-top: 20px;
     cursor: pointer;
 }
 
-#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover {
+#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover, #assinaturasButton:hover {
     background-color: #657BB4;
 }
 
@@ -264,6 +266,36 @@ body {
 
 #suitabilityDetailsForm input,
 #suitabilityDetailsForm textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #D4D4D4;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: #333333;
+    background-color: #F9F9F9;
+}
+
+/* Formulário de suitability complementar*/
+#suitabilityComplementarForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+}
+
+#suitabilityComplementarForm label {
+    font-weight: bold;
+    color: #333333;
+    margin-bottom: 7px;
+}
+
+#suitabilityComplementarForm input,
+#suitabilityComplementarForm textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #D4D4D4;

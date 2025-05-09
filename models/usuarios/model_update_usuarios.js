@@ -9,10 +9,10 @@ class UsersUpdateModel {
     static async updateUsuario(id, data) {
         const sqlQuery = `
             UPDATE users
-            SET email = ?, nome = ?, nome_completo = ?, cpf = ?, nome_da_mae = ?, genero = ?, celular = ?, estado = ?, cidade = ?, cep =?, bairro = ?, logradouro = ?, numero_da_rua = ?, complemento = ?, termos_de_uso = ?, data_nascimento = ?
+            SET email = ?, assinatura = ?, nome = ?, nome_completo = ?, cpf = ?, nome_da_mae = ?, genero = ?, celular = ?, estado = ?, cidade = ?, cep =?, bairro = ?, logradouro = ?, numero_da_rua = ?, complemento = ?, termos_de_uso = ?, data_nascimento = ?
             WHERE usuario_id = ?
         `;
-        const values = [data.email, data.nome, data.nome_completo, data.cpf, data.nome_da_mae, data.genero, data.celular, data.estado, data.cidade, data.cep, data.bairro, data.logradouro, data.numero_da_rua, data.complemento, data.termos_de_uso, data.data_nascimento, id];
+        const values = [data.email, data.assinatura, data.nome, data.nome_completo, data.cpf, data.nome_da_mae, data.genero, data.celular, data.estado, data.cidade, data.cep, data.bairro, data.logradouro, data.numero_da_rua, data.complemento, data.termos_de_uso, data.data_nascimento, id];
 
         // Logando as informações do usuário que serão atualizadas
         logger.info(`Executando update para usuario com ID: ${id}`);

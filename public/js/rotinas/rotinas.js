@@ -138,6 +138,9 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Poppy] - Pagamento dos rendimentos diário':
                     execucao = await PoppyRotinaPagamentoRendimentoDiario(rotinaId);
                     break;
+                case '[Poppy] - Pagamento das assinaturas diário':
+                    execucao = await PoppyRotinaPagamentoAssinaturaDiario(rotinaId);
+                    break;
                 default:
                     // Verifica se existe uma rotina criada na cron do Node.js
                     const cronRotinas = [
@@ -149,7 +152,8 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Manutenção] - Atualizar o ranking dos usuários',
                         '[Poppy] - Recompra de Pins em modo sinistro',
                         '[Poppy] - Recompra de Pins vencidos',
-                        '[Poppy] - Pagamento dos rendimentos diário'
+                        '[Poppy] - Pagamento dos rendimentos diário',
+                        '[Poppy] - Pagamento das assinaturas diário'
                     ];
 
                     if (!cronRotinas.includes(rotinaDescricao)) {
@@ -422,6 +426,28 @@ async function PoppyRotinaPagamentoRendimentoDiario(rotinaId) {
     }
 }
 
+async function PoppyRotinaPagamentoAssinaturaDiario(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-pagamento-assinatura-diario', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Poppy] - Rotina para pagamento das assinaturas diários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', error);
+        return false;
+    }
+}
+
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
@@ -434,4 +460,5 @@ window.ManutencaoRankingUsuarios = ManutencaoRankingUsuarios;
 window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;
 window.PoppyRotinaRecompraPinsVencidos = PoppyRotinaRecompraPinsVencidos;
 window.PoppyRotinaPagamentoRendimentoDiario = PoppyRotinaPagamentoRendimentoDiario;
+window.PoppyRotinaPagamentoAssinaturaDiario = PoppyRotinaPagamentoAssinaturaDiario;
 

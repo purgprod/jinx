@@ -51,24 +51,31 @@ function loadUserDetails(usuario_id) {
                     ${generateSuitabilitySection(data)}
                 </form>
                 <h3>Respostas Complementares</h3>
-		<form id="suitabilityDetailsForm">
-                    ${generateSuitabilityComplementarSection(data)}
-                </form>
+		<form id="suitabilityComplementarForm"></form>
             `;
 
             setupEventListenersUsuarios(usuario_id);
-            loadSuitability(usuario_id);  
-            loadSuitabilityComplementar(usuario_id);  
+	  //  generateSuitabilityComplementarSection(usuario_id);
+
+            // Chamada da função com callback para atualizar o formulário
+            generateSuitabilityComplementarSection(usuario_id, (html) => {
+                const form = document.getElementById('suitabilityComplementarForm');
+                if (form) {
+                    form.innerHTML = html;
+                }
+            });
 
             Promise.all([
                 loadUserTokens(usuario_id), 
                 loadUltimosDadosFinanceiros(usuario_id),
                 loadDadosFinanceirosHistoricos(usuario_id), 
                 loadDadosRendimentosHistoricos(usuario_id),
+                loadSuitability(usuario_id),  
 		loadSuitabilityCompleto(usuario_id),
 		loadRanking(usuario_id)
             ]).then(() => {
                 return Promise.all([
+		loadSaldos(usuario_id),
 		loadSaques(usuario_id),
 		loadDepositos(usuario_id)
 		]);
@@ -169,50 +176,102 @@ function loadSuitability(usuario_id) {
         });
 }
 
-function generateSuitabilityComplementarSection(data) {
-    return `
-        <label for="tolerancia_risco">Se você tivesse que escolher entre duas opções de investimento, uma com baixo risco e retorno modesto e outra com risco moderado e retorno potencialmente alto, qual você escolheria?</label>
-        <input type="text" id="tolerancia_risco" name="tolerancia_risco" value="${dicionarioRespostasConservador.tolerancia_risco[data.tolerancia_risco] ?? 'Não especificado'}" readonly>
-        <label for="expectativa_retorno">Qual é a sua expectativa de retorno anual em seus investimentos?</label>
-        <input type="text" id="expectativa_retorno" name="expectativa_retorno" value="${dicionarioRespostasConservador.expectativa_retorno[data.expectativa_retorno] ?? 'Não especificado'}" readonly>
-        <label for="reacao_mudanca_mercado">Quando você ouve notícias sobre quedas significativas no mercado, qual é sua primeira reação?</label>
-        <input type="text" id="reacao_mudanca_mercado" name="reacao_mudanca_mercado" value="${dicionarioRespostasConservador.reacao_mudanca_mercado[data.reacao_mudanca_mercado] ?? 'Não especificado'}" readonly>
-        <label for="abordagem_diversificacao">Como você vê a diversificação em seus investimentos?</label>
-        <input type="text" id="abordagem_diversificacao" name="abordagem_diversificacao" value="${data.abordagem_diversificacao ?? 'Não especificado'}" readonly>
-        <label for="influencia_oscilacoes_mercado">Com que frequência você revisa sua carteira de investimentos e considera fazer ajustes?</label>
-        <input type="text" id="influencia_oscilacoes_mercado" name="influencia_oscilacoes_mercado" value="${dicionarioRespostasConservador.influencia_oscilacoes_mercado[data.influencia_oscilacoes_mercado] ?? 'Não especificado'}" readonly>
-        <label for="nivel_conforto_renda_variavel">Qual é seu nível de conforto ao investir em produtos de renda variável (ações, ETFs, etc.)?</label>
-        <input type="text" id="nivel_conforto_renda_variavel" name="nivel_conforto_renda_variavel" value="${dicionarioRespostasConservador.nivel_conforto_renda_variavel[data.nivel_conforto_renda_variavel] ?? 'Não especificado'}" readonly>
-        <label for="tempo_resiliencia_perdas">Se seus investimentos fossem perdendo valor, como você reagiria?</label>
-        <input type="text" id="tempo_resiliencia_perdas" name="tempo_resiliencia_perdas" value="${dicionarioRespostasConservador.tempo_resiliencia_perdas[data.tempo_resiliencia_perdas] ?? 'Não especificado'}" readonly>
-        <label for="busca_novas_oportunidades">Com que frequência você busca novas oportunidades de investimento?</label>        
-        <input type="text" id="busca_novas_oportunidades" name="busca_novas_oportunidades" value="${dicionarioRespostasConservador.busca_novas_oportunidades[data.busca_novas_oportunidades] ?? 'Não especificado'}" readonly>
-    `;
+async function generateSuitabilityComplementarSection(usuario_id, callback) {
+    let dicionarioRespostasComplementar;
+    let suitabilityComplementar;
+    let dataComplementar;
+
+    try {
+        // Busca dados do perfil de suitability
+        const suitabilityResponse = await fetch(`/api/usuarios/${usuario_id}/perfil-suitability-usuario-completo`);
+        const suitabilityData = await suitabilityResponse.json();
+
+        suitabilityComplementar = suitabilityData.suitability;
+        console.log('suitabilityComplementar:', suitabilityComplementar);
+
+        // Busca dados complementares
+        const complementarResponse = await fetch(`/api/usuarios/${usuario_id}/suitability-complementar`);
+
+        if (!complementarResponse.ok) {
+            throw new Error('Erro ao buscar dados de suitability complementar');
+        }
+
+        dataComplementar = await complementarResponse.json();
+        console.log('dataComplementar:', dataComplementar);
+
+        // Garante que dataComplementar seja um objeto
+        const dadosComplementar = dataComplementar[0] || {};
+
+        // Verifica se suitabilityComplementar está definida e não é nula
+        if (!suitabilityComplementar) {
+            console.error('suitabilityComplementar não foi definida ou está nula.');
+            suitabilityComplementar = 'Conservador'; // Valor padrão
+        }
+
+        // Carrega o dicionário correto baseado no tipo de suitability
+        switch (suitabilityComplementar) {
+            case 'Conservador':
+                dicionarioRespostasComplementar = await import('./dicionario_respostas_conservador.js');
+                console.log('Dicionário Conservador carregado:', dicionarioRespostasComplementar.default);
+                break;
+            case 'Moderado':
+                dicionarioRespostasComplementar = await import('./dicionario_respostas_moderado.js');
+                console.log('Dicionário Moderado carregado:', dicionarioRespostasComplementar.default);
+                break;
+            case 'Agressivo':
+                dicionarioRespostasComplementar = await import('./dicionario_respostas_agressivo.js');
+                console.log('Dicionário Agressivo carregado:', dicionarioRespostasComplementar.default);
+                break;
+            default:
+                dicionarioRespostasComplementar = { default: {} }; // Fallback
+                console.warn('Tipo de suitability não reconhecido:', suitabilityComplementar);
+        }
+
+        // Gera o HTML da seção usando os dados complementares e o dicionário correto
+        const html = `
+            <label for="tolerancia_risco">Se você tivesse que escolher entre duas opções de investimento, uma com baixo risco e retorno modesto e outra com risco moderado e retorno potencialmente alto, qual você escolheria?</label>
+            <input type="text" id="tolerancia_risco" name="tolerancia_risco" value="${getResposta(dadosComplementar.tolerancia_risco, 'tolerancia_risco', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="expectativa_retorno">Qual é a sua expectativa de retorno anual em seus investimentos?</label>
+            <input type="text" id="expectativa_retorno" name="expectativa_retorno" value="${getResposta(dadosComplementar.expectativa_retorno, 'expectativa_retorno', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="reacao_mudanca_mercado">Quando você ouve notícias sobre quedas significativas no mercado, qual é sua primeira reação?</label>
+            <input type="text" id="reacao_mudanca_mercado" name="reacao_mudanca_mercado" value="${getResposta(dadosComplementar.reacao_mudanca_mercado, 'reacao_mudanca_mercado', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="abordagem_diversificacao">Como você vê a diversificação em seus investimentos?</label>
+            <input type="text" id="abordagem_diversificacao" name="abordagem_diversificacao" value="${getResposta(dadosComplementar.abordagem_diversificacao, 'abordagem_diversificacao', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="influencia_oscilacoes_mercado">Com que frequência você revisa sua carteira de investimentos e considera fazer ajustes?</label>
+            <input type="text" id="influencia_oscilacoes_mercado" name="influencia_oscilacoes_mercado" value="${getResposta(dadosComplementar.influencia_oscilacoes_mercado, 'influencia_oscilacoes_mercado', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="nivel_conforto_renda_variavel">Qual é seu nível de conforto ao investir em produtos de renda variável (ações, ETFs, etc.)?</label>
+            <input type="text" id="nivel_conforto_renda_variavel" name="nivel_conforto_renda_variavel" value="${getResposta(dadosComplementar.nivel_conforto_renda_variavel, 'nivel_conforto_renda_variavel', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="tempo_resiliencia_perdas">Se seus investimentos fossem perdendo valor, como você reagiria?</label>
+            <input type="text" id="tempo_resiliencia_perdas" name="tempo_resiliencia_perdas" value="${getResposta(dadosComplementar.tempo_resiliencia_perdas, 'tempo_resiliencia_perdas', dicionarioRespostasComplementar.default)}" readonly>
+
+            <label for="busca_novas_oportunidades">Com que frequência você busca novas oportunidades de investimento?</label>
+            <input type="text" id="busca_novas_oportunidades" name="busca_novas_oportunidades" value="${getResposta(dadosComplementar.busca_novas_oportunidades, 'busca_novas_oportunidades', dicionarioRespostasComplementar.default)}" readonly>
+        `;
+
+        if (callback) {
+            callback(html);
+        }
+        return html;
+    } catch (error) {
+        console.error('Erro ao gerar seção de complementar:', error);
+        if (callback) {
+            callback('');
+        }
+        return '';
+    }
 }
 
-function loadSuitabilityComplementar(usuario_id) {
-    return fetch(`/api/usuarios/${usuario_id}/suitability-complementar`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao buscar dados de suitability complementar');
-            }
-            return response.json();
-        })
-        .then(dadosSuitability => {
-            console.log('Suitability Data:', dadosSuitability);
-            
-            const suitability = dadosSuitability[0];
-            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
-            suitabilityInputs.forEach(input => {
-                const key = input.name;
-                if (suitability[key] !== undefined) {
-                    input.value = dicionarioRespostasConservador[key][suitability[key]] || 'Não especificado';
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Erro ao carregar dados de suitability:', error);
-        });
+function getResposta(valor, campo, dicionario) {
+    if (!valor || !dicionario?.[campo]) {
+        return 'Não especificado';
+    }
+    return dicionario[campo][valor] || 'Não especificado';
 }
 
 function loadUserTokens(usuario_id) {
@@ -467,12 +526,17 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Valor da Carteira:</strong> R$ ${parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Saldo da Carteira:</strong> R$ <span id="totalSaldo">0.00</span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Valor Investido:</strong> R$ ${parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
                     </div>
                 </div>
                 <div class="card">
@@ -503,14 +567,12 @@ function loadSuitabilityCompleto(usuario_id) {
         .then(dadosSuitability => {
             console.log('Suitability Data:', dadosSuitability);
             
-            // Ensure the data is an object
+            // Restante do seu código...
             if (dadosSuitability && typeof dadosSuitability === 'object') {
-                // Rename 'suitability_complementar' to 'suitability_completo'
                 const suitabilityData = {
                     ...dadosSuitability,
                     suitability_completo: dadosSuitability.suitability_complementar
                 };
-                
                 displaySuitability(suitabilityData, usuario_id);
             } else {
                 console.warn('Não foi encontrado dados de Suitability ou os dados não estão no formato esperado.');
@@ -605,6 +667,24 @@ function displayRanking(dados, usuario_id) {
             </div>
         `;
     }
+}
+
+function loadSaldos(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/dados-saldo`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar saldo');
+            }
+            return response.json();
+        })
+        .then(dadosSaldos => {
+            const totalSaldoElement = document.getElementById('totalSaldo');
+            const totalSaldo = dadosSaldos['saldo'] || 0;
+            totalSaldoElement.textContent = parseFloat(totalSaldo).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar saldo do usuário:', error);
+        });
 }
 
 function loadSaques(usuario_id) {
@@ -995,6 +1075,8 @@ function generateUserInputFields(data) {
     return `
         <label for="email">E-mail:</label>
         <input type="text" id="email" name="email" value="${data.email ?? ''}" readonly>
+        <label for="assinatura">Assinatura:</label>
+        <input type="text" id="assinatura" name="assinatura" value="${data.assinatura ?? ''}" readonly>
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
         <label for="nome_completo">Nome Completo:</label>
