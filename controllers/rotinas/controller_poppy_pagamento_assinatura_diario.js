@@ -5,14 +5,56 @@ const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_
 const HistoricoPagamentoAssinaturaModel = require('../../models/rotinas/model_poppy_historico_pagamento_assinatura');
 const axios = require('axios');
 
-// Definição da porcentagem como uma variável no início do arquivo
-const PORCENTAGEM_ASSINATURA = 0.25; // 25% para a assinatura
-
 const PagamentoAssinaturaController = {
     async executePagamentoAssinatura(req, res) {
         logger.info('Iniciando pagamento da assinatura Poppy Pro');
 
         try {
+            // Buscar a porcentagem da assinatura do endpoint
+            let porcentagemAssinatura;
+            try {
+                const response = await axios.get('http://localhost:3000/api/assinaturas/buscar-porcentagem');
+                // Extract the porcentagem_assinatura from the response array
+                porcentagemAssinatura = parseFloat(response.data[0].porcentagem_assinatura);
+                logger.info(`Porcentagem de assinatura obtida com sucesso: ${porcentagemAssinatura}`);
+            } catch (error) {
+                logger.error('Erro ao buscar porcentagem de assinatura:', error);
+                return res.status(500).json({
+                    error: 'Erro ao buscar porcentagem de assinatura',
+                    message: 'Não foi possível obter a porcentagem da assinatura',
+                    data: [],
+                    status_geral: {
+                        etapa1: 'falha',
+                        etapa2: 'nao_iniciada',
+                        etapa3: 'nao_iniciada',
+                        etapa4: 'nao_iniciada',
+                        etapa5: 'nao_iniciada',
+                        etapa6: 'nao_iniciada'
+                    }
+                });
+            }
+
+            if (isNaN(porcentagemAssinatura) || porcentagemAssinatura <= 0) {
+                logger.error('Porcentagem de assinatura inválida ou não informada');
+                return res.status(400).json({
+                    error: 'Porcentagem inválida',
+                    message: 'O valor da porcentagem de assinatura é inválido',
+                    data: [],
+                    status_geral: {
+                        etapa1: 'falha',
+                        etapa2: 'nao_iniciada',
+                        etapa3: 'nao_iniciada',
+                        etapa4: 'nao_iniciada',
+                        etapa5: 'nao_iniciada',
+                        etapa6: 'nao_iniciada'
+                    }
+                });
+            }
+
+            // Convert percentage to decimal
+            const porcentagemDecimal = porcentagemAssinatura / 100;
+            logger.info(`Porcentagem decimalizada: ${porcentagemDecimal}`);
+
             // Etapa 1: Buscar rendimentos do dia atual
             logger.info(`Buscando rendimentos pagos na data: ${new Date().toISOString().split('T')[0]}`);
             const rendimentos = await BuscarRendimentosModel.getRendimentos(new Date().toISOString().split('T')[0]);
@@ -70,7 +112,8 @@ const PagamentoAssinaturaController = {
 
                             // Etapa 5: Calcular o novo saldo
                             try {
-                                const valorAssinatura = Number((rendimento.rendimento_diario * PORCENTAGEM_ASSINATURA).toFixed(8));
+                                // Calculate the subscription amount using the decimal percentage
+                                const valorAssinatura = Number((rendimento.rendimento_diario * porcentagemDecimal).toFixed(8));
                                 const novoSaldo = Number((Number(saldoAtual) - Number(valorAssinatura)).toFixed(8));
 
                                 // Atualizar a carteira com o novo saldo usando o modelo

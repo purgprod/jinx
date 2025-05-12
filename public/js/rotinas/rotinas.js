@@ -26,7 +26,7 @@ async function loadRotinasResults() {
         // Cria o cabeçalho da tabela
         const thead = document.createElement('thead');
         thead.innerHTML = `
-            <tr>
+	    <tr>
                 <th>Rotina</th>
                 <th>Hora Agendada</th>
                 <th>Última Execução</th>

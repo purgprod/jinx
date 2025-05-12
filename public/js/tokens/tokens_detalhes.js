@@ -26,7 +26,7 @@ function loadTokensDetails(idToken) {
             const centerPanel = document.querySelector('.center-panel');
             if (centerPanel) {
                 centerPanel.innerHTML = `
-                    <h2>Detalhes do Token ${data.razao_social}</h2>
+                    <h2>Detalhes do Pin ${data.razao_social}</h2>
                     <form id="financialDetailsForm">
                         ${generateTokensInputFields(data)}
                         <div class="button-container">

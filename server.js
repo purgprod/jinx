@@ -10,6 +10,7 @@ const route_tokens = require('./routes/route_tokens');
 const route_usuarios = require('./routes/route_usuarios');
 const route_ecossistema = require('./routes/route_ecossistema');
 const route_rotinas = require('./routes/route_rotinas');
+const route_assinaturas = require('./routes/route_assinaturas');
 
 const app = express();
 const port = 3000;
@@ -103,6 +104,9 @@ app.use('/', route_ecossistema); // Prefixo das rotas para ecossistema
 
 //Usar o roteador para rotinas
 app.use('/', route_rotinas); // Prefixo das rotas para rotinas
+
+//Usar o roteador para assinaturas
+app.use('/', route_assinaturas); // Prefixo das rotas para assinaturas
 
 // Iniciar o servidor
 app.listen(port, () => {
