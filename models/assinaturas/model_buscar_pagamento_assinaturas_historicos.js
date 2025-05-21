@@ -5,7 +5,7 @@ const logger = require('../../logger');
 
 class PagamentosAssinaturasHistoricosModel {
     
-	// Método para obter todos os dados de pagamento das assinaturas históricos do ecossistema
+	// Método para obter todos os dados de pagamento das assinaturas históricos
 	static async getPagamentosAssinaturasHistoricos(usuarioId) {
     		const query = `
     		SELECT 
@@ -16,13 +16,13 @@ class PagamentosAssinaturasHistoricosModel {
     		GROUP BY DATE(data_criacao)
     		ORDER BY data_criacao ASC
 		`;
-    	logger.info(`Recuperando dados de pagamento das assinaturas históricos para o ecossistema`);
+    	logger.info(`Recuperando dados de pagamento das assinaturas históricos`);
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; // Retorna todos os dados de pagamento das assinaturas históricos
     		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
-        	logger.error(`Erro ao buscar dados de pagamento das assinaturas históricos para o ecossistema: ${error.message}`);
+        	logger.error(`Erro ao buscar dados de pagamento das assinaturas históricos para: ${error.message}`);
         	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}

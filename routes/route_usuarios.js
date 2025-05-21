@@ -21,6 +21,7 @@ const UsuariosSuitabilityUpdateController = require('../controllers/usuarios/con
 const UsuariosSuitabilityComplementarUpdateController = require('../controllers/usuarios/controller_calculo_suitability_complementar_update');
 const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usuarios/controller_perfil_suitability_completo_usuario');
 const UsuariosRankingController = require('../controllers/usuarios/controller_ranking_usuario');
+const UsuariosSinistroController = require('../controllers/usuarios/controller_sinistro_usuario');
 const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
 
 // Rota para criar um novo usuário
@@ -79,6 +80,9 @@ router.get('/api/usuarios/:id/perfil-suitability-usuario-completo', UsuariosPerf
 
 // Rota para obter qual o ranking de cada usuário
 router.get('/api/usuarios/:id/ranking-usuarios', UsuariosRankingController.getRanking);
+
+// Rota para obter qual o sinistro de cada usuário
+router.get('/api/usuarios/:id/sinistro-usuarios', UsuariosSinistroController.getSinistro);
 
 // Rota para obter o suitability complementar do usuário
 router.get('/api/usuarios/:id/suitability-complementar', UsuariosSuitabilityComplementarController.getSuitabilityComplementar);

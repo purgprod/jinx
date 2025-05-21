@@ -13,6 +13,8 @@ const ManutencaoChecagemPinsSinistroController = require('../controllers/rotinas
 const ManutencaoUpdateStatusExecucaoPendenteController = require('../controllers/rotinas/controller_manutencao_update_status_execucao_pendente');
 const ManutencaoChecagemResultadosFinanceirosVencimentoController = require('../controllers/rotinas/controller_manutencao_checagem_resultados_financeiros_vencimento');
 const ManutencaoRankingUsuariosController = require('../controllers/rotinas/controller_manutencao_ranking_usuarios');
+const ManutencaoSinistroUsuariosController = require('../controllers/rotinas/controller_manutencao_sinistro_usuarios');
+const ManutencaoPlanosAssinaturasHistoricoController = require('../controllers/rotinas/controller_manutencao_planos_assinaturas_historicos');
 
 //Variáveis exclusivas de rotinas da Poppy
 const PoppyRecompraPinsSinistroController = require('../controllers/rotinas/controller_poppy_recompra_pins_sinistro.js');
@@ -54,6 +56,12 @@ router.put('/api/rotinas/manutencao-inativar-resultado-financeiro-vencido', Manu
 
 // Rota para rankear os nossos usuários baseados no saldo deles
 router.put('/api/rotinas/manutencao-ranking-usuarios', ManutencaoRankingUsuariosController.executeManutencaoRankingUsuarios);
+
+// Rota para setar o sinistro dos nossos usuários baseados no ranking deles
+router.put('/api/rotinas/manutencao-sinistro-usuarios', ManutencaoSinistroUsuariosController.executeManutencaoSinistroUsuarios);
+
+// Rota para gravar no banco os planos das assinaturas diário
+router.post('/api/rotinas/manutencao-planos-assinaturas-historico', ManutencaoPlanosAssinaturasHistoricoController.executeManutencaoPlanosAssinaturasHistoricos);
 
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DA POPPY

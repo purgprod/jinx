@@ -37,6 +37,8 @@ function loadAssinaturasResults() {
             </div>
             <h2>Histórico de Pagamentos das Assinaturas</h2>
             <canvas id="assinaturasHistoricosChart"></canvas>
+            <h2>Histórico da Evolução dos Usuários por Planos</h2>
+            <canvas id="planosHistoricosChart"></canvas>
         `;
 
         centerPanel.innerHTML = formHTML;
@@ -71,13 +73,22 @@ function loadAssinaturasResults() {
         // Configura os botões Editar e Salvar
         setupEventListeners();
 
-        // Carrega e renderiza os dados históricos
+        // Carrega e renderiza os dados históricos do pagamento das assinaturas
         loadPagamentoAssinaturasHistoricos()
             .then(dados => {
                 renderizarGraficoPagamentoAssinaturasHistóricos(dados);
             })
             .catch(error => {
-                console.error('Erro ao carregar ou renderizar dados históricos:', error);
+                console.error('Erro ao carregar ou renderizar dados históricos do pagamento das assinaturas:', error);
+            });
+
+	// Carrega e renderiza os dados históricos dos planos
+        loadPlanosAssinaturasHistoricos()
+            .then(dados => {
+                renderizarGraficoPlanosAssinaturasHistóricos(dados);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar ou renderizar dados históricos dos planos:', error);
             });
 
         // Carrega os dados do total de pagamentos das assinaturas
@@ -226,6 +237,76 @@ function loadPagamentosAssinaturas() {
                 totalPagamentosAssinaturasElement.textContent = 'R$ 0,00';
             }
         });
+}
+
+// Função para carregar os planos das assinaturas históricos
+async function loadPlanosAssinaturasHistoricos() {
+    try {
+        const response = await fetch(`/api/assinaturas/dados-planos-assinaturas-historicos`);
+        if (!response.ok) throw new Error('Erro ao buscar planos das assinaturas históricos');
+        const dados = await response.json();
+        return dados;
+    } catch (error) {
+        console.error('Erro ao carregar dados de planos das assinaturas históricos:', error);
+        throw error;
+    }
+}
+
+function renderizarGraficoPlanosAssinaturasHistóricos(dadosPlanosHistorico) {
+    const canvas = document.getElementById('planosHistoricosChart');
+    if (!canvas) {
+        console.error('Elemento canvas "planosHistoricosChart" não encontrado.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    let planosHistoricosChart; // Declaração da variável local
+
+    const labels = dadosPlanosHistorico.map(d => new Date(d.data_criacao).toLocaleDateString());
+    const valoresBasic = dadosPlanosHistorico.map(d => parseFloat(d.poppy_basic));
+    const valoresPro = dadosPlanosHistorico.map(d => parseFloat(d.poppy_pro));
+
+    // Verifica se já existe um gráfico e o destroi
+    if (window.planosHistoricosChart instanceof Chart) {
+        window.planosHistoricosChart.destroy();
+    }
+
+    // Cria o novo gráfico com dois datasets
+    window.planosHistoricosChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Poppy Basic',
+                    data: valoresBasic,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                },
+                {
+                    label: 'Poppy Pro',
+                    data: valoresPro,
+                    borderColor: 'rgba(160, 212, 124, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Valor em R$' }
+                },
+                x: {
+                    title: { display: true, text: 'Datas' }
+                }
+            }
+        }
+    });
 }
 
 // Torna a função acessível no escopo global

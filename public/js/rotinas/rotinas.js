@@ -129,6 +129,12 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Manutenção] - Atualizar o ranking dos usuários':
                     execucao = await ManutencaoRankingUsuarios(rotinaId);
                     break;
+                case '[Manutenção] - Atualizar o sinistro dos usuários':
+                    execucao = await ManutencaoSinistroUsuarios(rotinaId);
+                    break;
+                case '[Manutenção] - Histórico dos planos dos usuários':
+                    execucao = await ManutencaoRotinaHistoricoPlanosUsuarios(rotinaId);
+                    break;
                 case '[Poppy] - Recompra de Pins em modo sinistro':
                     execucao = await PoppyRotinaRecompraPinsSinistro(rotinaId);
                     break;
@@ -150,6 +156,8 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Manutenção] - Checagem de Resultados Financeiros vencidos',
                         '[Manutenção] - Atualizar o status execução para Pendente',
                         '[Manutenção] - Atualizar o ranking dos usuários',
+                        '[Manutenção] - Atualizar o sinistro dos usuários',
+                        '[Manutenção] - Histórico dos planos dos usuários',
                         '[Poppy] - Recompra de Pins em modo sinistro',
                         '[Poppy] - Recompra de Pins vencidos',
                         '[Poppy] - Pagamento dos rendimentos diário',
@@ -356,6 +364,50 @@ async function ManutencaoRankingUsuarios(rotinaId) {
     }
 }
 
+async function ManutencaoSinistroUsuarios(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/manutencao-sinistro-usuarios', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Manutenção] - Rotina para fazer o sinistro dos usuários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Manutenção] - Erro ao executar rotina para fazer o sinistro dos usuários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Manutenção] - Erro ao executar rotina para fazer o sinistro dos usuários:', error);
+        return false;
+    }
+}
+
+async function ManutencaoRotinaHistoricoPlanosUsuarios(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/manutencao-planos-assinaturas-historico', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Manutenção] - Rotina para gravar o histórico dos planos dos usuários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Manutenção] - Erro ao executar rotina para gravar o histórico dos planos dos usuários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Manutenção] - Erro ao executar rotina para gravar o histórico dos planos dos usuários:', error);
+        return false;
+    }
+}
+
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DA POPPY
 // ---------------------------------------------
@@ -457,6 +509,8 @@ window.ManutencaoRotinaChecagemPinsSinistro = ManutencaoRotinaChecagemPinsSinist
 window.ManutencaoRotinaChecagemResultadosFinanceirosVencimento = ManutencaoRotinaChecagemResultadosFinanceirosVencimento;
 window.ManutencaoUpdateStatusExecucaoPendente = ManutencaoUpdateStatusExecucaoPendente;
 window.ManutencaoRankingUsuarios = ManutencaoRankingUsuarios;
+window.ManutencaoSinistroUsuarios = ManutencaoSinistroUsuarios;
+window.ManutencaoRotinaHistoricoPlanosUsuarios = ManutencaoRotinaHistoricoPlanosUsuarios;
 window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;
 window.PoppyRotinaRecompraPinsVencidos = PoppyRotinaRecompraPinsVencidos;
 window.PoppyRotinaPagamentoRendimentoDiario = PoppyRotinaPagamentoRendimentoDiario;

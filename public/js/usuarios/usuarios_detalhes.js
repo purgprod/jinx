@@ -27,7 +27,7 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <h3>Dados Financeiros</h3>
-                <div id="rankingContainer" class="ranking-container"></div>
+                <div id="infoContainer" class="suitability-container"></div>
                 <div id="carteiraContainer" class="carteira-container"></div>
                 <h3>Distribuição da Carteira por Perfil</h3>
                 <div id="chartsContainer">
@@ -72,7 +72,7 @@ function loadUserDetails(usuario_id) {
                 loadDadosRendimentosHistoricos(usuario_id),
                 loadSuitability(usuario_id),  
 		loadSuitabilityCompleto(usuario_id),
-		loadRanking(usuario_id)
+		loadInfo(usuario_id)
             ]).then(() => {
                 return Promise.all([
 		loadSaldos(usuario_id),
@@ -616,58 +616,67 @@ function displaySuitability(dados, usuario_id) {
     }
 }
 
-function loadRanking(usuario_id) {
-    return fetch(`/api/usuarios/${usuario_id}/ranking-usuarios`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao buscar dados de ranking');
-            }
-            return response.json();
-        })
-        .then(dadosRanking => {
-            console.log('Ranking Data:', dadosRanking);
+function loadInfo(usuario_id) {
+    return Promise.all([
+        fetch(`/api/usuarios/${usuario_id}/ranking-usuarios`),
+        fetch(`/api/usuarios/${usuario_id}/sinistro-usuarios`)
+    ])
+    .then(responses => {
+        return Promise.all(
+            responses.map(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar dados: ${response.status}`);
+                }
+                return response.json();
+            })
+        );
+    })
+    .then(([dadosRanking, dadosSinistro]) => {
+        console.log('Dados de Ranking:', dadosRanking);
+        console.log('Dados de Sinistro:', dadosSinistro);
+
+        // Processa os dados
+        const rankingData = dadosRanking && typeof dadosRanking === 'object' ? 
+            { ...dadosRanking } : { ranking: 'Não especificado' };
             
-            // Ensure the data is an object
-            if (dadosRanking && typeof dadosRanking === 'object') {
-                const rankingData = {
-                    ...dadosRanking
-                };
-                
-                displayRanking(rankingData, usuario_id);
-            } else {
-                console.warn('Não foi encontrado dados de Ranking ou os dados não estão no formato esperado.');
-                const defaultRanking = {
-                    ranking: 'Não especificado'
-                };
-                displayRanking(defaultRanking, usuario_id);
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao carregar dados de ranking:', error);
-            const defaultRanking = {
-                ranking: 'Não especificado',
-            };
-            displayRanking(defaultRanking, usuario_id);
-        });
+        const sinistroData = dadosSinistro && typeof dadosSinistro === 'object' ? 
+            { ...dadosSinistro } : { sinistro: 'Não especificado' };
+
+        // Exibe os dados combinados
+        displayInfo(rankingData, sinistroData, usuario_id);
+    })
+    .catch(error => {
+        console.error('Erro ao carregar dados:', error);
+        const defaultRanking = { ranking: 'Não especificado' };
+        const defaultSinistro = { sinistro: 'Não especificado' };
+        displayInfo(defaultRanking, defaultSinistro, usuario_id);
+    });
 }
 
-
-function displayRanking(dados, usuario_id) {
-    const rankingContainer = document.getElementById('rankingContainer');
-    if (rankingContainer) {
-        const data = dados || {};
-        
-        rankingContainer.innerHTML = `
+function displayInfo(rankingData, sinistroData, usuario_id) {
+    const infoContainer = document.getElementById('infoContainer');
+    if (infoContainer) {
+        const template = `
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Ranking:</strong> ${data.ranking || 'Não especificado'}</p>
+                        <p><strong>Ranking:</strong> ${rankingData.ranking || 'Não especificado'}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="cards-basico">
+                <div class="card">
+                    <div class="card-content">
+                        <p><strong>Sinistro:</strong> ${sinistroData.sinistro || 'Não especificado'}%</p>
                     </div>
                 </div>
             </div>
         `;
+        
+        infoContainer.innerHTML = template;
     }
 }
+
 
 function loadSaldos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-saldo`)
@@ -1077,6 +1086,8 @@ function generateUserInputFields(data) {
         <input type="text" id="email" name="email" value="${data.email ?? ''}" readonly>
         <label for="assinatura">Assinatura:</label>
         <input type="text" id="assinatura" name="assinatura" value="${data.assinatura ?? ''}" readonly>
+        <label for="data_ultima_alteracao_assinatura">Data da Assinatura:</label>
+        <input type="date" id="data_ultima_alteracao_assinatura" name="data_ultima_alteracao_assinatura" value="${data.data_ultima_alteracao_assinatura ? formatDate(data.data_ultima_alteracao_assinatura) : ''}" readonly>
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
         <label for="nome_completo">Nome Completo:</label>
