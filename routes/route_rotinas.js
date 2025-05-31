@@ -21,6 +21,7 @@ const PoppyRecompraPinsSinistroController = require('../controllers/rotinas/cont
 const PoppyRecompraPinsVencidosController = require('../controllers/rotinas/controller_poppy_recompra_pins_vencidos.js');
 const PoppyPagamentoRendimentoDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js');
 const PoppyPagamentoAssinaturaDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js');
+const PoppyCompraDiariaPinsController = require('../controllers/rotinas/controller_poppy_compra_diaria_pins.js');
 
 
 //----------------------------------------------
@@ -37,7 +38,7 @@ router.put('/api/rotinas/:id/manutencao-atualizar-ultima-execucao', ManutencaoAt
 router.post('/api/rotinas/:id/manutencao-status-execucao-sucesso', ManutencaoStatusExecucaoSucessoController.executarRotina);
 
 // Rota para alterar o status da rotina para falha
-router.post('/api/rotinas/:id/manutencao-status-execucao-falha', ManutencaoStatusExecucaoFalhaController.executarRotina);
+router.post('/api/rotinas/:id/manutencao-status-execucao-falha', ManutencaoStatusExecucaoFalhaController.executarRotinaFalha);
 
 // Rota para gravar no banco de dados o free float de cada token
 router.post('/api/rotinas/tokens-historico-free-float', ManutencaoTokensHistoricoFreeFloatController.executeTokensHistoricoFreeFloat);
@@ -78,6 +79,9 @@ router.put('/api/rotinas/poppy-pagamento-rendimento-diario', PoppyPagamentoRendi
 
 // Rota para pagamento da assinatura diário em X% dos rendimentos
 router.put('/api/rotinas/poppy-pagamento-assinatura-diario', PoppyPagamentoAssinaturaDiarioController.executePagamentoAssinatura);
+
+// Rota para pagamento da assinatura diário em X% dos rendimentos
+router.put('/api/rotinas/poppy-compra-diaria-pins', PoppyCompraDiariaPinsController.executarCompraDiariaPins);
 
 module.exports = router;
 

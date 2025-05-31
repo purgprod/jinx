@@ -13,6 +13,7 @@ class UsersTokensModel {
             INNER JOIN tokens t
             ON u.token_id = t.id_token
             WHERE usuario_id = ?
+	    AND u.quantidade_tokens != 0
         `;
         logger.info(`Recuperando tokens para o usuário com ID: ${usuarioId}`);
 

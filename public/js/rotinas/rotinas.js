@@ -147,6 +147,9 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Poppy] - Pagamento das assinaturas diário':
                     execucao = await PoppyRotinaPagamentoAssinaturaDiario(rotinaId);
                     break;
+                case '[Poppy] - Compra diária de Pins':
+                    execucao = await PoppyRotinaCompraDiariaPins(rotinaId);
+                    break;
                 default:
                     // Verifica se existe uma rotina criada na cron do Node.js
                     const cronRotinas = [
@@ -161,7 +164,8 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Poppy] - Recompra de Pins em modo sinistro',
                         '[Poppy] - Recompra de Pins vencidos',
                         '[Poppy] - Pagamento dos rendimentos diário',
-                        '[Poppy] - Pagamento das assinaturas diário'
+                        '[Poppy] - Pagamento das assinaturas diário',
+                        '[Poppy] - Compra diária de Pins'
                     ];
 
                     if (!cronRotinas.includes(rotinaDescricao)) {
@@ -500,6 +504,28 @@ async function PoppyRotinaPagamentoAssinaturaDiario(rotinaId) {
     }
 }
 
+async function PoppyRotinaCompraDiariaPins(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-compra-diaria-pins', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Poppy] - Rotina para compra diária de Pins executada com sucesso');
+            return true;
+        } else {
+            console.error('[Poppy] - Erro ao executar rotina para compra diária de Pins:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Poppy] - Erro ao executar rotina para compra diária de Pins:', error);
+        return false;
+    }
+}
+
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
@@ -515,4 +541,5 @@ window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;
 window.PoppyRotinaRecompraPinsVencidos = PoppyRotinaRecompraPinsVencidos;
 window.PoppyRotinaPagamentoRendimentoDiario = PoppyRotinaPagamentoRendimentoDiario;
 window.PoppyRotinaPagamentoAssinaturaDiario = PoppyRotinaPagamentoAssinaturaDiario;
+window.PoppyRotinaCompraDiariaPins = PoppyRotinaCompraDiariaPins;
 

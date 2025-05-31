@@ -3,7 +3,7 @@ const RotinasExecutarModel = require('../../models/rotinas/model_manutencao_stat
 const logger = require('../../logger');
 
 const RotinasExecutarFalhaController = {
-    async executarRotina(req, res) {
+    async executarRotinaFalha(req, res) {
         const { id } = req.params;
 
         try {

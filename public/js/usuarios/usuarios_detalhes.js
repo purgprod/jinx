@@ -531,12 +531,12 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Valor Investido:</strong> R$ ${parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p><strong>Valor Investido:</strong> R$ ${parseFloat(dados.investido).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
+                        <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_token).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
                     </div>
                 </div>
                 <div class="card">
@@ -689,7 +689,7 @@ function loadSaldos(usuario_id) {
         .then(dadosSaldos => {
             const totalSaldoElement = document.getElementById('totalSaldo');
             const totalSaldo = dadosSaldos['saldo'] || 0;
-            totalSaldoElement.textContent = parseFloat(totalSaldo).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            totalSaldoElement.textContent = parseFloat(totalSaldo).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         })
         .catch(error => {
             console.error('Erro ao carregar saldo do usuário:', error);

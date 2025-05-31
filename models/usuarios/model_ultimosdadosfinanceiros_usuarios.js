@@ -8,12 +8,15 @@ class UsersUltimosDadosFinanceirosModel {
 // Método para obter o valor mais recente da carteira e rendimento do usuário
     static async getUltimosDadosFinanceiros(usuarioId) {
         const query = `
-            SELECT carteira_dia, rendimento_dia 
-            FROM usuarios_dados_financeiros_diarios 
-            WHERE usuario_id = ?
-            ORDER BY data_criacao DESC 
-            LIMIT 1
-        `;
+        SELECT 
+	    c.investido, 
+	    SUM(rendimento_token) AS rendimento_token
+	FROM carteiras c
+	INNER JOIN usuario_tokens u
+	ON c.usuario_id = u.usuario_id
+	WHERE u.usuario_id = ?
+	GROUP BY c.investido;
+	    `;
         logger.info(`Recuperando os últimos dados financeiros para o usuário ID: ${usuarioId}`);
 
         try {
