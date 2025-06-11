@@ -82,8 +82,8 @@ async function loadEcossistemaResults() {
             </div>
         </div>
         <canvas id="carteiraRendimentosChart" width="400" height="200"></canvas>
-        <h3>Transações de Compra e Venda de Tokens</h3>
-        <canvas id="transacoesChart" width="400" height="200"></canvas>
+	<h3>Transações de Compra e Venda de Tokens</h3>
+	<canvas id="transacoesChart" width="400" height="200"></canvas>
         <h3>Distribuição da Carteira Purg</h3>
         <div id="chartsContainer">    
             <canvas id="risksDistributionChart"></canvas>
@@ -190,8 +190,30 @@ function renderizarGraficoDistribuicaoRisco() {
             datasets: [{
                 label: 'Distribuição Financeira de Risco dos Tokens (R$)',
                 data: data,
-                backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
-                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                backgroundColor: [                    
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)', 
+                    'rgba(54, 162, 235, 1)', 
+                    'rgba(255, 206, 86, 1)', 
+                    'rgba(75, 192, 192, 1)', 
+                    'rgba(153, 102, 255, 1)', 
+                    'rgba(255, 159, 64, 1)', 
+                    'rgba(200, 200, 200, 1)', 
+                    'rgba(255, 99, 71, 1)', 
+                    'rgba(124, 252, 0, 1)', 
+                    'rgba(0, 191, 255, 1)'
+		],
                 borderWidth: 2
             }]
         },
@@ -236,8 +258,30 @@ function renderizarGraficoPorcentagemRisco() {
             datasets: [{
                 label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
                 data: data,
-                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-                borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(200, 200, 200, 1)',
+                    'rgba(255, 99, 71, 1)',
+                    'rgba(124, 252, 0, 1)',
+                    'rgba(0, 191, 255, 1)'
+		],
                 borderWidth: 2
             }]
         },
@@ -284,21 +328,29 @@ function renderizarGraficoRendimentoPorRisco() {
                 label: 'Distribuição do Rendimento Diário por Risco (R$)',
                 data: data,
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)', 
-                    'rgba(54, 162, 235, 0.2)', 
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
+                    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
                 ],
-                borderColor: [
+                borderColor: [ // Cores das bordas
                     'rgba(255, 99, 132, 1)', 
                     'rgba(54, 162, 235, 1)', 
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
+                    'rgba(255, 206, 86, 1)', 
+                    'rgba(75, 192, 192, 1)', 
+                    'rgba(153, 102, 255, 1)', 
+                    'rgba(255, 159, 64, 1)', 
+                    'rgba(200, 200, 200, 1)', 
+                    'rgba(255, 99, 71, 1)', 
+                    'rgba(124, 252, 0, 1)', 
+                    'rgba(0, 191, 255, 1)'
+		],
                 borderWidth: 2
             }]
         },
@@ -375,8 +427,30 @@ function renderizarGraficoDistribuicaoRiscoEcossistema() {
             datasets: [{
                 label: 'Distribuição Financeira de Risco dos Tokens (R$)',
                 data: data,
-                backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
-                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                backgroundColor:[ 
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(200, 200, 200, 1)',
+                    'rgba(255, 99, 71, 1)',
+                    'rgba(124, 252, 0, 1)',
+                    'rgba(0, 191, 255, 1)'
+		],
                 borderWidth: 2
             }]
         },
@@ -421,8 +495,30 @@ function renderizarGraficoPorcentagemRiscoEcossistema() {
             datasets: [{
                 label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
                 data: data,
-                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-                borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(200, 200, 200, 1)',
+                    'rgba(255, 99, 71, 1)',
+                    'rgba(124, 252, 0, 1)',
+                    'rgba(0, 191, 255, 1)'   
+		],
                 borderWidth: 2
             }]
         },
@@ -469,21 +565,29 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
                 label: 'Distribuição do Rendimento Diário por Risco (R$)',
                 data: data,
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)', 
-                    'rgba(54, 162, 235, 0.2)', 
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
+                    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
                 ],
-                borderColor: [
+                borderColor: [ // Cores das bordas
                     'rgba(255, 99, 132, 1)', 
                     'rgba(54, 162, 235, 1)', 
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
+                    'rgba(255, 206, 86, 1)', 
+                    'rgba(75, 192, 192, 1)', 
+                    'rgba(153, 102, 255, 1)', 
+                    'rgba(255, 159, 64, 1)', 
+                    'rgba(200, 200, 200, 1)', 
+                    'rgba(255, 99, 71, 1)', 
+                    'rgba(124, 252, 0, 1)', 
+                    'rgba(0, 191, 255, 1)'   
+		],
                 borderWidth: 2
             }]
         },
@@ -735,13 +839,13 @@ function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Rendimentos da Carteira Purg (R$)',
+                label: 'Rendimentos da Carteira Purg',
                 data: valoresPurg,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
                 fill: false
             }, {
-                label: 'Rendimentos da Carteira Ecossistema (R$)',
+                label: 'Rendimentos da Carteira Ecossistema',
                 data: valoresEcossistema,
                 borderColor: 'rgba(160, 212, 124, 1)',
                 borderWidth: 2,
@@ -763,6 +867,7 @@ function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
         }
     });
 }
+
 
 // Função para carregar os saques históricos
 async function loadSaquesHistoricos(usuario_id) {

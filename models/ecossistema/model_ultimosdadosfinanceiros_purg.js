@@ -8,12 +8,12 @@ class PurgUltimosDadosFinanceirosModel {
 // Método para obter o valor mais recente da carteira da purg
     static async getUltimosDadosFinanceiros(usuarioId) {
         const query = `
-            SELECT carteira_dia, rendimento_dia 
-            FROM usuarios_dados_financeiros_diarios 
-            WHERE usuario_id = ?
-            ORDER BY data_criacao DESC 
-            LIMIT 1
-        `;
+        SELECT 
+	    SUM((quantidade_tokens * 0.01)) AS carteira_dia, 
+	    SUM(rendimento_token) AS rendimento_dia 
+	FROM usuario_tokens
+	WHERE usuario_id = ?;
+	    `;
         logger.info(`Recuperando os últimos dados financeiros para a purg`);
 
         try {

@@ -52,7 +52,7 @@ const ManutencaoPlanosAssinaturasHistoricosController = {
 
             // Retorno com os totais
             res.status(200).json({
-                message: 'Busca e inserção de planos realizada com sucesso',
+                message: 'Rotinas executadas com sucesso',
                 totals: {
                     poppyBasic: totalPoppyBasic,
                     poppyPro: totalPoppyPro

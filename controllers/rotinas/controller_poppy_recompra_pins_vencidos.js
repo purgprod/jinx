@@ -1,5 +1,5 @@
 const logger = require('../../logger');
-const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins');
+const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins_vencidos');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const ZerarPinsModel = require('../../models/rotinas/model_poppy_zerar_pins_para_clientes');
 const MoverPinsModel = require('../../models/rotinas/model_poppy_mover_pins_para_purg');
@@ -20,7 +20,7 @@ const RecompraPinsVencidosController = {
             if (!pinsAtivos.length) {
                 logger.warn('Nenhum Pin ativo encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum Pin ativo encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsAtivos: [],
                     usuariosPorToken: {},
                 });
@@ -38,7 +38,7 @@ const RecompraPinsVencidosController = {
             if (idTokens.length === 0) {
                 logger.warn('Nenhum Pin válido encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum Pim válido encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pins: pinsAtivos,
                     usuariosPorToken: {},
                 });
@@ -63,7 +63,7 @@ const RecompraPinsVencidosController = {
             if (Object.keys(usuariosPorToken).length === 0) {
                 logger.warn('Nenhum usuário encontrado para os tokens');
                 return res.status(200).json({
-                    message: 'Nenhum usuário encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                 });
@@ -116,7 +116,7 @@ const RecompraPinsVencidosController = {
             if (Object.keys(tokensTotais).length === 0) {
                 logger.warn('Nenhum total válido encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum total válido encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: {},
@@ -222,7 +222,7 @@ const RecompraPinsVencidosController = {
             if (usuariosAFazerZerar.length === 0) {
                 logger.warn('Nenhum usuário para zerar tokens');
                 return res.status(200).json({
-                    message: 'Nenhum usuário para zerar tokens.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,
@@ -267,7 +267,7 @@ const RecompraPinsVencidosController = {
             if (!saldos.length) {
                 logger.warn('Nenhum saldo encontrado nas carteiras');
                 return res.status(200).json({
-                    message: 'Nenhum saldo encontrado nas carteiras.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsAtivos: pinsAtivos,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,

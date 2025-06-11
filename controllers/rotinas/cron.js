@@ -420,7 +420,7 @@ cron.schedule('15 15 * * *', async () => {
 });
 
 // Agendar execução da rotina para pagamento dos rendimentos diário 15:20:00 todos os dias
-cron.schedule('15 20 * * *', async () => {
+cron.schedule('20 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Pagamento das assinaturas diário agendada às 15:20:00');
         
@@ -457,7 +457,7 @@ cron.schedule('15 20 * * *', async () => {
 });
 
 // Agendar execução da rotina para pagamento dos rendimentos diário 17:00:00 todos os dias
-cron.schedule('17 00 * * *', async () => {
+cron.schedule('0 17 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Compra diária de Pins agendada às 17:00:00');
         

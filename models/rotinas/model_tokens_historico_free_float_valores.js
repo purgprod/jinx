@@ -9,15 +9,15 @@ const TokensHistoricoFreeFloatValoresModel = {
      */
     async getValoresByTokenId(idToken) {
         const query = `
-            SELECT 
-                t.quantidade_tokens AS total_tokens,
-                t.quantidade_tokens - (SELECT u.quantidade_tokens 
-                                    FROM usuario_tokens u 
-                                    WHERE u.token_id = t.id_token 
-                                    AND u.usuario_id = 1) AS free_float_tokens
-            FROM tokens t
-            WHERE t.id_token = ?;
-        `;
+        SELECT 
+		u.quantidade_tokens AS total_tokens,
+		t.quantidade_tokens - u.quantidade_tokens AS free_float_tokens
+	FROM tokens t
+	INNER JOIN usuario_tokens u 
+	ON u.token_id = t.id_token 
+	WHERE t.id_token = ?
+	AND u.usuario_id = 1;
+	    `;
 
         return new Promise((resolve, reject) => {
             connection.query(query, [idToken], (error, results) => {

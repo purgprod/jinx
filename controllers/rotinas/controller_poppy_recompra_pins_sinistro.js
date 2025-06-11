@@ -19,8 +19,9 @@ const RecompraPinsSinistroController = {
 
             if (!pinsSinistro.length) {
                 logger.warn('Nenhum Pin em sinistro encontrado');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum Pin em sinistro.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: [],
                     usuariosPorToken: {},
                 });
@@ -37,8 +38,9 @@ const RecompraPinsSinistroController = {
 
             if (idTokens.length === 0) {
                 logger.warn('Nenhum token válido encontrado');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum token válido encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: pinsSinistro,
                     usuariosPorToken: {},
                 });
@@ -62,8 +64,9 @@ const RecompraPinsSinistroController = {
 
             if (Object.keys(usuariosPorToken).length === 0) {
                 logger.warn('Nenhum usuário encontrado para os tokens');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum usuário encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: pinsSinistro,
                     usuariosPorToken: {},
                 });
@@ -115,8 +118,9 @@ const RecompraPinsSinistroController = {
 
             if (Object.keys(tokensTotais).length === 0) {
                 logger.warn('Nenhum total válido encontrado');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum total válido encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: pinsSinistro,
                     usuariosPorToken: {},
                     tokensTotais: {},
@@ -221,8 +225,9 @@ const RecompraPinsSinistroController = {
 
             if (usuariosAFazerZerar.length === 0) {
                 logger.warn('Nenhum usuário para zerar tokens');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum usuário para zerar tokens.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: pinsSinistro,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,
@@ -266,8 +271,9 @@ const RecompraPinsSinistroController = {
             // Verificar se há dados válidos
             if (!saldos.length) {
                 logger.warn('Nenhum saldo encontrado nas carteiras');
+                logger.info('Rotinas concluídas com sucesso');
                 return res.status(200).json({
-                    message: 'Nenhum saldo encontrado nas carteiras.',
+                    message: 'Rotinas executadas com sucesso',
                     pinsSinistro: pinsSinistro,
                     usuariosPorToken: {},
                     tokensTotais: tokensTotais,

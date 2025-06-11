@@ -20,4 +20,3 @@ const UpdateSinistroUsuariosModel = {
 };
 
 module.exports = UpdateSinistroUsuariosModel;
-

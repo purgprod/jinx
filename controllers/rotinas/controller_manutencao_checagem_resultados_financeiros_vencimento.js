@@ -1,6 +1,9 @@
 const BuscarResultadosFinanceirosModel = require('../../models/rotinas/model_manutencao_buscar_resultados_financeiros');
 const RotinasInativarResultadosFinanceirosModel = require('../../models/rotinas/model_manutencao_inativar_resultados_financeiros');
+const TokensBuscarModel = require('../../models/tokens/model_buscar_tokens');
+const AtualizarDiasVencimentoModel = require('../../models/rotinas/model_manutencao_update_dias_vencimento');
 const logger = require('../../logger');
+const moment = require('moment'); // Import do moment.js
 
 /**
  * Controller responsável por checar e inativar resultados financeiros vencidos
@@ -14,6 +17,18 @@ const ChecagemResultadosFinanceirosVencimentoController = {
     async executeChecagemResultadosFinanceiros(req, res) {
         logger.info('Iniciando a inativação de resultados financeiros vencidos');
         try {
+            // Busca tokens
+            const resultado_tokens = await TokensBuscarModel.getTokens();
+            logger.info(`Encontrados ${resultado_tokens.length} tokens`);
+
+            if (resultado_tokens.length === 0) {
+                logger.info('Nenhum token encontrado');
+                return res.status(200).json({
+                    message: 'Nenhum token encontrado',
+                    tokens: []
+                });
+            }
+
             // Busca todos os resultados financeiros
             const resultadosFinanceiros = await BuscarResultadosFinanceirosModel.getResultadosFinanceiros();
             logger.info(`Encontrados ${resultadosFinanceiros.length} resultados financeiros`);
@@ -26,16 +41,16 @@ const ChecagemResultadosFinanceirosVencimentoController = {
                 });
             }
 
-            const dataHoraAtual = new Date().toISOString();
+            const dataHoraAtual = moment(); // Cria uma instância do moment.js com a data/hora atual
             const resultadosInativados = [];
             const erros = [];
 
             // Processa cada resultado financeiro
             for (const resultado of resultadosFinanceiros) {
-                const dataVencimento = new Date(resultado.vencimento);
-                const dataAtual = new Date(dataHoraAtual);
+                const dataVencimento = moment(resultado.vencimento);
+                const dataAtual = moment(); // Cria uma instância do moment.js com a data/hora atual
 
-                if (dataVencimento < dataAtual) {
+                if (dataVencimento.isBefore(dataAtual)) {
                     try {
                         // Inativa o resultado
                         await RotinasInativarResultadosFinanceirosModel.inativarResultadosFinanceiros(resultado.id_resultado);
@@ -52,6 +67,25 @@ const ChecagemResultadosFinanceirosVencimentoController = {
                         });
                         logger.error(`Falha ao inativar o resultado ${resultado.id_resultado}:`, error);
                     }
+                }
+            }
+
+            // Ajusta a data de vencimento
+            const hoje = moment().format('YYYY-MM-DD'); // Formato: 2026-12-28
+
+            // Processa cada token para atualização dos dias de vencimento
+            for (const token of resultado_tokens) {
+                try {
+                    // Calcula a diferença entre o dia de hoje e a data de vencimento
+                    const dataVencimentoToken = moment(token.vencimento);
+                    const diferencaEmDias = dataVencimentoToken.diff(hoje, 'days');
+
+                    // Atualiza o token com o novo valor de dias_vencimento
+                    const updateResult = await AtualizarDiasVencimentoModel.atualizarDiasVencimento(diferencaEmDias, token.id_token);
+
+                    logger.info(`Token ${token.id_token} atualizado com sucesso. Dias de vencimento: ${diferencaEmDias}`);
+                } catch (error) {
+                    logger.error(`Falha ao atualizar o token ${token.id_token}:`, error);
                 }
             }
 

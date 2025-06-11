@@ -67,9 +67,9 @@ function showFreeFloatPieChart(freeFloatData) {
         return;
     }
 
-    const totalTokens = freeFloatData[0].quantidade_tokens;
+//    const totalTokens = freeFloatData[0].quantidade_tokens;
     const freeFloat = freeFloatData[0].freefloat_token;
-    const consumed = totalTokens - freeFloat;
+    const ipo = freeFloatData[0].quantidade_tokens;
 
     const ctx = document.getElementById('freeFloatChart').getContext('2d');
     new Chart(ctx, {
@@ -77,7 +77,7 @@ function showFreeFloatPieChart(freeFloatData) {
         data: {
             labels: [`Purg IPO`, `Free Float`],
             datasets: [{
-                data: [freeFloat, consumed],
+                data: [ipo, freeFloat],
                 backgroundColor: ['#36A2EB', '#64CE68'],
                 borderColor: ['#36A2EB', '#64CE68'],
                 borderWidth: 2,
@@ -111,11 +111,11 @@ function showPercentagePieChart(freeFloatData) {
         return;
     }
 
-    const totalTokens = freeFloatData[0].quantidade_tokens;
     const freeFloat = freeFloatData[0].freefloat_token;
-    const consumed = totalTokens - freeFloat;
+    const ipo = freeFloatData[0].quantidade_tokens;
+    const totalTokens = ( ipo + freeFloat);
 
-    const percentageConsumed = ((consumed / totalTokens) * 100).toFixed(2);
+    const percentageIPO = ((ipo / totalTokens) * 100).toFixed(2);
     const percentageAvailable = ((freeFloat / totalTokens) * 100).toFixed(2);
 
     const ctx = document.getElementById('percentageChart').getContext('2d');
@@ -124,7 +124,7 @@ function showPercentagePieChart(freeFloatData) {
         data: {
             labels: [`Purg IPO`, `Free Float`],
             datasets: [{
-                data: [percentageAvailable, percentageConsumed],
+                data: [percentageIPO, percentageAvailable],
                 backgroundColor: ['#36A2EB', '#64CE68'],
                 borderColor: ['#36A2EB', '#64C368'],
                 borderWidth: 2

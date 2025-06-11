@@ -174,7 +174,8 @@ function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistor
     let assinaturasHistoricosChart; // Declaração da variável local
 
     const labels = dadosAssinaturasHistorico.map(d => new Date(d.data_criacao).toLocaleDateString());
-    const valores = dadosAssinaturasHistorico.map(d => parseFloat(d.pagamento_assinatura).toFixed(8));
+    const valores = dadosAssinaturasHistorico.map(d => parseFloat(d.pagamento_assinatura));
+
     // Verifica se já existe um gráfico e o destroi
     if (window.assinaturasHistoricosChart instanceof Chart) {
         window.assinaturasHistoricosChart.destroy();
@@ -196,6 +197,17 @@ function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistor
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: R$ ${value.toFixed(8)}`;
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -209,6 +221,7 @@ function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistor
     });
 }
 
+
 function loadPagamentosAssinaturas() {
     return fetch(`/api/assinaturas/1/dados-pagamentos-assinaturas-total`)
         .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar saques'))
@@ -218,7 +231,7 @@ function loadPagamentosAssinaturas() {
                 // Verifica se os dados estão no formato correto
                 if (Array.isArray(dadosPagamentosAssinaturas) && dadosPagamentosAssinaturas.length > 0) {
                     const valorBruto = dadosPagamentosAssinaturas[0].pagamento_assinatura || 0;
-                    const valorFormatado = parseFloat(valorBruto).toFixed(2);
+                    const valorFormatado = parseFloat(valorBruto).toFixed(8);
                     totalPagamentosAssinaturasElement.textContent = `${valorFormatado.toLocaleString('pt-BR', { 
                         minimumFractionDigits: 8
                     })}`;
@@ -299,7 +312,7 @@ function renderizarGraficoPlanosAssinaturasHistóricos(dadosPlanosHistorico) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Valor em R$' }
+                    title: { display: true, text: 'Número de usuários' }
                 },
                 x: {
                     title: { display: true, text: 'Datas' }

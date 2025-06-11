@@ -331,8 +331,29 @@ function renderizarGraficoDistribuicaoRisco() {
             datasets: [{
                 label: 'Distribuição Financeira de Risco dos Tokens (R$)',
                 data: data,
-                backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)'],
-                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(200, 200, 200, 1)',
+                    'rgba(255, 99, 71, 1)',
+                    'rgba(124, 252, 0, 1)',
+                    'rgba(0, 191, 255, 1)'],
                 borderWidth: 2,
             }]
         },
@@ -393,8 +414,29 @@ function renderizarGraficoPorcentagemRisco() {
             datasets: [{
                 label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
                 data: data,
-                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-                borderColor: ['rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                backgroundColor: [
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
+                    'rgba(54, 162, 235, 0.2)',   // Azul
+                    'rgba(255, 206, 86, 0.2)',   // Amarelo
+                    'rgba(75, 192, 192, 0.2)',   // Verde água
+                    'rgba(153, 102, 255, 0.2)',  // Roxo
+                    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+                    'rgba(255, 99, 71, 0.2)',    // Vermelho
+                    'rgba(124, 252, 0, 0.2)',    // Verde
+                    'rgba(0, 191, 255, 0.2)',     // Azul claro
+                    'rgba(255, 159, 64, 0.2)'   // Laranja
+                ],
+                borderColor: [ // Cores das bordas
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(200, 200, 200, 1)',
+                    'rgba(255, 99, 71, 1)',
+                    'rgba(124, 252, 0, 1)',
+                    'rgba(0, 191, 255, 1)'],
                 borderWidth: 2,
             }]
         },
@@ -458,24 +500,32 @@ function renderizarGraficoRendimentoPorRisco() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição do Rendimento Diário por Risco (R$)',
+               // label: labels,
                 data: data,
                 backgroundColor: [ // Cores para o gráfico
-                    'rgba(255, 99, 132, 0.2)', 
-                    'rgba(54, 162, 235, 0.2)', 
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                ],
-                borderColor: [ // Cores das bordas
-                    'rgba(255, 99, 132, 1)', 
-                    'rgba(54, 162, 235, 1)', 
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
+		    'rgba(54, 162, 235, 0.2)',   // Azul
+		    'rgba(255, 206, 86, 0.2)',   // Amarelo
+		    'rgba(75, 192, 192, 0.2)',   // Verde água
+		    'rgba(153, 102, 255, 0.2)',  // Roxo
+		    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+		    'rgba(255, 99, 71, 0.2)',    // Vermelho
+		    'rgba(124, 252, 0, 0.2)',    // Verde
+		    'rgba(0, 191, 255, 0.2)',     // Azul claro
+		    'rgba(255, 159, 64, 0.2)'   // Laranja
+		],
+		borderColor: [ // Cores das bordas
+		    'rgba(255, 99, 132, 1)', 
+		    'rgba(54, 162, 235, 1)', 
+		    'rgba(255, 206, 86, 1)', 
+		    'rgba(75, 192, 192, 1)', 
+		    'rgba(153, 102, 255, 1)', 
+		    'rgba(255, 159, 64, 1)', 
+		    'rgba(200, 200, 200, 1)', 
+		    'rgba(255, 99, 71, 1)', 
+		    'rgba(124, 252, 0, 1)', 
+		    'rgba(0, 191, 255, 1)'    
+	    ],
                 borderWidth: 2,
             }]
         },
@@ -494,6 +544,15 @@ function renderizarGraficoRendimentoPorRisco() {
                     color: '#333333',
                     formatter: (value, ctx) => {
                         return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                    }
+                },
+	        tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: R$ ${value.toFixed(8)}`;
+                        }
                     }
                 }
             }
@@ -864,6 +923,17 @@ function renderizarGraficoRendimentos(dados) {
         },
         options: {
             responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: R$ ${value.toFixed(8)}`;
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
