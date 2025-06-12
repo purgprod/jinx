@@ -71,12 +71,12 @@ async function loadEcossistemaResults() {
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento Diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00</span></p>
+                        <p><strong>Rendimento Diário (Purg):</strong> R$ <span id="rendimentoDiario">0,00000000</span></p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Rendimento Diário (Ecossistema):</strong> R$ <span id="rendimentoDiarioEcossistema">0,00</span></p>
+                        <p><strong>Rendimento Diário (Ecossistema):</strong> R$ <span id="rendimentoDiarioEcossistema">0,00000000</span></p>
                     </div>
                 </div>
             </div>
@@ -318,7 +318,7 @@ function renderizarGraficoRendimentoPorRisco() {
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(2)));
+    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(8)));
 
     new Chart(ctx, {
         type: 'pie',
@@ -339,7 +339,7 @@ function renderizarGraficoRendimentoPorRisco() {
                     'rgba(0, 191, 255, 0.2)',     // Azul claro
                     'rgba(255, 159, 64, 0.2)'   // Laranja
                 ],
-                borderColor: [ // Cores das bordas
+                borderColor: [
                     'rgba(255, 99, 132, 1)', 
                     'rgba(54, 162, 235, 1)', 
                     'rgba(255, 206, 86, 1)', 
@@ -350,8 +350,9 @@ function renderizarGraficoRendimentoPorRisco() {
                     'rgba(255, 99, 71, 1)', 
                     'rgba(124, 252, 0, 1)', 
                     'rgba(0, 191, 255, 1)'
-		],
-                borderWidth: 2
+                ],
+                borderWidth: 2,
+                labels: labels // Adicione aqui o array labels ao dataset
             }]
         },
         options: {
@@ -362,13 +363,30 @@ function renderizarGraficoRendimentoPorRisco() {
                 title: { display: true, text: 'Distribuição do Rendimento Diário por Risco (R$)' },
                 datalabels: {
                     color: '#333333',
-                    formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    formatter: (value, ctx) => {
+                        return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            // Verifica se o dataset tem labels e se o dataIndex é válido
+                            if (context.dataset.labels && context.dataIndex < context.dataset.labels.length) {
+                                const label = context.dataset.labels[context.dataIndex];
+                                const value = context.raw || 0;
+                                return `${label}: R$ ${value.toFixed(8)}`;
+                            }
+                            // Caso contrário, retorna um valor padrão
+                            return `Label não disponível: R$ ${context.raw.toFixed(8)}`;
+                        }
+                    }
                 }
             }
         },
         plugins: [ChartDataLabels]
     });
 }
+
 
 function loadEcossistemaTokens(usuario_id) {
     return fetch(`/api/ecossistema/${usuario_id}/tokens`)
@@ -555,7 +573,7 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(2)));
+    const data = Object.values(riscoMap).map(rend => parseFloat(rend.toFixed(8)));
 
     new Chart(ctx, {
         type: 'pie',
@@ -576,7 +594,7 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
                     'rgba(0, 191, 255, 0.2)',     // Azul claro
                     'rgba(255, 159, 64, 0.2)'   // Laranja
                 ],
-                borderColor: [ // Cores das bordas
+                borderColor: [
                     'rgba(255, 99, 132, 1)', 
                     'rgba(54, 162, 235, 1)', 
                     'rgba(255, 206, 86, 1)', 
@@ -586,9 +604,10 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
                     'rgba(200, 200, 200, 1)', 
                     'rgba(255, 99, 71, 1)', 
                     'rgba(124, 252, 0, 1)', 
-                    'rgba(0, 191, 255, 1)'   
-		],
-                borderWidth: 2
+                    'rgba(0, 191, 255, 1)'
+                ],
+                borderWidth: 2,
+                labels: labels // Adicione aqui o array labels ao dataset
             }]
         },
         options: {
@@ -599,7 +618,23 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
                 title: { display: true, text: 'Distribuição do Rendimento Diário por Risco (R$)' },
                 datalabels: {
                     color: '#333333',
-                    formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    formatter: (value, ctx) => {
+                        return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            // Verifica se o dataset tem labels e se o dataIndex é válido
+                            if (context.dataset.labels && context.dataIndex < context.dataset.labels.length) {
+                                const label = context.dataset.labels[context.dataIndex];
+                                const value = context.raw || 0;
+                                return `${label}: R$ ${value.toFixed(8)}`;
+                            }
+                            // Caso contrário, retorna um valor padrão
+                            return `Label não disponível: R$ ${context.raw.toFixed(8)}`;
+                        }
+                    }
                 }
             }
         },
@@ -615,10 +650,10 @@ function loadUltimosDadosFinanceiros(usuario_id) {
             const valorCarteira = document.getElementById('valorCarteira');
             const rendimentoDiario = document.getElementById('rendimentoDiario');
             if (valorCarteira) {
-                valorCarteira.textContent = parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                valorCarteira.textContent = parseFloat(dados.carteira_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 });
             }
             if (rendimentoDiario) {
-                rendimentoDiario.textContent = parseFloat(dados.rendimento_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                rendimentoDiario.textContent = parseFloat(dados.rendimento_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 });
             }
             return dados;
         })
@@ -633,10 +668,10 @@ function loadUltimosDadosFinanceirosEcossistema(usuario_id) {
             const valorCarteiraEcossistema = document.getElementById('valorCarteiraEcossistema');
             const rendimentoDiarioEcossistema = document.getElementById('rendimentoDiarioEcossistema');
             if (valorCarteiraEcossistema) {
-                valorCarteiraEcossistema.textContent = parseFloat(dados.carteira_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                valorCarteiraEcossistema.textContent = parseFloat(dados.carteira_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 });
             }
             if (rendimentoDiarioEcossistema) {
-                rendimentoDiarioEcossistema.textContent = parseFloat(dados.rendimento_dia).toFixed(2).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                rendimentoDiarioEcossistema.textContent = parseFloat(dados.rendimento_dia).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 });
             }
             return dados;
         })
@@ -819,16 +854,19 @@ function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
         carteiraRendimentosChart.destroy();
     }
 
+    // Obtém labels únicas e ordenadas
     const labels = [...new Set([
         ...rendimentosPurg.map(d => new Date(d.data_criacao).toLocaleDateString()),
         ...rendimentosEcossistema.map(d => new Date(d.data_criacao).toLocaleDateString())
-    ])].sort(); // Obtém labels únicas e ordenadas
+    ])].sort();
 
+    // Valores para a carteira Purg
     const valoresPurg = labels.map(label => {
         const rendimento = rendimentosPurg.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
         return rendimento ? parseFloat(rendimento.rendimento_dia) : 0; // Retorna 0 se não houver rendimento para a data
     });
 
+    // Valores para a carteira Ecossistema
     const valoresEcossistema = labels.map(label => {
         const rendimento = rendimentosEcossistema.find(d => new Date(d.data_criacao).toLocaleDateString() === label);
         return rendimento ? parseFloat(rendimento.rendimento_dia) : 0; // Retorna 0 se não houver rendimento para a data
@@ -863,11 +901,21 @@ function renderizarGraficoRendimentos(rendimentosPurg, rendimentosEcossistema) {
                 x: {
                     title: { display: true, text: 'Datas' }
                 }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.labels ? context.dataset.labels[context.dataIndex] : context.dataset.label;
+                            const value = context.raw || 0;
+                            return `${label}: R$ ${value.toFixed(8)}`;
+                        }
+                    }
+                }
             }
         }
     });
 }
-
 
 // Função para carregar os saques históricos
 async function loadSaquesHistoricos(usuario_id) {

@@ -39,6 +39,26 @@ function loadAssinaturasResults() {
             <canvas id="assinaturasHistoricosChart"></canvas>
             <h2>Histórico da Evolução dos Usuários por Planos</h2>
             <canvas id="planosHistoricosChart"></canvas>
+            <h2>Estatísticas de Usuários</h2>
+            <div id="totalUsersContainer">
+                <div class="cards-basico">
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Pro:</strong> <span id="totalProUsers">0</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Basic:</strong> <span id="totalBasicUsers">0</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Total de Usuários:</strong> <span id="totalUsers">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 
         centerPanel.innerHTML = formHTML;
@@ -47,7 +67,6 @@ function loadAssinaturasResults() {
         fetch('/api/assinaturas/buscar-porcentagem')
             .then(response => response.json())
             .then(data => {
-                // Verifica se a resposta é um array e se o primeiro item tem a porcentagem
                 if (Array.isArray(data) && data.length > 0 && data[0].porcentagem_assinatura) {
                     const porcentagem = parseFloat(data[0].porcentagem_assinatura);
                     const valueElement = document.getElementById('porcentagem');
@@ -82,7 +101,7 @@ function loadAssinaturasResults() {
                 console.error('Erro ao carregar ou renderizar dados históricos do pagamento das assinaturas:', error);
             });
 
-	// Carrega e renderiza os dados históricos dos planos
+        // Carrega e renderiza os dados históricos dos planos
         loadPlanosAssinaturasHistoricos()
             .then(dados => {
                 renderizarGraficoPlanosAssinaturasHistóricos(dados);
@@ -93,6 +112,9 @@ function loadAssinaturasResults() {
 
         // Carrega os dados do total de pagamentos das assinaturas
         loadPagamentosAssinaturas();
+
+        // Carrega as estatísticas de usuários
+        displayTotalUsuarios();
     }
 }
 
@@ -103,24 +125,18 @@ function setupEventListeners() {
 
     if (editButton && saveButton && valueElement) {
         editButton.addEventListener('click', () => {
-            // Torna o campo editável
             valueElement.removeAttribute('readonly');
-            
-            // Altera o estado dos botões
             editButton.style.display = 'none';
             saveButton.style.display = 'block';
         });
 
         saveButton.addEventListener('click', (event) => {
             event.preventDefault();
-            
-            // Verifica se o valor é válido
             const novoValor = parseFloat(valueElement.value.replace('%', ''));
             if (!isNaN(novoValor)) {
                 const porcentagem = novoValor.toFixed(2);
                 valueElement.value = `${porcentagem}%`;
                 
-                // Atualiza a porcentagem na API
                 fetch('/api/assinaturas/atualizar-porcentagem', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -129,7 +145,6 @@ function setupEventListeners() {
                 .then(response => {
                     if (response.ok) {
                         alert('Porcentagem atualizada com sucesso!');
-                        // Atualiza a página após a atualização bem-sucedida
                         window.location.reload();
                     } else {
                         return response.json().then(data => Promise.reject(data));
@@ -140,27 +155,27 @@ function setupEventListeners() {
                     alert('Erro ao atualizar porcentagem');
                 });
                 
-                // Torna o campo somente leitura novamente
                 valueElement.setAttribute('readonly', true);
             }
         });
 
-        // Esconde inicialmente o botão de salvar
         saveButton.style.display = 'none';
     }
 }
 
-// Função para carregar os pagamentos das assinaturas históricos
-async function loadPagamentoAssinaturasHistoricos() {
-    try {
-        const response = await fetch(`/api/assinaturas/1/dados-pagamentos-assinaturas-historicos`);
-        if (!response.ok) throw new Error('Erro ao buscar pagamentos das assinaturas históricos');
-        const dados = await response.json();
-        return dados;
-    } catch (error) {
-        console.error('Erro ao carregar dados de pagamento das assinaturas históricos:', error);
-        throw error;
-    }
+function loadPagamentoAssinaturasHistoricos() {
+    return fetch(`/api/assinaturas/1/dados-pagamentos-assinaturas-historicos`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao buscar pagamentos das assinaturas históricos');
+            return response.json();
+        })
+        .then(dados => {
+            return dados;
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados de pagamento das assinaturas históricos:', error);
+            throw error;
+        });
 }
 
 function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistorico) {
@@ -171,17 +186,15 @@ function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistor
     }
 
     const ctx = canvas.getContext('2d');
-    let assinaturasHistoricosChart; // Declaração da variável local
+    let assinaturasHistoricosChart;
 
     const labels = dadosAssinaturasHistorico.map(d => new Date(d.data_criacao).toLocaleDateString());
     const valores = dadosAssinaturasHistorico.map(d => parseFloat(d.pagamento_assinatura));
 
-    // Verifica se já existe um gráfico e o destroi
     if (window.assinaturasHistoricosChart instanceof Chart) {
         window.assinaturasHistoricosChart.destroy();
     }
 
-    // Cria o novo gráfico
     window.assinaturasHistoricosChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -221,20 +234,16 @@ function renderizarGraficoPagamentoAssinaturasHistóricos(dadosAssinaturasHistor
     });
 }
 
-
 function loadPagamentosAssinaturas() {
     return fetch(`/api/assinaturas/1/dados-pagamentos-assinaturas-total`)
         .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar saques'))
         .then(dadosPagamentosAssinaturas => {
             const totalPagamentosAssinaturasElement = document.getElementById('totalPagamentosAssinaturas');
             if (totalPagamentosAssinaturasElement) {
-                // Verifica se os dados estão no formato correto
                 if (Array.isArray(dadosPagamentosAssinaturas) && dadosPagamentosAssinaturas.length > 0) {
                     const valorBruto = dadosPagamentosAssinaturas[0].pagamento_assinatura || 0;
                     const valorFormatado = parseFloat(valorBruto).toFixed(8);
-                    totalPagamentosAssinaturasElement.textContent = `${valorFormatado.toLocaleString('pt-BR', { 
-                        minimumFractionDigits: 8
-                    })}`;
+                    totalPagamentosAssinaturasElement.textContent = `${valorFormatado.toLocaleString('pt-BR', { minimumFractionDigits: 8 })}`;
                 } else {
                     totalPagamentosAssinaturasElement.textContent = 'R$ 0,00';
                     console.error('Resposta da API não está no formato esperado');
@@ -252,7 +261,6 @@ function loadPagamentosAssinaturas() {
         });
 }
 
-// Função para carregar os planos das assinaturas históricos
 async function loadPlanosAssinaturasHistoricos() {
     try {
         const response = await fetch(`/api/assinaturas/dados-planos-assinaturas-historicos`);
@@ -273,18 +281,16 @@ function renderizarGraficoPlanosAssinaturasHistóricos(dadosPlanosHistorico) {
     }
 
     const ctx = canvas.getContext('2d');
-    let planosHistoricosChart; // Declaração da variável local
+    let planosHistoricosChart;
 
     const labels = dadosPlanosHistorico.map(d => new Date(d.data_criacao).toLocaleDateString());
     const valoresBasic = dadosPlanosHistorico.map(d => parseFloat(d.poppy_basic));
     const valoresPro = dadosPlanosHistorico.map(d => parseFloat(d.poppy_pro));
 
-    // Verifica se já existe um gráfico e o destroi
     if (window.planosHistoricosChart instanceof Chart) {
         window.planosHistoricosChart.destroy();
     }
 
-    // Cria o novo gráfico com dois datasets
     window.planosHistoricosChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -322,6 +328,116 @@ function renderizarGraficoPlanosAssinaturasHistóricos(dadosPlanosHistorico) {
     });
 }
 
-// Torna a função acessível no escopo global
+function loadTotalProUsers() {
+    return fetch('/api/assinaturas/dados-total-usuarios-pro')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar total de usuários Pro');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const totalProUsersElement = document.getElementById('totalProUsers');
+            if (totalProUsersElement) {
+                const totalPro = parseInt(data.data[0].assinatura_pro, 10) || 0;
+                totalProUsersElement.textContent = totalPro.toLocaleString('pt-BR');
+            console.info('Total de Usuários Pro:', totalPro);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar total de usuários Pro:', error);
+        });
+}
+
+function loadTotalBasicUsers() {
+    return fetch('/api/assinaturas/dados-total-usuarios-basic')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar total de usuários Basic');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const totalBasicUsersElement = document.getElementById('totalBasicUsers');
+            if (totalBasicUsersElement) {
+                const totalBasic = parseInt(data.data[0].assinatura_basic, 10) || 0;
+                totalBasicUsersElement.textContent = totalBasic.toLocaleString('pt-BR');
+            console.info('Total de Usuários Basic:', totalBasic);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar total de usuários Basic:', error);
+        });
+}
+
+function loadTotalUsers() {
+    return Promise.all([
+        fetch('/api/assinaturas/dados-total-usuarios-pro'),
+        fetch('/api/assinaturas/dados-total-usuarios-basic')
+    ])
+    .then(responses => {
+        return Promise.all(responses.map(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar total de usuários');
+            }
+            return response.json();
+        }));
+    })
+    .then(data => {
+        const totalPro = parseInt(data[0].data[0].assinatura_pro, 10) || 0;
+        const totalBasic = parseInt(data[1].data[0].assinatura_basic, 10) || 0;
+        const total = totalPro + totalBasic;
+        const totalUsersElement = document.getElementById('totalUsers');
+        if (totalUsersElement) {
+            totalUsersElement.textContent = `Total de usuários: ${total.toLocaleString('pt-BR')}`;
+            console.info('Total de Usuários:', totalUsers);
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao carregar total de usuários:', error);
+    });
+}
+
+async function displayTotalUsuarios() {
+    const container = document.getElementById('totalUsersContainer');
+    if (container) {
+        try {
+            const [totalPro, totalBasic, totalUsers] = await Promise.all([
+                loadTotalProUsers(),
+                loadTotalBasicUsers(),
+                loadTotalUsers()
+            ]);
+
+            container.innerHTML = `
+                <div class="cards-basico">
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Pro:</strong> <span>${totalPro || 0}</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Basic:</strong> <span>${totalBasic || 0}</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Total de Usuários:</strong> <span>${totalUsers || 0}</span></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Erro ao exibir total de usuários:', error);
+            container.innerHTML = '<p>Erro ao carregar os dados</p>';
+        }
+    }
+}
+
+// Torna as funções acessíveis no escopo global
 window.loadAssinaturasResults = loadAssinaturasResults;
+window.loadTotalProUsers = loadTotalProUsers;
+window.loadTotalBasicUsers = loadTotalBasicUsers;
+window.loadTotalUsers = loadTotalUsers;
+window.displayTotalUsuarios = displayTotalUsuarios;
 

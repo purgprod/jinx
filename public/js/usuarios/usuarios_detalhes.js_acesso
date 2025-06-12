@@ -35,9 +35,9 @@ function loadUserDetails(usuario_id) {
                     <canvas id="genericRisksDistributionChart"></canvas>
                     <canvas id="genericRisksPercentageChart"></canvas>
                     <canvas id="genericRisksRendimentoChart"></canvas>
-                </div>
-
-                <h3>Distribuição da Carteira por Tokens</h3>
+		</div>
+		
+		<h3>Distribuição da Carteira por Tokens</h3>
                 <div id="chartsContainer">
                     <canvas id="risksDistributionChart"></canvas>
                     <canvas id="risksPercentageChart"></canvas>
@@ -48,15 +48,15 @@ function loadUserDetails(usuario_id) {
                 <h3>Suitability</h3>
                 <div id="suitabilityContainer" class="suitability-container"></div>
                 <h3>Respostas Principais</h3>
-                <form id="suitabilityDetailsForm">
+		<form id="suitabilityDetailsForm">
                     ${generateSuitabilitySection(data)}
                 </form>
                 <h3>Respostas Complementares</h3>
-                <form id="suitabilityComplementarForm"></form>
+		<form id="suitabilityComplementarForm"></form>
             `;
 
             setupEventListenersUsuarios(usuario_id);
-          //  generateSuitabilityComplementarSection(usuario_id);
+	  //  generateSuitabilityComplementarSection(usuario_id);
 
             // Chamada da função com callback para atualizar o formulário
             generateSuitabilityComplementarSection(usuario_id, (html) => {
@@ -72,23 +72,24 @@ function loadUserDetails(usuario_id) {
                 loadDadosFinanceirosHistoricos(usuario_id), 
                 loadDadosRendimentosHistoricos(usuario_id),
                 loadSuitability(usuario_id),  
-                loadSuitabilityCompleto(usuario_id),
-                loadInfo(usuario_id)
+		loadSuitabilityCompleto(usuario_id),
+		loadInfo(usuario_id)
             ]).then(() => {
                 return Promise.all([
-                loadSaldos(usuario_id),
-                loadSaques(usuario_id),
-                loadDepositos(usuario_id),
-                loadRendimentos(usuario_id)
-                ]);
+		loadSaldos(usuario_id),
+		loadSaques(usuario_id),
+		loadDepositos(usuario_id)
+		]);
+	    //    return loadSaques(usuario_id);
+            //    return loadDepositos(usuario_id);
             }).then(() => {
                 console.log("Todas as chamadas de API foram completadas.");
                 renderizarGraficoDistribuicaoRisco(); 
                 renderizarGraficoPorcentagemRisco();
                 renderizarGraficoRendimentoPorRisco();
-                renderizarGraficoDistribuicaoRiscoGenerico();
-                renderizarGraficoPorcentagemRiscoGenerico();
-                renderizarGraficoRendimentoPorRiscoGenerico();
+		renderizarGraficoDistribuicaoRiscoGenerico();
+		renderizarGraficoPorcentagemRiscoGenerico();
+		renderizarGraficoRendimentoPorRiscoGenerico();
             }).catch(err => {
                 console.error("Erro ao carregar dados:", err);
             });
@@ -415,7 +416,7 @@ function renderizarGraficoPorcentagemRisco() {
                 label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
                 data: data,
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',  // Rosa
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
                     'rgba(54, 162, 235, 0.2)',   // Azul
                     'rgba(255, 206, 86, 0.2)',   // Amarelo
                     'rgba(75, 192, 192, 0.2)',   // Verde água
@@ -495,75 +496,70 @@ function renderizarGraficoRendimentoPorRisco() {
     }
 
     // Configura o gráfico
-        const rendimentoPorRiscoChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                        labels: labels,
-                        datasets: [{
-                                data: data,
-                                backgroundColor: [
-                                        'rgba(255, 99, 132, 0.2)',  // Rosa
-                                        'rgba(54, 162, 235, 0.2)',   // Azul
-                                        'rgba(255, 206, 86, 0.2)',   // Amarelo
-                                        'rgba(75, 192, 192, 0.2)',   // Verde água
-                                        'rgba(153, 102, 255, 0.2)',  // Roxo
-                                        'rgba(200, 200, 200, 0.2)',   // Cinza claro
-                                        'rgba(255, 99, 71, 0.2)',    // Vermelho
-                                        'rgba(124, 252, 0, 0.2)',     // Verde
-                                        'rgba(0, 191, 255, 0.2)',    // Azul claro
-                                        'rgba(255, 159, 64, 0.2)'   // Laranja
-                                ],
-                                borderColor: [
-                                        'rgba(255, 99, 132, 1)', 
-                                        'rgba(54, 162, 235, 1)', 
-                                        'rgba(255, 206, 86, 1)', 
-                                        'rgba(75, 192, 192, 1)', 
-                                        'rgba(153, 102, 255, 1)', 
-                                        'rgba(255, 159, 64, 1)', 
-                                        'rgba(200, 200, 200, 1)', 
-                                        'rgba(255, 99, 71, 1)', 
-                                        'rgba(124, 252, 0, 1)', 
-                                        'rgba(0, 191, 255, 1)'
-                                ],
-                                borderWidth: 2,
-                                labels: labels // Adicione o array labels ao dataset
-                        }]
+    const rendimentoPorRiscoChart = new Chart(ctx, {
+        type: 'pie', // Tipo de gráfico
+        data: {
+            labels: labels,
+            datasets: [{
+               // label: labels,
+                data: data,
+                backgroundColor: [ // Cores para o gráfico
+		    'rgba(255, 99, 132, 0.2)',  // Rosa
+		    'rgba(54, 162, 235, 0.2)',   // Azul
+		    'rgba(255, 206, 86, 0.2)',   // Amarelo
+		    'rgba(75, 192, 192, 0.2)',   // Verde água
+		    'rgba(153, 102, 255, 0.2)',  // Roxo
+		    'rgba(200, 200, 200, 0.2)',   // Cinza claro
+		    'rgba(255, 99, 71, 0.2)',    // Vermelho
+		    'rgba(124, 252, 0, 0.2)',    // Verde
+		    'rgba(0, 191, 255, 0.2)',     // Azul claro
+		    'rgba(255, 159, 64, 0.2)'   // Laranja
+		],
+		borderColor: [ // Cores das bordas
+		    'rgba(255, 99, 132, 1)', 
+		    'rgba(54, 162, 235, 1)', 
+		    'rgba(255, 206, 86, 1)', 
+		    'rgba(75, 192, 192, 1)', 
+		    'rgba(153, 102, 255, 1)', 
+		    'rgba(255, 159, 64, 1)', 
+		    'rgba(200, 200, 200, 1)', 
+		    'rgba(255, 99, 71, 1)', 
+		    'rgba(124, 252, 0, 1)', 
+		    'rgba(0, 191, 255, 1)'    
+	    ],
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
                 },
-                options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        plugins: {
-                                legend: {
-                                        position: 'top',
-                                },
-                                title: {
-                                        display: true,
-                                        text: 'Distribuição do Rendimento Diário por Risco (R$)'
-                                },
-                                datalabels: {
-                                        color: '#333333',
-                                        formatter: (value, ctx) => {
-                                                return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-                                        }
-                                },
-                                tooltip: {
-                                        callbacks: {
-                                                label: function(context) {
-                                                        // Verifica se o dataset tem labels e se o dataIndex é válido
-                                                        if (context.dataset.labels && context.dataIndex < context.dataset.labels.length) {
-                                                                const label = context.dataset.labels[context.dataIndex];
-                                                                const value = context.raw || 0;
-                                                                return `${label}: R$ ${value.toFixed(8)}`;
-                                                        }
-                                                        // Caso contrário, retorna um valor padrão
-                                                        return `Label não disponível: R$ ${context.raw.toFixed(8)}`;
-                                                }
-                                        }
-                                }
+                title: {
+                    display: true,
+                    text: 'Distribuição do Rendimento Diário por Risco (R$)'
+                },
+                datalabels: {
+                    color: '#333333',
+                    formatter: (value, ctx) => {
+                        return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                    }
+                },
+	        tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: R$ ${value.toFixed(8)}`;
                         }
-                },
-                plugins: [ChartDataLabels]
-        });
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Ativa o plugin de Data Labels
+    });
 }
 
 function loadUltimosDadosFinanceiros(usuario_id) {
@@ -587,7 +583,6 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
     const carteiraContainer = document.getElementById('carteiraContainer');
     if (carteiraContainer) {
         carteiraContainer.innerHTML = `
-	    <h3>Carteira Atual</h3>
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
@@ -604,25 +599,17 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
                         <p><strong>Rendimento diário:</strong> R$ ${parseFloat(dados.rendimento_token).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 })}</p>
                     </div>
                 </div>
-            </div>
-	    <h3>Histórico da Carteira</h3>
-            <div class="cards-basico">
-	        <div class="card">
+                <div class="card">
                     <div class="card-content">
                         <p><strong>Total de Saques:</strong> R$ <span id="totalSaque">0.00</span></p>
                     </div>
                 </div>
-                <div class="card">
+	        <div class="card">
                     <div class="card-content">
                         <p><strong>Total de Depositos:</strong> R$ <span id="totalDeposito">0.00</span></p>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-content">
-                        <p><strong>Total de Rendimentos:</strong> R$ <span id="totalRendimento">0.00000000</span></p>
-                    </div>
-                </div>				
-	    </div>
+            </div>
             <canvas id="carteiraChart"></canvas>
             <canvas id="carteiraRendimentosChart"></canvas>
         `;
@@ -715,46 +702,53 @@ function loadInfo(usuario_id) {
         const sinistroData = dadosSinistro && typeof dadosSinistro === 'object' ? 
             { ...dadosSinistro } : { sinistro: 'Não especificado' };
 
+        // Find the investment access based on ranking
+        const rankingName = rankingData.ranking || 'Não especificado';
+        const investmentsAccess = rankingAcessoInvestimentos
+            .find(ranking => ranking.nomeRanking === rankingName)
+            ?.acessoInvestimentos || [];
+
         // Exibe os dados combinados
-        displayInfo(rankingData, sinistroData, usuario_id);
+        displayInfo(rankingData, sinistroData, usuario_id, investmentsAccess);
     })
     .catch(error => {
         console.error('Erro ao carregar dados:', error);
         const defaultRanking = { ranking: 'Não especificado' };
         const defaultSinistro = { sinistro: 'Não especificado' };
-        displayInfo(defaultRanking, defaultSinistro, usuario_id);
+        const defaultInvestments = [];
+        displayInfo(defaultRanking, defaultSinistro, usuario_id, defaultInvestments);
     });
 }
 
-function displayInfo(rankingData, sinistroData, usuario_id) {
+function displayInfo(rankingData, sinistroData, usuario_id, investmentsAccess) {
     const infoContainer = document.getElementById('infoContainer');
     if (infoContainer) {
-        // Procura pelos acessos de investimentos com base no ranking
-        const rankingName = rankingData.ranking || 'Não especificado';
-        const acessoInvestimentos = rankingAcessoInvestimentos.find(item => 
-            item.nomeRanking === rankingName
-        )?.acessoInvestimentos || ['Nenhum acesso disponível'];
+        const investmentsList = investmentsAccess.map(investment => 
+            `<div class="investment-item">${investment}</div>`
+        ).join('');
 
-        // Cria o template com os novos dados
         const template = `
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Ranking:</strong> ${rankingData.ranking || 'Não especificado'}</p>
+                        <p><strong>Ranking:</strong> ${rankingData.ranking||'Não especificado'}</p>
                     </div>
                 </div>
             </div>
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Sinistro:</strong> ${sinistroData.sinistro || 'Não especificado'}%</p>
+                        <p><strong>Sinistro:</strong> ${sinistroData.sinistro||'Não especificado'}%</p>
                     </div>
                 </div>
             </div>
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Acessos de Investimentos:</strong> ${acessoInvestimentos.join(', ')}</p>
+                        <h3>Acesso a Investimentos:</h3>
+                        <div class="investments-list">
+                            ${investmentsList}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -763,6 +757,7 @@ function displayInfo(rankingData, sinistroData, usuario_id) {
         infoContainer.innerHTML = template;
     }
 }
+
 
 function loadSaldos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-saldo`)
@@ -818,23 +813,6 @@ function loadDepositos(usuario_id) {
         });
 }
 
-function loadRendimentos(usuario_id) {
-    return fetch(`/api/usuarios/${usuario_id}/dados-rendimentos`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao buscar rendimentos');
-            }
-            return response.json();
-        })
-        .then(dadosRendimentos => {
-            const totalRendimentoElement = document.getElementById('totalRendimento');
-            const totalRendimento = dadosRendimentos['SUM(rendimento_diario)'] || 0;
-            totalRendimentoElement.textContent = parseFloat(totalRendimento).toFixed(8).toLocaleString('pt-BR', { minimumFractionDigits: 8 });
-        })
-        .catch(error => {
-            console.error('Erro ao carregar rendimentos do usuário:', error);
-        });
-}
 
 function loadDadosFinanceirosHistoricos(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/dados-financeiros-historicos`)
@@ -1111,7 +1089,7 @@ function renderizarGraficoPorcentagemRiscoGenerico() {
         plugins: [ChartDataLabels]
     });
 }
-
+	
 function renderizarGraficoRendimentoPorRiscoGenerico() {
     const canvas = document.getElementById('genericRisksRendimentoChart');
     if (!canvas) {
@@ -1130,11 +1108,11 @@ function renderizarGraficoRendimentoPorRiscoGenerico() {
     const distribGenMap = {};
 
     tokensData.forEach(token => {
-        const quantidade = token.quantidade_tokens||0;
-        const rendimento = token.rendimento_token||0;
+        const quantidade = token.quantidade_tokens || 0;
+        const rendimento = token.rendimento_token || 0;
         for (const [key, values] of Object.entries(riscoGenMap)) {
             if (values.includes(token.risco)) {
-                distribGenMap[key] = (distribGenMap[key]||0) + (quantidade * rendimento);
+                distribGenMap[key] = (distribGenMap[key] || 0) + (quantidade * rendimento);
                 break;
             }
         }
@@ -1160,8 +1138,7 @@ function renderizarGraficoRendimentoPorRiscoGenerico() {
                     'rgba(255, 202, 40, 1)',
                     'rgba(239, 83, 80, 1)'
                 ],
-                borderWidth: 2,
-                labels: labels // Adicione aqui o array labels ao dataset
+                borderWidth: 2
             }]
         },
         options: {
@@ -1172,23 +1149,7 @@ function renderizarGraficoRendimentoPorRiscoGenerico() {
                 title: { display: true, text: 'Distribuição Genérica do Rendimento Diário por Risco (R$)' },
                 datalabels: {
                     color: '#333333',
-                    formatter: (value, ctx) => {
-                        return `${value.toFixed(8).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            // Verifica se o dataset tem labels e se o dataIndex é válido
-                            if (context.dataset.labels && context.dataIndex < context.dataset.labels.length) {
-                                const label = context.dataset.labels[context.dataIndex];
-                                const value = context.raw||0;
-                                return `${label}: R$ ${value.toFixed(8)}`;
-                            }
-                            // Caso contrário, retorna um valor padrão
-                            return `Label não disponível: R$ ${context.raw.toFixed(8)}`;
-                        }
-                    }
+                    formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                 }
             }
         },
@@ -1367,3 +1328,4 @@ function resetarSenha(usuario_id) {
 }
 
 window.loadUserDetails = loadUserDetails;
+

@@ -7,6 +7,8 @@ const PagamentosAssinaturasHistoricoController = require('../controllers/assinat
 const PagamentosAssinaturasTotalController = require('../controllers/assinaturas/controller_buscar_pagamento_assinaturas_total');
 const PlanosAssinaturasHistoricoController = require('../controllers/assinaturas/controller_buscar_planos_assinaturas_historicos');
 const UpdateAssinaturaClienteController = require('../controllers/assinaturas/controller_update_assinatura_cliente');
+const UsuariosProTotalController = require('../controllers/assinaturas/controller_buscar_usuarios_pro_total');
+const UsuariosBasicTotalController = require('../controllers/assinaturas/controller_buscar_usuarios_basic_total');
 
 // Rota para carregar o valor cobrado em porcentagem dos rendimentos das assinaturas
 router.get('/api/assinaturas/buscar-porcentagem', PorcentagemAssinaturasBuscarController.getPorcentagem);
@@ -25,6 +27,12 @@ router.get('/api/assinaturas/dados-planos-assinaturas-historicos', PlanosAssinat
 
 // Rota para atualizar a assinatura de um cliente
 router.put('/api/assinaturas/atualizar-assinatura/:id', UpdateAssinaturaClienteController.updateAssinaturaCliente);
+
+// Rota para obter o total de usuarios Poppy Pro total
+router.get('/api/assinaturas/dados-total-usuarios-pro', UsuariosProTotalController.getUsuariosProTotal);
+
+// Rota para obter o total de usuarios Poppy Basic total
+router.get('/api/assinaturas/dados-total-usuarios-basic', UsuariosBasicTotalController.getUsuariosBasicTotal);
 
 module.exports = router;
 

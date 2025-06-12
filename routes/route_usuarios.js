@@ -16,6 +16,7 @@ const UsuariosDadosRendimentosHistoricosController = require('../controllers/usu
 const UsuariosSaldosController = require('../controllers/usuarios/controller_saldos_usuarios');
 const UsuariosSaquesController = require('../controllers/usuarios/controller_saques_usuarios');
 const UsuariosDepositosController = require('../controllers/usuarios/controller_depositos_usuarios');
+const UsuariosRendimentosController = require('../controllers/usuarios/controller_rendimentos_usuarios');
 const UsuariosSuitabilityController = require('../controllers/usuarios/controller_suitability_usuarios');
 const UsuariosSuitabilityUpdateController = require('../controllers/usuarios/controller_calculo_suitability_update');
 const UsuariosSuitabilityComplementarUpdateController = require('../controllers/usuarios/controller_calculo_suitability_complementar_update');
@@ -65,6 +66,9 @@ router.get('/api/usuarios/:id/dados-saques', UsuariosSaquesController.getSaques)
 
 // Rota para obter o total de depositos do usuário 
 router.get('/api/usuarios/:id/dados-depositos', UsuariosDepositosController.getDepositos);
+
+// Rota para obter o total de rendimentos do usuário 
+router.get('/api/usuarios/:id/dados-rendimentos', UsuariosRendimentosController.getRendimentos);
 
 // Rota para obter o suitability do usuário
 router.get('/api/usuarios/:id/suitability', UsuariosSuitabilityController.getSuitability);
