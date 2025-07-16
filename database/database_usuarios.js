@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 const pool = mysql.createPool({
     host: 'ip-172-31-5-211.us-east-2.compute.internal', // IP do servidor MySQL
     user: 'admin',           // Nome de usuário do MySQL
-    password: 'Purgtrihold', // Senha do MySQL
+    password: '@Purg2012', // Senha do MySQL
     database: 'usuarios',    // Nome do banco de dados
     port: 3306,              // Porta padrão do MySQL
     waitForConnections: true,

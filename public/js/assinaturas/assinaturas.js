@@ -339,7 +339,7 @@ function loadTotalProUsers() {
         .then(data => {
             const totalProUsersElement = document.getElementById('totalProUsers');
             if (totalProUsersElement) {
-                const totalPro = parseInt(data.data[0].assinatura_pro, 10) || 0;
+                const totalPro = parseInt(data.data[0].assinatura_pro, 10);
                 totalProUsersElement.textContent = totalPro.toLocaleString('pt-BR');
             console.info('Total de Usuários Pro:', totalPro);
             }
@@ -417,12 +417,12 @@ async function displayTotalUsuarios() {
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p><strong>Usuários Basic:</strong> <span>${totalBasic || 0}</span></p>
+                            <p><strong>Usuários Basic:</strong> <span>${totalBasic}</span></p>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p><strong>Total de Usuários:</strong> <span>${totalUsers || 0}</span></p>
+                            <p><strong>Total de Usuários:</strong> <span>${totalUsers}</span></p>
                         </div>
                     </div>
                 </div>
