@@ -22,6 +22,7 @@ const PoppyRecompraPinsVencidosController = require('../controllers/rotinas/cont
 const PoppyPagamentoRendimentoDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js');
 const PoppyPagamentoAssinaturaDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js');
 const PoppyCompraDiariaPinsController = require('../controllers/rotinas/controller_poppy_compra_diaria_pins.js');
+const PoppyPagamentoEmblemasDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js');
 
 
 //----------------------------------------------
@@ -82,6 +83,9 @@ router.put('/api/rotinas/poppy-pagamento-assinatura-diario', PoppyPagamentoAssin
 
 // Rota para pagamento da assinatura diário em X% dos rendimentos
 router.put('/api/rotinas/poppy-compra-diaria-pins', PoppyCompraDiariaPinsController.executarCompraDiariaPins);
+
+// Rota para pagamento do emblema diário em X% do saldo
+router.put('/api/rotinas/poppy-pagamento-emblema-diario', PoppyPagamentoEmblemasDiarioController.executarPagamentoEmblemas);
 
 module.exports = router;
 

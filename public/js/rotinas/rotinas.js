@@ -150,6 +150,9 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Poppy] - Compra diária de Pins':
                     execucao = await PoppyRotinaCompraDiariaPins(rotinaId);
                     break;
+                case '[Poppy] - Pagamento dos emblemas diário':
+                    execucao = await PoppyRotinaPagamentoEmblemaDiario(rotinaId);
+                    break;
                 default:
                     // Verifica se existe uma rotina criada na cron do Node.js
                     const cronRotinas = [
@@ -165,7 +168,8 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Poppy] - Recompra de Pins vencidos',
                         '[Poppy] - Pagamento dos rendimentos diário',
                         '[Poppy] - Pagamento das assinaturas diário',
-                        '[Poppy] - Compra diária de Pins'
+                        '[Poppy] - Compra diária de Pins',
+                        '[Poppy] - Pagamento dos emblemas diário'
                     ];
 
                     if (!cronRotinas.includes(rotinaDescricao)) {
@@ -526,6 +530,28 @@ async function PoppyRotinaCompraDiariaPins(rotinaId) {
     }
 }
 
+async function PoppyRotinaPagamentoEmblemaDiario(rotinaId) {
+    try {
+        const response = await fetch('/api/rotinas/poppy-pagamento-emblema-diario', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log('[Poppy] - Rotina para pagamento das assinaturas diários executada com sucesso');
+            return true;
+        } else {
+            console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', await response.text());
+            return false;
+        }
+    } catch (error) {
+        console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', error);
+        return false;
+    }
+}
+
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
@@ -542,4 +568,5 @@ window.PoppyRotinaRecompraPinsVencidos = PoppyRotinaRecompraPinsVencidos;
 window.PoppyRotinaPagamentoRendimentoDiario = PoppyRotinaPagamentoRendimentoDiario;
 window.PoppyRotinaPagamentoAssinaturaDiario = PoppyRotinaPagamentoAssinaturaDiario;
 window.PoppyRotinaCompraDiariaPins = PoppyRotinaCompraDiariaPins;
+window.PoppyRotinaPagamentoEmblemaDiario = PoppyRotinaPagamentoEmblemaDiario;
 
