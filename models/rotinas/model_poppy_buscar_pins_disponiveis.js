@@ -10,6 +10,7 @@ const BuscarPinsDisponiveisModel = {
 		ON u.token_id = t.id_token
 		WHERE t.status_ativo = 1
 		AND t.flag_sinistro = 0
+		AND u.quantidade_tokens > 0
 		AND u.usuario_id = 1;`
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, (error, results) => {

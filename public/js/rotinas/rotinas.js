@@ -1,3 +1,6 @@
+// Variável de controle para verificar se uma rotina está em execução
+let rotinaEmExecucao = false;
+
 // Função para formatar a data atual no timezone de São Paulo
 function getDataFormatada() {
     const data = new Date();
@@ -26,7 +29,7 @@ async function loadRotinasResults() {
         // Cria o cabeçalho da tabela
         const thead = document.createElement('thead');
         thead.innerHTML = `
-	    <tr>
+            <tr>
                 <th>Rotina</th>
                 <th>Hora Agendada</th>
                 <th>Última Execução</th>
@@ -92,9 +95,19 @@ async function loadRotinasResults() {
 // Função para executar as rotinas
 async function executarRotina(rotinaId, rotinaDescricao) {
     try {
+        // Verifica se já existe uma rotina em execução
+        if (rotinaEmExecucao) {
+            alert('Uma rotina já está em execução. Por favor, aguarde.');
+            return;
+        }
+
+        // Marca que uma rotina está em execução
+        rotinaEmExecucao = true;
+
         // Verifica se a descrição da rotina está definida
         if (!rotinaDescricao) {
             alert('Erro: Descrição da rotina não identificada.');
+            rotinaEmExecucao = false;
             return;
         }
 
@@ -154,7 +167,6 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                     execucao = await PoppyRotinaPagamentoEmblemaDiario(rotinaId);
                     break;
                 default:
-                    // Verifica se existe uma rotina criada na cron do Node.js
                     const cronRotinas = [
                         '[Manutenção] - Histórico do free float dos Pins',
                         '[Manutenção] - Histórico do valor investido e rendimentos por usuário',
@@ -174,17 +186,15 @@ async function executarRotina(rotinaId, rotinaDescricao) {
 
                     if (!cronRotinas.includes(rotinaDescricao)) {
                         alert(`Atenção! Não existe uma rotina criada na cron do Node.js para "${rotinaDescricao}".`);
+                        rotinaEmExecucao = false;
                         return;
                     }
-                    // Adicione aqui a lógica para rotinas adicionais se necessário
                     break;
             }
 
-		console.log('Valor de execucao:', execucao);
-		
-            // Verifica se a execução foi bem-sucedida
+            console.log('Valor de execucao:', execucao);
+
             if (execucao) {
-                // Executa os endpoints de sucesso
                 const responseSucesso = await fetch(endpointSucesso, {
                     method: 'POST',
                     headers: {
@@ -193,7 +203,6 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 });
 
                 if (responseSucesso.status === 200) {
-                    // Atualiza a última execução
                     const responseAtualizacao = await fetch(endpointAtualizarExecucao, {
                         method: 'PUT'
                     });
@@ -210,7 +219,6 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                     throw new Error('Erro ao executar endpoint de sucesso.');
                 }
             } else {
-                // Executa os endpoints de falha
                 const responseFalha = await fetch(endpointFalha, {
                     method: 'POST'
                 });
@@ -229,9 +237,13 @@ async function executarRotina(rotinaId, rotinaDescricao) {
             alert('[Manutenção] - Erro ao executar a rotina. Detalhes: ' + error.message);
         }
 
+        // Libera a execução para outras rotinas
+        rotinaEmExecucao = false;
+
     } catch (error) {
         console.error('Erro ao executar rotina:', error);
         alert('[Manutenção] - Erro ao executar a rotina. Detalhes: ' + error.message);
+        rotinaEmExecucao = false;
     }
 }
 

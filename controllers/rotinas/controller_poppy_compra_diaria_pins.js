@@ -191,9 +191,9 @@ const CompraDiariaPinsController = {
                     // Etapa 6: Buscar tokens disponíveis
                     const tokensDisponiveis = await BuscarPinsDisponiveisModel.getPins();
 
-                    // Etapa 7: Equilibrar a carteira com base nas porcentagens desejadas (APENAS COMPRAS)
+                    // Etapa 7: Equilibrar a carteira com base nas porcentagens desejadas
                     const equilibrarCarteira = async () => {
-                        const saldo = usuarioComDistribuicao.saldo || 0;
+                        let saldo = usuarioComDistribuicao.saldo || 0;
 
                         if (saldo <= 0) {
                             logger.warn(`-------------------------`);
@@ -214,303 +214,163 @@ const CompraDiariaPinsController = {
                             Agressivo: usuarioComDistribuicao.porcentagem_pin_agressivo
                         };
 
-                        const currentPerfil = {
-                            Conservador: usuarioComDistribuicao.distribuicao_perfil?.Conservador || 0,
-                            Moderado: usuarioComDistribuicao.distribuicao_perfil?.Moderado || 0,
-                            Agressivo: usuarioComDistribuicao.distribuicao_perfil?.Agressivo || 0
-                        };
+                        const comprarTokensPorPerfil = async (perfil, valorCompra) => {
+                            const tokensDoPerfil = tokensDisponiveis.filter(token => {
+                                const riscoToken = token.risco;
+                                const perfilToken = ratings.find(r => r.rating === riscoToken)?.perfil || 'Não Classificado';
+                                return perfilToken === perfil;
+                            });
 
-                        const ajustes = [];
+                            const tokenPrice = 0.01; // Valor unitário do token
+                            let totalTokensPossiveis = Math.floor(valorCompra / tokenPrice);
 
-                        // Verificar se a carteira já está balanceada
-                        const verificarBalanceamento = () => {
-                            return Object.keys(targetPerfil).every(perfil => 
-                                Math.round(currentPerfil[perfil]) === Math.round(targetPerfil[perfil])
-                            );
-                        };
+                            for (const token of tokensDoPerfil) {
+                                if (totalTokensPossiveis > 0) {
+                                    try {
+                                        const releaseMutex = await mutex.acquire();
+                                        try {
+                                            await sleep(1000);
 
-                        if (verificarBalanceamento()) {
-                            logger.info(`-------------------------`);
-                            logger.info(`A carteira do usuário ${usuarioComDistribuicao.usuario_id} já está balanceada`);
-                            
-                            // Utilizar o saldo remanescente para comprar mais tokens mantendo o balanceamento
-                            const saldoUtilizado = saldo; // Saldo total disponível para compra
+                                            const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
+                                            const tokenAtual = tokensUsuario.find(t => t.token_id === token.token_id);
+                                            const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
 
-                            if (saldoUtilizado > 0) {
-                                logger.info(`-------------------------`);
-                                logger.info(`Usuário ${usuarioComDistribuicao.usuario_id} - Utilizando saldo remanescente para compra adicional de tokens`);
-                                
-                                const comprarTokens = async () => {
-                                    const tokenPrice = 0.01; // Valor unitário do token
-                                    const totalTokensPossiveis = Math.floor(saldoUtilizado / tokenPrice);
-                                    
-                                    // Distribuir os tokens de acordo com as porcentagens
-                                    const tokensPorPerfil = {
-                                        Conservador: Math.floor((targetPerfil.Conservador / 100) * totalTokensPossiveis),
-                                        Moderado: Math.floor((targetPerfil.Moderado / 100) * totalTokensPossiveis),
-                                        Agressivo: Math.floor((targetPerfil.Agressivo / 100) * totalTokensPossiveis)
-                                    };
-
-                                    // Ajustar para garantir que o total seja igual ao totalTokensPossiveis
-                                    const totalTokens = Object.values(tokensPorPerfil).reduce((acc, value) => acc + value, 0);
-                                    if (totalTokens < totalTokensPossiveis) {
-                                        // Distribuir os tokens restantes proporcionalmente
-                                        const tokensRestantes = totalTokensPossiveis - totalTokens;
-                                        const perfis = Object.keys(tokensPorPerfil);
-                                        
-                                        for (let i = 0; i < tokensRestantes; i++) {
-                                            const perfil = perfis[i % perfis.length];
-                                            tokensPorPerfil[perfil]++;
-                                        }
-                                    }
-
-                                    logger.info(`-------------------------`);
-                                    logger.info(`Distribuição adicional de tokens:`);
-                                    logger.info(JSON.stringify(tokensPorPerfil, null, 2));
-
-                                    // Compra dos tokens um por um
-                                    for (const [perfil, quantidade] of Object.entries(tokensPorPerfil)) {
-                                        if (quantidade > 0) {
-                                            const tokensDoPerfil = tokensDisponiveis.filter(token => {
-                                                const riscoToken = token.risco;
-                                                const perfilToken = ratings.find(r => r.rating === riscoToken)?.perfil || 'Não Classificado';
-                                                return perfilToken === perfil;
-                                            });
-
-                                            for (const token of tokensDoPerfil) {
-                                                if (quantidade > 0) {
-                                                    try {
-                                                        // Usar o mutex para garantir que somente uma operação seja executada por vez
-                                                        const releaseMutex = await mutex.acquire();
-                                                        
-                                                        try {
-                                                            // Aguarde 1 segundo antes de processar o próximo token
-                                                            await sleep(1000);
-                                                    
-                                                            // Obter todos os tokens do usuário
-                                                            const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
-                                                            
-                                                            // Encontrar a quantidade atual do token específico
-                                                            const tokenAtual = tokensUsuario.find(t => t.token_id === token.token_id);
-                                                            const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
-
-                                                            // Verificar disponibilidade global do token
-                                                            if (token.quantidade_tokens === 0) {
-                                                                logger.warn(`-------------------------`);
-                                                                logger.warn(`Token ${token.token_id} não está disponível para compra.`);
-                                                                continue;
-                                                            }
-
-                                                            // Passo 1: Atualizar a quantidade total
-                                                            const quantidadeTotal = quantidadeAtual + 1; // Comprar 1 token
-                                                            await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                                                usuarioComDistribuicao.usuario_id,
-                                                                token.token_id,
-                                                                quantidadeTotal
-                                                            );
-
-                                                            // Passo 2: Gravar transação
-                                                            await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                                                usuarioComDistribuicao.usuario_id,
-                                                                token.token_id,
-                                                                1 // Quantidade comprada
-                                                            );
-
-                                                            // Passo 3: Definir o novo valor do token do IPO
-                                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
-                                                            const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
-                                                            const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
-
-                                                            // Passo 4: Calcular nova quantidade total
-                                                            const quantidadeIPO = quantidadeTokensIPO - 1; // Reduzir 1 token do IPO
-                                                            await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                                                token.token_id,
-                                                                quantidadeIPO
-                                                            );
-
-                                                            // Passo 5: Calcular novo saldo
-                                                            const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
-                                                            const saldo_atual = parseFloat(saldo_usuario.saldo);
-                                                            const saldo_atualizado = saldo_atual - (1 * tokenPrice); // Subtrair o custo do token
-                                                            
-                                                            // Passo 6: Atualizar o novo saldo
-                                                            await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo_atualizado, usuarioComDistribuicao.usuario_id);
-
-                                                            logger.info(`Compra executada: Token ID: ${token.token_id}, Quantidade: 1`);
-                                                        } finally {
-                                                            releaseMutex();
-                                                        }
-                                                    } catch (error) {
-                                                        logger.error(`Erro ao comprar o token ${token.token_id}: ${error.message}`);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                };
-
-                                await comprarTokens();
-                            }
-                        } else {
-                            // Processo original de balanceamento
-                            const filtrarTokensPorPerfil = async (tokensDisponiveis, targetPerfil, currentPerfil) => {
-                                Object.entries(targetPerfil).forEach(async ([perfil, target]) => {
-                                    const current = currentPerfil[perfil];
-                                    const discrepencia = target - current;
-
-                                    if (discrepencia > 0) {
-                                        const tokensDoPerfil = tokensDisponiveis.filter(token => {
-                                            const riscoToken = token.risco;
-                                            const perfilToken = ratings.find(r => r.rating === riscoToken)?.perfil || 'Não Classificado';
-                                            return perfilToken === perfil;
-                                        });
-
-                                        if (tokensDoPerfil.length > 0) {
-                                            logger.info(`-------------------------`);
-                                            logger.info(`Usuário ${usuarioComDistribuicao.usuario_id} - Tokens disponíveis para ${perfil}:`);
-                                            logger.info(JSON.stringify(tokensDoPerfil, null, 2));
-
-                                            const tokenPrice = 0.01; // Valor unitário do token
-                                            const totalValor = (discrepencia * saldo) / 100;
-                                            const tokensNecessarios = Math.floor(totalValor / tokenPrice);
-                                            const tokensPorToken = Math.floor(tokensNecessarios / tokensDoPerfil.length);
-                                            const valorPorToken = tokensPorToken * tokenPrice;
-
-                                            if (tokensNecessarios > 0) {
-                                                logger.info(`-------------------------`);
-                                                logger.info(`Usuário ${usuarioComDistribuicao.usuario_id} - Distribuição equilibrada de compra de tokens de ${perfil}`);
-                                                logger.info(`Valor total disponível para compra: R$ ${totalValor.toFixed(2)}`);
-                                                logger.info(`Número de tokens disponíveis para compra: ${tokensDoPerfil.length}`);
-                                                logger.info(`Quantidade de tokens por token: ${tokensPorToken}`);
-                                                logger.info(`Valor por token: R$ ${valorPorToken.toFixed(2)}`);
-
-                                                for (const token of tokensDoPerfil) {
-                                                    try {
-                                                        // Aguarde 2 segundos antes de processar o próximo token
-                                                        await sleep(2000);
-                                                        
-                                                        // Usar o mutex para garantir que somente uma operação seja executada por vez
-                                                        const releaseMutex = await mutex.acquire();
-                                                        
-                                                        try {
-                                                            // Obter todos os tokens do usuário
-                                                            const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
-                                                            
-                                                            // Encontrar a quantidade atual do token específico
-                                                            const tokenAtual = tokensUsuario.find(t => t.token_id === token.token_id);
-                                                            const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
-
-                                                            // Verificar disponibilidade global do token
-                                                            if (token.quantidade_tokens === 0) {
-                                                                logger.warn(`-------------------------`);
-                                                                logger.warn(`Token ${token.token_id} não está disponível para compra.`);
-                                                                continue;
-                                                            }
-
-                                                            // Calcular a nova quantidade total
-                                                            const quantidadeTotal = quantidadeAtual + tokensPorToken;
-
-                                                            // Atualizar a quantidade total
-                                                            const resultado = await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                                                usuarioComDistribuicao.usuario_id,
-                                                                token.token_id,
-                                                                quantidadeTotal
-                                                            );
-
-                                                            // Gravar transação após a atualização bem-sucedida
-                                                            await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                                                usuarioComDistribuicao.usuario_id,
-                                                                token.token_id,
-                                                                tokensPorToken
-                                                            );
-
-                                                            // Definir o novo valor do token do IPO
-                                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
-                                                            const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
-                                                            const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
-                                                    
-                                                            // Calcular a nova quantidade total
-                                                            const quantidadeIPO = quantidadeTokensIPO - tokensPorToken;
-
-                                                            // Chamada à nova função atualizarTokensIPO
-                                                            await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                                                token.token_id,
-                                                                quantidadeIPO
-                                                            );
-
-                                                            // Calcular o novo saldo atualizado
-                                                            const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
-                                                            if (!saldo_usuario) {
-                                                                logger.error(`Erro: Saldo não encontrado para o usuário ${usuarioComDistribuicao.usuario_id}`);
-                                                                throw new Error('Saldo não encontrado');
-                                                            }
-                                                            const saldo_atual = parseFloat(saldo_usuario.saldo);
-                                                            const saldo_atualizado = saldo_atual - (tokensPorToken * 0.01);
-                                                            logger.info(`Saldo atualizado: ${saldo_atualizado}`);
-                                                            
-                                                            // Aguarde a atualização do saldo ser concluída
-                                                            await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo_atualizado, usuarioComDistribuicao.usuario_id);
-
-                                                            logger.info(`-------------------------`);
-                                                            logger.info(`Compra executada com sucesso:`);
-                                                            logger.info(`Usuário: ${usuarioComDistribuicao.usuario_id}`);
-                                                            logger.info(`Token ID: ${token.token_id}`);
-                                                            logger.info(`Quantidade comprada: ${tokensPorToken}`);
-                                                            logger.info(`-------------------------`);
-                                                        } finally {
-                                                            releaseMutex();
-                                                        }
-                                                    } catch (error) {
-                                                        logger.error(`Erro ao executar a compra adicional do token ${token.token_id} para o usuário ${usuarioComDistribuicao.usuario_id}:`, error);
-                                                        ajustes.push({
-                                                            perfil,
-                                                            acao: 'Análise',
-                                                            descricao: `Erro ao comprar o token ${token.token_id}`,
-                                                            detalhes: error.message
-                                                        });
-                                                    }
-                                                }
-                                            } else {
+                                            if (token.quantidade_tokens === 0) {
                                                 logger.warn(`-------------------------`);
-                                                logger.warn(`Usuário ${usuarioComDistribuicao.usuario_id} - Não há tokens disponíveis para o perfil ${perfil}`);
-                                                ajustes.push({
-                                                    perfil,
-                                                    acao: 'Análise',
-                                                    descricao: `Nenhum token disponível para o perfil ${perfil}`,
-                                                    recomendacao: `Revisar a disponibilidade de tokens ou ajustar o perfil`
-                                                });
+                                                logger.warn(`Token ${token.token_id} não está disponível para compra.`);
+                                                continue;
                                             }
+
+                                            // Ajustar a quantidade total de tokens para não exceder o saldo e a quantidade disponível
+                                            const maxTokensParaComprar = Math.floor(saldo / tokenPrice);
+                                            const quantidadeParaComprar = Math.min(totalTokensPossiveis, maxTokensParaComprar, token.quantidade_tokens);
+
+                                            if (quantidadeParaComprar <= 0) {
+                                                continue;
+                                            }
+
+                                            const quantidadeTotal = quantidadeAtual + quantidadeParaComprar;
+                                            await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
+                                                usuarioComDistribuicao.usuario_id,
+                                                token.token_id,
+                                                quantidadeTotal
+                                            );
+
+                                            await AtualizarQuantidadeTokensModel.gravarTransacao(
+                                                usuarioComDistribuicao.usuario_id,
+                                                token.token_id,
+                                                quantidadeParaComprar
+                                            );
+
+                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
+                                            const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
+                                            const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
+
+                                            const quantidadeIPO = quantidadeTokensIPO - quantidadeParaComprar;
+                                            await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
+                                                token.token_id,
+                                                quantidadeIPO
+                                            );
+
+                                            const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
+                                            const saldo_atual = parseFloat(saldo_usuario.saldo);
+                                            saldo = saldo_atual - (quantidadeParaComprar * tokenPrice);
+
+                                            await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo, usuarioComDistribuicao.usuario_id);
+
+                                            logger.info(`Compra executada: Token ID: ${token.token_id}, Quantidade: ${quantidadeParaComprar}`);
+
+                                            // Atualizar a quantidade possível de tokens a serem comprados
+                                            totalTokensPossiveis -= quantidadeParaComprar;
+                                        } finally {
+                                            releaseMutex();
                                         }
-                                    } else if (discrepencia < 0) {
-                                        logger.warn(`-------------------------`);
-                                        logger.warn(`Usuário ${usuarioComDistribuicao.usuario_id} - Excesso de tokens detectado:`);
-                                        logger.warn(`Perfil: ${perfil}`);
-                                        logger.warn(`Porcentagem atual: ${current}%`);
-                                        logger.warn(`Porcentagem target: ${target}%`);
-                                        logger.warn(`Discrepência: ${Math.abs(discrepencia)}%`);
-                                        logger.warn(`Excesso de tokens no perfil ${perfil}. Idealmente deveria ter ${target}% e atualmente tem ${current}%.`);
-
-                                        ajustes.push({
-                                            perfil,
-                                            acao: 'Análise',
-                                            descricao: `Excesso de ${Math.abs(discrepencia)}% no perfil ${perfil}`,
-                                            recomendacao: `Recomenda-se revisar a distribuição para ajustar o excesso.`
-                                        });
+                                    } catch (error) {
+                                        logger.error(`Erro ao comprar o token ${token.token_id}: ${error.message}`);
                                     }
-                                });
-                            };
-
-                            await filtrarTokensPorPerfil(tokensDisponiveis, targetPerfil, currentPerfil);
-
-                            if (ajustes.length === 0) {
-                                logger.info(`-------------------------`);
-                                logger.info(`Usuário ${usuarioComDistribuicao.usuario_id} - Carteira já está equilibrada`);
+                                }
                             }
+                        };
+
+                        // Primeiro, tentar comprar tokens de acordo com as porcentagens alvo
+                        const valorParaConservador = saldo * (targetPerfil.Conservador / 100);
+                        const valorParaModerado = saldo * (targetPerfil.Moderado / 100);
+                        const valorParaAgressivo = saldo * (targetPerfil.Agressivo / 100);
+
+                        await comprarTokensPorPerfil('Conservador', valorParaConservador);
+                        await comprarTokensPorPerfil('Moderado', valorParaModerado);
+                        await comprarTokensPorPerfil('Agressivo', valorParaAgressivo);
+
+                        // Verificar saldo restante e gastar se for maior ou igual a 0.01
+                        let saldoRestante = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
+                        saldo = parseFloat(saldoRestante.saldo);
+
+                        while (saldo >= 0.01) {
+                            // Atualizar a lista de tokens disponíveis antes de tentar usar o saldo restante
+                            const tokensDisponiveisAtualizados = await BuscarPinsDisponiveisModel.getPins();
+                            
+                            // Usar todo o saldo restante para comprar o primeiro token disponível
+                            const primeiroToken = tokensDisponiveisAtualizados[0];
+                            if (!primeiroToken) {
+                                break;
+                            }
+
+                            const tokenPrice = 0.01; // Valor unitário do token
+                            const quantidadeParaComprar = Math.floor(saldo / tokenPrice);
+
+                            // Verificar se a quantidade disponível é suficiente
+                            const quantidadeDisponivel = primeiroToken.quantidade_tokens;
+                            const quantidadeCompravel = Math.min(quantidadeParaComprar, quantidadeDisponivel);
+
+                            if (quantidadeCompravel > 0) {
+                                const releaseMutex = await mutex.acquire();
+                                try {
+                                    await sleep(1000);
+
+                                    const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
+                                    const tokenAtual = tokensUsuario.find(t => t.token_id === primeiroToken.token_id);
+                                    const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
+
+                                    const quantidadeTotal = quantidadeAtual + quantidadeCompravel;
+                                    await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
+                                        usuarioComDistribuicao.usuario_id,
+                                        primeiroToken.token_id,
+                                        quantidadeTotal
+                                    );
+
+                                    await AtualizarQuantidadeTokensModel.gravarTransacao(
+                                        usuarioComDistribuicao.usuario_id,
+                                        primeiroToken.token_id,
+                                        quantidadeCompravel
+                                    );
+
+                                    const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
+                                    const tokenAtualIPO = tokensIPO.find(t => t.token_id === primeiroToken.token_id);
+                                    const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
+
+                                    const quantidadeIPO = quantidadeTokensIPO - quantidadeCompravel;
+                                    await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
+                                        primeiroToken.token_id,
+                                        quantidadeIPO
+                                    );
+
+                                    saldo -= (quantidadeCompravel * tokenPrice);
+                                    await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo, usuarioComDistribuicao.usuario_id);
+
+                                    logger.info(`Compra executada com saldo restante: Token ID: ${primeiroToken.token_id}, Quantidade: ${quantidadeCompravel}`);
+                                } finally {
+                                    releaseMutex();
+                                }
+                            }
+
+                            // Atualizar saldo restante
+                            saldoRestante = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
+                            saldo = parseFloat(saldoRestante.saldo);
                         }
 
                         return {
                             ...usuarioComDistribuicao,
-                            ajustes
+                            ajustes: []
                         };
                     };
 
@@ -534,50 +394,42 @@ const CompraDiariaPinsController = {
             };
 
             // Processando usuários sequencialmente com sleep
-            const processarTodosUsuarios = async (listaUsuarios) => {
+            const processarTodosUsuarios = async (usuariosPro, usuariosBasic) => {
                 const resultados = {
                     usuariosPro: [],
                     usuariosBasic: [],
                     outros: []
                 };
 
-                for (const usuario of listaUsuarios) {
+                // Processar usuários Poppy Pro primeiro
+                for (const usuario of usuariosPro) {
                     try {
                         const usuarioProcessado = await processarUsuario(usuario);
-                        
-                        // Adicionar sleep após o processamento de cada usuário
                         await sleep(5000); // 5 segundos
-                        
-                        // Atribuir o usuário processado à sua categoria
-                        if (usuario.assinatura === 'Poppy Pro') {
-                            resultados.usuariosPro.push(usuarioProcessado);
-                        } else if (usuario.assinatura === 'Poppy Basic') {
-                            resultados.usuariosBasic.push(usuarioProcessado);
-                        } else {
-                            resultados.outros.push(usuarioProcessado);
-                        }
+                        resultados.usuariosPro.push(usuarioProcessado);
                     } catch (error) {
                         logger.error(`Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`);
-                        // Caso ocorra erro, ainda assim tenta manter a estrutura de resposta
-                        if (usuario.assinatura === 'Poppy Pro') {
-                            resultados.usuariosPro.push({
-                                ...usuario,
-                                error: 'Erro ao processar o usuário',
-                                message: 'Ocorreu um erro durante o processamento.'
-                            });
-                        } else if (usuario.assinatura === 'Poppy Basic') {
-                            resultados.usuariosBasic.push({
-                                ...usuario,
-                                error: 'Erro ao processar o usuário',
-                                message: 'Ocorreu um erro durante o processamento.'
-                            });
-                        } else {
-                            resultados.outros.push({
-                                ...usuario,
-                                error: 'Erro ao processar o usuário',
-                                message: 'Ocorreu um erro durante o processamento.'
-                            });
-                        }
+                        resultados.usuariosPro.push({
+                            ...usuario,
+                            error: 'Erro ao processar o usuário',
+                            message: 'Ocorreu um erro durante o processamento.'
+                        });
+                    }
+                }
+
+                // Depois processar usuários Poppy Basic
+                for (const usuario of usuariosBasic) {
+                    try {
+                        const usuarioProcessado = await processarUsuario(usuario);
+                        await sleep(5000); // 5 segundos
+                        resultados.usuariosBasic.push(usuarioProcessado);
+                    } catch (error) {
+                        logger.error(`Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`);
+                        resultados.usuariosBasic.push({
+                            ...usuario,
+                            error: 'Erro ao processar o usuário',
+                            message: 'Ocorreu um erro durante o processamento.'
+                        });
                     }
                 }
 
@@ -585,7 +437,7 @@ const CompraDiariaPinsController = {
             };
 
             // Processar todos os usuários sequencialmente
-            const resultados = await processarTodosUsuarios(usuariosCarteiras);
+            const resultados = await processarTodosUsuarios(usuariosPro, usuariosBasic);
 
             // Retornar a resposta final
             return res.status(200).json({
