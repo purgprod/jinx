@@ -1,3 +1,4 @@
+// controllers/rotinas/controller_poppy_compra_diaria_pins.js
 const Mutex = require('async-mutex').Mutex;
 const logger = require('../../logger');
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
@@ -8,6 +9,8 @@ const BuscarPinsDisponiveisModel = require('../../models/rotinas/model_poppy_bus
 const AtualizarQuantidadeTokensModel = require('../../models/rotinas/model_poppy_comprar_pins_disponiveis');
 const UsersSaldosModel = require('../../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_saldo_usuarios');
+const rankingAcessoInvestimentos = require('../../public/js/usuarios/acesso_investimentos_por_ranking');
+const rankings = rankingAcessoInvestimentos.default; // Acessa o array exportado pelo módulo
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -21,7 +24,10 @@ const CompraDiariaPinsController = {
         logger.info('Iniciando a coleta e processamento sequencial de usuários');
 
         try {
-            // Etapa 1: Buscar usuários e carteiras
+            // Nova Etapa 1: Importar rankings e acessos correspondentes
+            logger.info('Importando rankings e acessos correspondentes');
+
+            // Etapa 2: Buscar usuários e carteiras
             const usuariosCarteiras = await BuscarUsuariosCarteirasModel.getUsuariosCarteiras();
 
             if (!usuariosCarteiras.length) {
@@ -56,6 +62,22 @@ const CompraDiariaPinsController = {
                 }
             });
 
+            // Ordenar usuários Pro e Basic pelo valor investido
+            usuariosPro.sort((a, b) => b.investido - a.investido);
+            usuariosBasic.sort((a, b) => b.investido - a.investido);
+
+            // Log da ordem dos usuários Pro
+            logger.info('Ordem dos usuários Pro por investimento:');
+            usuariosPro.forEach((usuario, index) => {
+                logger.info(`${index + 1}: Usuário ID ${usuario.usuario_id} - Investido: ${usuario.investido}`);
+            });
+
+            // Log da ordem dos usuários Basic
+            logger.info('Ordem dos usuários Basic por investimento:');
+            usuariosBasic.forEach((usuario, index) => {
+                logger.info(`${index + 1}: Usuário ID ${usuario.usuario_id} - Investido: ${usuario.investido}`);
+            });
+
             logger.info(`Usuários Pro encontrados: ${usuariosPro.length}`);
             logger.info(`Usuários Basic encontrados: ${usuariosBasic.length}`);
             logger.info(`Outros usuários encontrados: ${outros.length}`);
@@ -69,7 +91,8 @@ const CompraDiariaPinsController = {
                         investido: usuario.investido,
                         suitability: usuario.suitability,
                         suitability_complementar: usuario.suitability_complementar,
-                        saldo: usuario.saldo // Garantindo que o saldo está incluso
+                        saldo: usuario.saldo, // Garantindo que o saldo está incluso
+                        ranking: usuario.ranking // Adicionando o ranking do usuário
                     };
 
                     logger.info(`-------------------------`);
@@ -188,8 +211,20 @@ const CompraDiariaPinsController = {
 
                     const usuarioComDistribuicao = calcularDistribuicao();
 
-                    // Etapa 6: Buscar tokens disponíveis
-                    const tokensDisponiveis = await BuscarPinsDisponiveisModel.getPins();
+                    // Etapa 6: Buscar tokens disponíveis com base no ranking do usuário
+                    const rankingUsuario = rankings.find(r => r.nomeRanking === usuarioComDistribuicao.ranking);
+                    if (!rankingUsuario) {
+                        logger.warn(`Ranking não encontrado para o usuário ${usuarioComDistribuicao.usuario_id}`);
+                        return usuarioComDistribuicao;
+                    }
+
+                    // Log do ranking do usuário e seus acessoInvestimentos
+                    logger.info(
+                        `Ranking do usuário ${usuarioComDistribuicao.usuario_id}: ${rankingUsuario.nomeRanking} | AcessoInvestimentos: ${rankingUsuario.acessoInvestimentos.join(', ')}`
+                    );
+                    
+                    const riscos = rankingUsuario.acessoInvestimentos;
+                    const tokensDisponiveis = await BuscarPinsDisponiveisModel.getPins(riscos);
 
                     // Etapa 7: Equilibrar a carteira com base nas porcentagens desejadas
                     const equilibrarCarteira = async () => {
@@ -262,7 +297,7 @@ const CompraDiariaPinsController = {
                                                 quantidadeParaComprar
                                             );
 
-                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
+                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
                                             const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
                                             const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
 
@@ -307,7 +342,7 @@ const CompraDiariaPinsController = {
 
                         while (saldo >= 0.01) {
                             // Atualizar a lista de tokens disponíveis antes de tentar usar o saldo restante
-                            const tokensDisponiveisAtualizados = await BuscarPinsDisponiveisModel.getPins();
+                            const tokensDisponiveisAtualizados = await BuscarPinsDisponiveisModel.getPins(riscos);
                             
                             // Usar todo o saldo restante para comprar o primeiro token disponível
                             const primeiroToken = tokensDisponiveisAtualizados[0];
@@ -344,7 +379,7 @@ const CompraDiariaPinsController = {
                                         quantidadeCompravel
                                     );
 
-                                    const tokensIPO = await BuscarPinsDisponiveisModel.getPins();
+                                    const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
                                     const tokenAtualIPO = tokensIPO.find(t => t.token_id === primeiroToken.token_id);
                                     const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
 

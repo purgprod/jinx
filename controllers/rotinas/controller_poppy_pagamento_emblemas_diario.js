@@ -4,6 +4,7 @@ const BuscarEmblemasCarteirasModel = require('../../models/rotinas/model_poppy_b
 const HistoricoPagamentoEmblemasModel = require('../../models/rotinas/model_poppy_historico_pagamento_emblemas');
 const AtualizarEmblemasUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_emblemas_usuarios');
 const AtualizarFlagEmblemasUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_flag_emblemas_usuarios');
+const BuscarUsuariosModel = require('../../models/rotinas/model_manutencao_buscar_usuarios');
 const axios = require('axios');
 
 const PagamentoEmblemasController = {
@@ -40,16 +41,28 @@ const PagamentoEmblemasController = {
                     status: 'concluido',
                 });
             }
-            
+
             // Etapa 3: Buscar a quantidade de emblemas para cada usuario_id nos saldos filtrados
+            const usuarios = await BuscarUsuariosModel.getUsuarios();
+            const usuarioMap = new Map(usuarios.map(usuario => [usuario.usuario_id, usuario]));
+
             const detalhesEmblemas = [];
             let saldoInferiorAoMinimo = false;
 
             for (const saldo of saldosFiltrados) {
                 const usuario_id = saldo.usuario_id;
-                let flagEmblemas = saldo.saldo > 0.01 ? 1 : 0;
+                const usuario = usuarioMap.get(usuario_id);
 
-                // Atualizar flag_emblemas baseado no saldo
+                let flagEmblemas = 1;
+                if (usuario && usuario.assinatura === 'Poppy Basic') {
+                    flagEmblemas = 0;
+                    logger.info(`Usuário ${usuario_id} possui assinatura 'Poppy Basic'. Emblemas não serão pagos.`);
+                    continue; // Pular para o próximo usuário
+                } else if (saldo.saldo <= 0.01) {
+                    flagEmblemas = 0;
+                }
+
+                // Atualizar flag_emblemas baseado no saldo e assinatura
                 try {
                     await AtualizarFlagEmblemasUsuariosModel.atualizarFlagEmblemas(flagEmblemas, usuario_id);
                     logger.info(`Flag emblemas do usuário ${usuario_id} atualizado para ${flagEmblemas}`);

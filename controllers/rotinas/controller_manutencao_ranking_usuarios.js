@@ -1,5 +1,6 @@
 const logger = require('../../logger');
 const BuscarCarteirasModel = require('../../models/rotinas/model_manutencao_buscar_carteiras');
+const BuscarUsuariosModel = require('../../models/rotinas/model_manutencao_buscar_usuarios');
 const UpdateRankingUsuariosModel = require('../../models/rotinas/model_manutencao_update_ranking_usuarios');
 const rankings = require('./rankings');
 
@@ -19,7 +20,14 @@ const ManutencaoRankingUsuariosController = {
                 });
             }
 
-            // Etapa 2: Processar os dados para somar saldo e investido por usuário
+            // Etapa 2: Buscar dados dos usuários
+            const usuarios = await BuscarUsuariosModel.getUsuarios();
+            const usuariosMap = {};
+            usuarios.forEach(usuario => {
+                usuariosMap[usuario.usuario_id] = usuario;
+            });
+
+            // Etapa 3: Processar os dados para somar saldo e investido por usuário
             logger.info('Processando dados para somar saldo e investido por usuário');
             
             const usuariosProcessados = {};
@@ -58,7 +66,7 @@ const ManutencaoRankingUsuariosController = {
 
                 logger.info('Processamento de dados concluído com sucesso');
 
-                // Etapa 3: Verificar o ranking de cada usuário
+                // Etapa 4: Verificar o ranking de cada usuário
                 logger.info('Iniciando verificação do ranking dos usuários');
 
                 // Ordenar os rankings por valor mínimo em ordem decrescente
@@ -69,12 +77,23 @@ const ManutencaoRankingUsuariosController = {
                     const valorTotal = usuariosProcessados[usuarioId].valor_total;
                     let nomeRanking = 'Pioneiro Financeiro'; // Ranking padrão mais baixo
 
-                    // Encontrar o ranking adequado
-                    for (const ranking of rankingsOrdenados) {
-                        if (valorTotal >= ranking.valorMinimo) {
-                            nomeRanking = ranking.nomeRanking;
-                            break;
+                    // Verificar assinatura
+                    const usuario = usuariosMap[usuarioId];
+                    if (usuario) {
+                        logger.info(`Assinatura do usuário ${usuarioId}: ${usuario.assinatura}`);
+                        if (usuario.assinatura === 'Poppy Basic') {
+                            nomeRanking = 'Pioneiro Financeiro';
+                        } else {
+                            // Encontrar o ranking adequado
+                            for (const ranking of rankingsOrdenados) {
+                                if (valorTotal >= ranking.valorMinimo) {
+                                    nomeRanking = ranking.nomeRanking;
+                                    break;
+                                }
+                            }
                         }
+                    } else {
+                        logger.warn(`Usuário ${usuarioId} não encontrado nos dados de usuários.`);
                     }
 
                     logger.info(`Verificação do ranking para o usuário ${usuarioId}:`);
@@ -86,7 +105,7 @@ const ManutencaoRankingUsuariosController = {
                     usuariosProcessados[usuarioId].nomeRanking = nomeRanking;
                 }
 
-                // Etapa 4: Atualizar o ranking de cada usuário no banco de dados
+                // Etapa 5: Atualizar o ranking de cada usuário no banco de dados
                 logger.info('Iniciando atualização do ranking dos usuários no banco de dados');
 
                 try {
