@@ -13,7 +13,7 @@ const ResultadosFinanceirosUpdateModel = {
                 descritivo = ?, garantias_oferecidas = ?, historico_com_nexoos = ?, capital_e_capacidade = ?,
                 carater = ?, credito = ?, condicoes = ?, conexoes = ?, colateral = ?, controle = ?,
                 crescimento_12_meses = ?, perfil_das_receitas = ?, site = ?, facebook = ?, instagram = ?, 
-		pre_venda = ?, data_pre_venda = ?, cobertura_sinistro = ?, flag_sinistro = ?, data_sinistro = ?
+		cobertura_sinistro = ?, flag_sinistro = ?, data_sinistro = ?
             WHERE id_resultado = ?
         `;
         const values = [
@@ -23,7 +23,7 @@ const ResultadosFinanceirosUpdateModel = {
             data.descritivo, data.garantias_oferecidas, data.historico_com_nexoos, data.capital_e_capacidade,
             data.carater, data.credito, data.condicoes, data.conexoes, data.colateral, data.controle,
             data.crescimento_12_meses, data.perfil_das_receitas, data.site, data.facebook, data.instagram,
-            data.pre_venda, data.data_pre_venda, data.cobertura_sinistro, data.flag_sinistro, data.data_sinistro, id
+            data.cobertura_sinistro, data.flag_sinistro, data.data_sinistro, id
         ];
 
         logger.info(`Executando update para resultado financeiro com ID: ${id}`);

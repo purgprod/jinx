@@ -133,12 +133,6 @@ function generateInputFields(data) {
         <label for="instagram">Instagram:</label>
         <input type="url" id="instagram" name="instagram" value="${data.instagram}" readonly>
 
-        <label for="pre_venda">Pré-venda:</label>
-        <input type="number" id="pre_venda" name="pre_venda" value="${data.pre_venda}" readonly>
-
-        <label for="data_fim_pre_venda">Data Fim Pré-venda:</label>
-        <input type="date" id="data_fim_pre_venda" name="data_fim_pre_venda" value="${formatDate(data.data_fim_pre_venda)}" readonly>
-
 	<label for="cobertura_sinistro">Cobertura Sinistro:</label>
         <input type="number" id="cobertura_sinistro" name="cobertura_sinistro" value="${data.cobertura_sinistro}" readonly>
 
