@@ -232,7 +232,7 @@ cron.schedule('10 16 * * *', async () => {
 // Agendar execução da rotina de manutenção para gravar o histórico dos planos dos usuários às 19:00:00 todos os dias
 cron.schedule('0 19 * * *', async () => {
     try {
-        logger.info('Iniciando execução da rotina [Manutenção] - Histórico dos planos dos usuários às 18:00:00');
+        logger.info('Iniciando execução da rotina [Manutenção] - Histórico dos planos dos usuários às 19:00:00');
         
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-planos-assinaturas-historico';
@@ -499,7 +499,7 @@ cron.schedule('0 18 * * *', async () => {
         logger.info('Iniciando execução da rotina [Poppy] - Pagamento dos emblemas diário agendada às 18:00:00');
         
         // Configurar o endpoint principal
-        const mainUrl = 'http://localhost:3000/api/rotinas/poppy-pagamento-emblemas-diario';
+        const mainUrl = 'http://localhost:3000/api/rotinas/poppy-pagamento-emblema-diario';
         
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);

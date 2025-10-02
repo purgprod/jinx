@@ -1,5 +1,5 @@
 // models/rotinas/model_tokens_historico_free_float.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const TokensModel = {

@@ -1,5 +1,5 @@
 // models/model_autenticacao.js
-const pool = require('../database/database_usuarios');
+const pool = require('../database/database_purg');
 
 // Função para encontrar um usuário pelo e-mail
 exports.findUserByEmail = (email, callback) => {

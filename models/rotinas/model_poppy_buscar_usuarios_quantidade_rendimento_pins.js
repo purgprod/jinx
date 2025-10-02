@@ -1,5 +1,5 @@
 // models/rotinas/model_buscar_usuarios_quantidade_rendimento_pins.js
-const pool = require('../../database/database_crowdfunding');
+const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarUsuariosQuantidadeRendimentoPinsModel = {
@@ -19,7 +19,8 @@ const BuscarUsuariosQuantidadeRendimentoPinsModel = {
         SELECT token_id, usuario_id, quantidade_tokens, rendimento_token
         FROM usuario_tokens
         WHERE token_id = ?
-        AND quantidade_tokens > 0;
+        AND quantidade_tokens > 0
+	AND flag_sinistro = 0;
       `;
 
       logger.info(`Executando consulta SQL: ${sqlQuery}`);

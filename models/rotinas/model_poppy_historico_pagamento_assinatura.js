@@ -1,4 +1,4 @@
-const pool = require('../../database/database_crowdfunding');
+const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const HistoricoPagamentoAssinaturaModel = {

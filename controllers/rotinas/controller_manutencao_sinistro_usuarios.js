@@ -14,7 +14,7 @@ const ManutencaoSinistroUsuariosController = {
             if (!sinistros || sinistros.length === 0) {
                 logger.warn('Nenhum sinistro encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum sinistro encontrado',
+                    message: 'Rotinas executadas com sucesso',
                     sinistros: []
                 });
             }
@@ -37,17 +37,17 @@ const ManutencaoSinistroUsuariosController = {
                 for (const sinistro of sinistros) {
                     if (sinistro.ranking === null) {
                         sinistro.sinistro = 0;
-                        logger.info(`Valor do sinistro definido como ${sinistro.sinistro} para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
+                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
                         continue;
                     }
 
                     const rankingEncontrado = rankings.find(r => r.nomeRanking === sinistro.ranking);
                     if (rankingEncontrado) {
                         sinistro.sinistro = rankingEncontrado.sinistro;
-                        logger.info(`Valor do sinistro definido como ${sinistro.sinistro} para o usuário ${sinistro.usuario_id}`);
+                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id}`);
                     } else {
                         sinistro.sinistro = 0;
-                        logger.info(`Valor do sinistro definido como ${sinistro.sinistro} para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
+                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
                     }
                 }
 

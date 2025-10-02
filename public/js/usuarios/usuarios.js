@@ -133,8 +133,10 @@ function filterUsers() {
 function createCardsHTML(users) {
     return users.map(user => `
         <div class="card" data-id="${user.usuario_id}">
-            <h3 class="card-title">Nome: ${user.nome}</h3>
-            <p><strong>Email:</strong> ${user.email}</p>
+            <h3 class="card-title">${user.nome}</h3>
+            <p><strong>E-mail:</strong> ${user.email}</p>
+            <p><strong>ID:</strong> ${user.usuario_id}</p>
+            <p><strong>Assinatura:</strong> ${user.assinatura}</p>
             ${user.status_ativo === 0 ? `<p class="inactive-label" style="color: red;"><strong>Inativo</strong></p>` : ''}
         </div>
     `).join('');

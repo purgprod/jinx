@@ -156,4 +156,3 @@ export function loadNewFinancialDetails() {
         console.error('Elemento center-panel não encontrado.');
     }
 }
-

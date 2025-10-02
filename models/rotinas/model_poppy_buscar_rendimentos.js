@@ -1,5 +1,5 @@
 // models/rotinas/model_buscar_poppy_rendimentos.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarRendimentosModel = {

@@ -1,5 +1,5 @@
 // models/rotinas/model_atualizar_ultima_execucao.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const RotinasAtualizarModel = {

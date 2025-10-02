@@ -1,7 +1,7 @@
 // models/usuarios/model_coletar_suitability_complementar_usuario.js
 
 const mysql = require('mysql2');
-const connection = require('../../database/database_usuarios');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 class ColetarSuitabilityComplementarUsuarioModel {

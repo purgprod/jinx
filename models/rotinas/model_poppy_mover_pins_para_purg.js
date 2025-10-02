@@ -1,5 +1,5 @@
 // models/rotinas/model_mover_pins_para_purg.js
-const pool = require('../../database/database_crowdfunding');
+const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const MoverPinsModel = {

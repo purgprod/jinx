@@ -2,7 +2,7 @@
 
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); 
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 class PagamentosEmblemasTotalModel {

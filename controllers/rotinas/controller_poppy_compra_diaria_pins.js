@@ -2,6 +2,7 @@
 const Mutex = require('async-mutex').Mutex;
 const logger = require('../../logger');
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
+const ConverterEmblemasModel = require('../../models/rotinas/model_poppy_converter_emblemas_em_saldo'); // Importa o model de conversão
 const carteiras = require('./carteiras');
 const UsersTokensModel = require('../../models/usuarios/model_tokens_usuarios');
 const ratings = require('./ratings');
@@ -24,7 +25,7 @@ const CompraDiariaPinsController = {
         logger.info('Iniciando a coleta e processamento sequencial de usuários');
 
         try {
-            // Nova Etapa 1: Importar rankings e acessos correspondentes
+            // Etapa 1: Importar rankings e acessos correspondentes
             logger.info('Importando rankings e acessos correspondentes');
 
             // Etapa 2: Buscar usuários e carteiras
@@ -33,7 +34,7 @@ const CompraDiariaPinsController = {
             if (!usuariosCarteiras.length) {
                 logger.warn('Nenhum usuário ativo encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum usuário ativo encontrado.',
+                    message: 'Rotinas executadas com sucesso',
                     usuariosPro: [],
                     usuariosBasic: [],
                 });
@@ -46,8 +47,7 @@ const CompraDiariaPinsController = {
 
             usuariosCarteiras.forEach(usuario => {
                 logger.info(`Processando usuário ${usuario.usuario_id}`);
-                logger.info(`Dados do usuário:`);
-                logger.info(JSON.stringify(usuario, null, 2));
+                logger.info(`Dados do usuário: ${JSON.stringify(usuario, null, 2)}`);
 
                 switch (usuario.assinatura) {
                     case 'Poppy Pro':
@@ -66,13 +66,10 @@ const CompraDiariaPinsController = {
             usuariosPro.sort((a, b) => b.investido - a.investido);
             usuariosBasic.sort((a, b) => b.investido - a.investido);
 
-            // Log da ordem dos usuários Pro
             logger.info('Ordem dos usuários Pro por investimento:');
             usuariosPro.forEach((usuario, index) => {
                 logger.info(`${index + 1}: Usuário ID ${usuario.usuario_id} - Investido: ${usuario.investido}`);
             });
-
-            // Log da ordem dos usuários Basic
             logger.info('Ordem dos usuários Basic por investimento:');
             usuariosBasic.forEach((usuario, index) => {
                 logger.info(`${index + 1}: Usuário ID ${usuario.usuario_id} - Investido: ${usuario.investido}`);
@@ -85,18 +82,19 @@ const CompraDiariaPinsController = {
             // Função para processar um usuário
             const processarUsuario = async (usuario) => {
                 try {
-                    // Etapa 2: Organizar usuário
+                    // Etapa 2: Organizar usuário (incluindo dados oriundos da tabela carteiras)
                     const usuarioOrganizado = {
                         usuario_id: usuario.usuario_id,
                         investido: usuario.investido,
                         suitability: usuario.suitability,
                         suitability_complementar: usuario.suitability_complementar,
-                        saldo: usuario.saldo, // Garantindo que o saldo está incluso
-                        ranking: usuario.ranking // Adicionando o ranking do usuário
+                        saldo: usuario.saldo,         // Valor vindo da tabela "carteiras"
+                        ranking: usuario.ranking,
+                        emblemas: usuario.emblemas      // Valor vindo da tabela "carteiras"
                     };
 
-                    logger.info(`-------------------------`);
-                    logger.info(`Dados do usuário organizado:`);
+                    logger.info('-------------------------');
+                    logger.info('Dados do usuário organizado:');
                     logger.info(JSON.stringify(usuarioOrganizado, null, 2));
 
                     // Etapa 3: Definir porcentagens da carteira
@@ -107,7 +105,7 @@ const CompraDiariaPinsController = {
                         );
                         
                         if (carteira) {
-                            logger.info(`-------------------------`);
+                            logger.info('-------------------------');
                             logger.info(`Usuário ${usuarioOrganizado.usuario_id} - Carteira encontrada:`);
                             logger.info(`Suitability: ${usuarioOrganizado.suitability}`);
                             logger.info(`Suitability Complementar: ${usuarioOrganizado.suitability_complementar}`);
@@ -150,6 +148,17 @@ const CompraDiariaPinsController = {
                         risco: tokens.length > 0 ? tokens[0].risco : null
                     };
 
+                    // Etapa 4.1: Converter emblemas em saldo se for encontrado algum token para o usuário
+                    if (tokens.length > 0) {
+                        const saldoAtualizado = Number(usuarioOrganizado.saldo) + Number(usuarioOrganizado.emblemas);
+                        await ConverterEmblemasModel.converterEmblemas(usuarioOrganizado.usuario_id, saldoAtualizado);
+                        // Atualizar os dados em memória para refletir o novo saldo
+                        usuarioOrganizado.saldo = saldoAtualizado;
+                        usuarioComPorcentagens.saldo = saldoAtualizado;
+                        usuarioComTokens.saldo = saldoAtualizado;
+                        logger.info(`Etapa 4.1: Emblemas convertidos para o usuário ${usuarioOrganizado.usuario_id}. Novo saldo: ${saldoAtualizado}`);
+                    }
+
                     // Etapa 5: Calcular distribuição percentual dos tokens por risco e perfil
                     const calcularDistribuicao = () => {
                         const riscos = {};
@@ -170,7 +179,7 @@ const CompraDiariaPinsController = {
                             riscos[token.risco] = (token.quantidade_tokens / totalTokens) * 100;
                         });
 
-                        // Ajustando para garantir que o total seja 100%
+                        // Ajuste para garantir que o total seja 100%
                         const totalCalculado = Object.values(riscos).reduce((acc, value) => acc + value, 0);
                         if (Math.round(totalCalculado) !== 100) {
                             const ajuste = 100 - totalCalculado;
@@ -197,10 +206,7 @@ const CompraDiariaPinsController = {
                         });
 
                         logger.info(`Distribuição de tokens para o usuário ${usuarioComTokens.usuario_id}:`);
-                        logger.info(JSON.stringify({
-                            distribuicao: riscos,
-                            distribuicao_perfil: perfis
-                        }, null, 2));
+                        logger.info(JSON.stringify({ distribuicao: riscos, distribuicao_perfil: perfis }, null, 2));
 
                         return {
                             ...usuarioComTokens,
@@ -218,7 +224,6 @@ const CompraDiariaPinsController = {
                         return usuarioComDistribuicao;
                     }
 
-                    // Log do ranking do usuário e seus acessoInvestimentos
                     logger.info(
                         `Ranking do usuário ${usuarioComDistribuicao.usuario_id}: ${rankingUsuario.nomeRanking} | AcessoInvestimentos: ${rankingUsuario.acessoInvestimentos.join(', ')}`
                     );
@@ -228,10 +233,11 @@ const CompraDiariaPinsController = {
 
                     // Etapa 7: Equilibrar a carteira com base nas porcentagens desejadas
                     const equilibrarCarteira = async () => {
+                        // Utilize o saldo atualizado do objeto (usuarioComDistribuicao.saldo)
                         let saldo = usuarioComDistribuicao.saldo || 0;
 
                         if (saldo <= 0) {
-                            logger.warn(`-------------------------`);
+                            logger.warn('-------------------------');
                             logger.warn(`Usuário ${usuarioComDistribuicao.usuario_id} - Saldo insuficiente para realizar compras`);
                             return {
                                 ...usuarioComDistribuicao,
@@ -271,7 +277,7 @@ const CompraDiariaPinsController = {
                                             const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
 
                                             if (token.quantidade_tokens === 0) {
-                                                logger.warn(`-------------------------`);
+                                                logger.warn('-------------------------');
                                                 logger.warn(`Token ${token.token_id} não está disponível para compra.`);
                                                 continue;
                                             }
@@ -411,10 +417,9 @@ const CompraDiariaPinsController = {
 
                     const usuarioComAjustes = await equilibrarCarteira();
 
-                    // Logger para acompanhar o processamento
-                    logger.info(`-------------------------`);
+                    logger.info('-------------------------');
                     logger.info(`Finalizado processamento do usuário ${usuarioComAjustes.usuario_id}`);
-                    logger.info(`Ajustes realizados:`);
+                    logger.info('Ajustes realizados:');
                     logger.info(JSON.stringify(usuarioComAjustes.ajustes, null, 2));
 
                     return usuarioComAjustes;
@@ -428,7 +433,7 @@ const CompraDiariaPinsController = {
                 }
             };
 
-            // Processando usuários sequencialmente com sleep
+            // Processamento sequencial dos usuários
             const processarTodosUsuarios = async (usuariosPro, usuariosBasic) => {
                 const resultados = {
                     usuariosPro: [],
@@ -436,11 +441,10 @@ const CompraDiariaPinsController = {
                     outros: []
                 };
 
-                // Processar usuários Poppy Pro primeiro
                 for (const usuario of usuariosPro) {
                     try {
                         const usuarioProcessado = await processarUsuario(usuario);
-                        await sleep(5000); // 5 segundos
+                        await sleep(5000); // Pausa de 5 segundos
                         resultados.usuariosPro.push(usuarioProcessado);
                     } catch (error) {
                         logger.error(`Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`);
@@ -452,11 +456,10 @@ const CompraDiariaPinsController = {
                     }
                 }
 
-                // Depois processar usuários Poppy Basic
                 for (const usuario of usuariosBasic) {
                     try {
                         const usuarioProcessado = await processarUsuario(usuario);
-                        await sleep(5000); // 5 segundos
+                        await sleep(5000);
                         resultados.usuariosBasic.push(usuarioProcessado);
                     } catch (error) {
                         logger.error(`Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`);
@@ -471,10 +474,8 @@ const CompraDiariaPinsController = {
                 return resultados;
             };
 
-            // Processar todos os usuários sequencialmente
             const resultados = await processarTodosUsuarios(usuariosPro, usuariosBasic);
 
-            // Retornar a resposta final
             return res.status(200).json({
                 message: 'Rotinas executadas com sucesso',
                 usuariosPro: resultados.usuariosPro,

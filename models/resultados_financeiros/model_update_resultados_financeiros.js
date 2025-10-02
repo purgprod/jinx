@@ -1,5 +1,5 @@
 // models/resultados_financeiros/model_update_resultados_financeiros.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger'); // Importa o logger
 
 const ResultadosFinanceirosUpdateModel = {

@@ -27,7 +27,27 @@ function loadAssinaturasResults() {
                     </tr>
                 </table>
             </form>
-            <h2>Pagamento Total das Assinaturas</h2>
+            <h2>Estatísticas de Usuários</h2>
+            <div id="totalUsersContainer">
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Total de Usuários:</strong> <span id="totalUsers">0</span></p>
+                        </div>
+                    </div>
+		    <div class="cards-basico">
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Pro:</strong> <span id="totalProUsers">0</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p><strong>Usuários Basic:</strong> <span id="totalBasicUsers">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+	    <h2>Pagamento Total das Assinaturas</h2>
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
@@ -39,26 +59,6 @@ function loadAssinaturasResults() {
             <canvas id="assinaturasHistoricosChart"></canvas>
             <h2>Histórico da Evolução dos Usuários por Planos</h2>
             <canvas id="planosHistoricosChart"></canvas>
-            <h2>Estatísticas de Usuários</h2>
-            <div id="totalUsersContainer">
-                <div class="cards-basico">
-                    <div class="card">
-                        <div class="card-content">
-                            <p><strong>Usuários Pro:</strong> <span id="totalProUsers">0</span></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-content">
-                            <p><strong>Usuários Basic:</strong> <span id="totalBasicUsers">0</span></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-content">
-                            <p><strong>Total de Usuários:</strong> <span id="totalUsers">0</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         `;
 
         centerPanel.innerHTML = formHTML;
@@ -337,15 +337,17 @@ function loadTotalProUsers() {
             return response.json();
         })
         .then(data => {
+            const totalPro = Number(data.data[0].assinatura_pro) || 0;
             const totalProUsersElement = document.getElementById('totalProUsers');
             if (totalProUsersElement) {
-                const totalPro = parseInt(data.data[0].assinatura_pro, 10);
                 totalProUsersElement.textContent = totalPro.toLocaleString('pt-BR');
-            console.info('Total de Usuários Pro:', totalPro);
+                console.info('Total de Usuários Pro:', totalPro);
             }
+            return totalPro; // Retorna o valor para ser usado posteriormente
         })
         .catch(error => {
             console.error('Erro ao carregar total de usuários Pro:', error);
+            return 0;
         });
 }
 
@@ -358,15 +360,17 @@ function loadTotalBasicUsers() {
             return response.json();
         })
         .then(data => {
+            const totalBasic = Number(data.data[0].assinatura_basic) || 0;
             const totalBasicUsersElement = document.getElementById('totalBasicUsers');
             if (totalBasicUsersElement) {
-                const totalBasic = parseInt(data.data[0].assinatura_basic, 10) || 0;
                 totalBasicUsersElement.textContent = totalBasic.toLocaleString('pt-BR');
-            console.info('Total de Usuários Basic:', totalBasic);
+                console.info('Total de Usuários Basic:', totalBasic);
             }
+            return totalBasic; // Retorna o valor para ser usado posteriormente
         })
         .catch(error => {
             console.error('Erro ao carregar total de usuários Basic:', error);
+            return 0;
         });
 }
 
@@ -384,17 +388,24 @@ function loadTotalUsers() {
         }));
     })
     .then(data => {
-        const totalPro = parseInt(data[0].data[0].assinatura_pro, 10) || 0;
-        const totalBasic = parseInt(data[1].data[0].assinatura_basic, 10) || 0;
-        const total = totalPro + totalBasic;
+        // Converte os valores para número e garante que sejam válidos
+        const totalProUsers = Number(data[0].data[0].assinatura_pro) || 0;
+        const totalBasicUsers = Number(data[1].data[0].assinatura_basic) || 0;
+        
+        // Soma os valores
+        const total = totalProUsers + totalBasicUsers;
+        
         const totalUsersElement = document.getElementById('totalUsers');
         if (totalUsersElement) {
-            totalUsersElement.textContent = `Total de usuários: ${total.toLocaleString('pt-BR')}`;
-            console.info('Total de Usuários:', totalUsers);
+            totalUsersElement.textContent = total.toLocaleString('pt-BR');
+            console.info('Total de Usuários:', total);
         }
+        
+        return total; // Retorna o total dos usuários
     })
     .catch(error => {
         console.error('Erro ao carregar total de usuários:', error);
+        return 0;
     });
 }
 
@@ -402,6 +413,7 @@ async function displayTotalUsuarios() {
     const container = document.getElementById('totalUsersContainer');
     if (container) {
         try {
+            // As funções loadTotalProUsers e loadTotalBasicUsers agora retornam os valores
             const [totalPro, totalBasic, totalUsers] = await Promise.all([
                 loadTotalProUsers(),
                 loadTotalBasicUsers(),
@@ -412,17 +424,17 @@ async function displayTotalUsuarios() {
                 <div class="cards-basico">
                     <div class="card">
                         <div class="card-content">
-                            <p><strong>Usuários Pro:</strong> <span>${totalPro || 0}</span></p>
+                            <p><strong>Total de Usuários:</strong> <span>${totalUsers.toLocaleString('pt-BR')}</span></p>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p><strong>Usuários Basic:</strong> <span>${totalBasic}</span></p>
+                            <p><strong>Usuários Pro:</strong> <span>${totalPro.toLocaleString('pt-BR')}</span></p>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p><strong>Total de Usuários:</strong> <span>${totalUsers}</span></p>
+                            <p><strong>Usuários Basic:</strong> <span>${totalBasic.toLocaleString('pt-BR')}</span></p>
                         </div>
                     </div>
                 </div>
@@ -433,6 +445,7 @@ async function displayTotalUsuarios() {
         }
     }
 }
+
 
 // Torna as funções acessíveis no escopo global
 window.loadAssinaturasResults = loadAssinaturasResults;

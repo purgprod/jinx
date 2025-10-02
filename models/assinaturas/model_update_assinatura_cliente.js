@@ -1,5 +1,5 @@
 // models/assinaturas/model_update_assinatura_cliente.js
-const connection = require('../../database/database_usuarios');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const UpdateAssinaturaClienteModel = {

@@ -1,5 +1,5 @@
 // models/rotinas/model_poppy_buscar_saldos_carteiras.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarSaldosCarteirasModel = {
@@ -24,4 +24,3 @@ const BuscarSaldosCarteirasModel = {
 };
 
 module.exports = BuscarSaldosCarteirasModel;
-

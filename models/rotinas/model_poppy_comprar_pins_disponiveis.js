@@ -1,5 +1,5 @@
 const mysql = require('mysql2');
-const pool = require('../../database/database_crowdfunding');
+const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const AtualizarQuantidadeTokensModel = {
@@ -35,7 +35,7 @@ const AtualizarQuantidadeTokensModel = {
                 });
         });
     },
-
+    
     async atualizarTokensIPO(token_id, quantidade_tokens) {
         const sqlUpdate = 'UPDATE usuario_tokens SET quantidade_tokens = ? WHERE usuario_id = ? AND token_id = ?';
         

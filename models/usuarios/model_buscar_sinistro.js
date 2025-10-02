@@ -1,7 +1,7 @@
 // models/usuarios/model_buscar_sinistro.js
 
 const mysql = require('mysql2');
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 class BuscarSinistroUsuarioModel {

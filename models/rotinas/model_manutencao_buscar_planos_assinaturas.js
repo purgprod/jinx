@@ -1,5 +1,5 @@
-// models/rotinas/model_manutencao_buscar_planos.js
-const connection = require('../../database/database_usuarios');
+// models/rotinas/model_manutencao_buscar_planos_assinaturas.js
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarPlanosModel = {

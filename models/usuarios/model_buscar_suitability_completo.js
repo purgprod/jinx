@@ -1,7 +1,7 @@
 // models/usuarios/model_buscar_suitability_completo.js
 
 const mysql = require('mysql2');
-const connection = require('../../database/database_usuarios');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 class BuscarSuitabilityUsuarioModel {

@@ -1,5 +1,5 @@
 // models/rotinas/model_manutencao_update_ranking_usuarios.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const UpdateRankingUsuariosModel = {

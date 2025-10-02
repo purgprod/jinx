@@ -1,5 +1,5 @@
 // models/assinaturas/model_buscar_porcentagem_assinatura.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const PorcentagemAssinaturaBuscarModel = {

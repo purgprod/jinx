@@ -23,7 +23,7 @@ const PagamentoEmblemasController = {
             if (!saldos || !saldos.length) {
                 logger.warn('Nenhum saldo encontrado');
                 return res.status(200).json({
-                    message: 'Nenhum saldo encontrado',
+                    message: 'Rotinas executadas com sucesso',
                     data: [],
                     data_consulta: new Date().toISOString().split('T')[0],
                     status: 'concluido',
@@ -35,7 +35,7 @@ const PagamentoEmblemasController = {
             if (!saldosFiltrados.length) {
                 logger.warn('Nenhum saldo encontrado após desconsiderar usuario_id 1');
                 return res.status(200).json({
-                    message: 'Nenhum saldo encontrado após desconsiderar usuario_id 1',
+                    message: 'Rotinas executadas com sucesso',
                     data: [],
                     data_consulta: new Date().toISOString().split('T')[0],
                     status: 'concluido',
@@ -161,7 +161,7 @@ const PagamentoEmblemasController = {
 
             if (saldoInferiorAoMinimo) {
                 return res.status(200).json({
-                    message: 'Alguns usuários possuem saldo inferior ao mínimo de 0.01 para pagamento de emblemas.',
+                    message: 'Rotinas executadas com sucesso',
                     porcentagem_emblemas: porcentagemEmblemas,
                     saldos: saldosFiltrados,
                     detalhes_emblemas: detalhesEmblemas,

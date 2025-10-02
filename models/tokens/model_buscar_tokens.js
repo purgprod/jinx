@@ -1,5 +1,5 @@
 // models/tokens/model_buscar_tokens.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const TokensBuscarModel = {

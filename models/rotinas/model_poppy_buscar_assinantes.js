@@ -1,5 +1,5 @@
 // models/rotinas/model_poppy_buscar_assinaturas.js
-const connection = require('../../database/database_usuarios');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarAssinaturaModel = {

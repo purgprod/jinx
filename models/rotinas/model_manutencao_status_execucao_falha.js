@@ -1,5 +1,5 @@
 // models/rotinas/model_manutencao_status_execucao_falha.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const RotinasExecutarModel = {

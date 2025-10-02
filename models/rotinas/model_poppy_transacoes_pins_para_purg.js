@@ -1,38 +1,10 @@
-const pool = require('../../database/database_crowdfunding');
+const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const TransacoesPinsModel = {
-    async transacoesPins(usuario_id, tokenId, totalQuantidade, totalTransacao) {
+    async transacoesPins(usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente) {
         try {
             logger.info(`Iniciando o registro da transação de pins para o usuário ${usuario_id}`);
-
-            // Converte os parâmetros para números, se necessário
-            const id_token = parseInt(tokenId, 10);
-            logger.info(`id_token processado: ${id_token} (${typeof id_token})`);
-
-            usuario_id = parseInt(usuario_id, 10);
-            logger.info(`usuario_id processado: ${usuario_id} (${typeof usuario_id})`);
-
-            // Validação dos parâmetros
-            if (typeof usuario_id !== 'number' || isNaN(usuario_id)) {
-                logger.error(`Usuário inválido: ${usuario_id}`);
-                throw new Error('usuario_id deve ser um número válido');
-            }
-
-            if (typeof id_token !== 'number' || isNaN(id_token)) {
-                logger.error(`id_token inválido: ${id_token}`);
-                throw new Error('id_token deve ser um número válido');
-            }
-
-            if (typeof totalQuantidade !== 'number' || isNaN(totalQuantidade)) {
-                logger.error(`Quantidade inválida: ${totalQuantidade}`);
-                throw new Error('Quantidade deve ser um número válido');
-            }
-
-            if (typeof totalTransacao !== 'number' || isNaN(totalTransacao)) {
-                logger.error(`Valor de Transação inválido: ${totalTransacao}`);
-                throw new Error('Valor de Transação deve ser um número válido');
-            }
 
             const sqlQuery = `
                 INSERT INTO transacoes 
@@ -41,9 +13,9 @@ const TransacoesPinsModel = {
             `;
 
             logger.info(`Executando consulta SQL: ${sqlQuery}`);
-            logger.info(`Parâmetros da transação: ${usuario_id}, ${id_token}, ${totalQuantidade}, ${totalTransacao}`);
+            logger.info(`Parâmetros da transação: ${usuario_id}, ${token_id}, ${quantidade_tokens_cliente}, ${tokens_transacao_cliente}`);
 
-            const [results] = await pool.promise().execute(sqlQuery, [usuario_id, id_token, totalQuantidade, totalTransacao]);
+            const [results] = await pool.promise().execute(sqlQuery, [usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente]);
 
             logger.info(`Registro de transação concluído com sucesso: ${JSON.stringify(results)}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);

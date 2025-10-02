@@ -1,5 +1,5 @@
 // models/assinaturas/model_update_porcentagem_assinaturas.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const UpdatePorcentagemAssinaturasModel = {

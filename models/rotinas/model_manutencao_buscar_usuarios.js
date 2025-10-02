@@ -1,5 +1,5 @@
 // models/rotinas/model_manutencao_buscar_usuarios.js
-const connection = require('../../database/database_usuarios');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarUsuariosModel = {

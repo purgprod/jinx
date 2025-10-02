@@ -11,11 +11,10 @@ const ManutencaoRankingUsuariosController = {
 
             // Etapa 1: Buscar carteiras
             const carteiras = await BuscarCarteirasModel.getCarteiras();
-
             if (!carteiras || carteiras.length === 0) {
                 logger.warn('Nenhuma carteira encontrada');
                 return res.status(200).json({
-                    message: 'Nenhuma carteira encontrada',
+                    message: 'Rotinas executadas com sucesso',
                     carteiras: []
                 });
             }
@@ -23,128 +22,89 @@ const ManutencaoRankingUsuariosController = {
             // Etapa 2: Buscar dados dos usuários
             const usuarios = await BuscarUsuariosModel.getUsuarios();
             const usuariosMap = {};
-            usuarios.forEach(usuario => {
-                usuariosMap[usuario.usuario_id] = usuario;
-            });
+            usuarios.forEach(u => { usuariosMap[u.usuario_id] = u; });
 
-            // Etapa 3: Processar os dados para somar saldo e investido por usuário
-            logger.info('Processando dados para somar saldo e investido por usuário');
-            
+            // Etapa 3: Processar os dados para somar pontos por usuário
+            logger.info('Processando dados para somar pontos por usuário');
             const usuariosProcessados = {};
 
-            try {
-                for (const carteira of carteiras) {
-                    const usuarioId = carteira.usuario_id;
-                    
-                    // Garantir que os valores sejam números válidos
-                    const saldo = typeof carteira.saldo === 'number' ? carteira.saldo : parseFloat(carteira.saldo);
-                    const investido = typeof carteira.investido === 'number' ? carteira.investido : parseFloat(carteira.investido);
+            for (const carteira of carteiras) {
+                const usuarioId = carteira.usuario_id;
+                // Garantir que pontos seja número válido
+                const pontosRaw = carteira.pontos;
+                const pontos = typeof pontosRaw === 'number'
+                    ? pontosRaw
+                    : parseFloat(pontosRaw);
 
-                    if (isNaN(saldo) || isNaN(investido)) {
-                        logger.warn(`Valores inválidos para o usuário ${usuarioId}`);
-                        continue;
-                    }
-
-                    if (!usuariosProcessados[usuarioId]) {
-                        usuariosProcessados[usuarioId] = {
-                            saldo_total: 0,
-                            investido_total: 0,
-                            valor_total: 0
-                        };
-                    }
-
-                    usuariosProcessados[usuarioId].saldo_total += saldo;
-                    usuariosProcessados[usuarioId].investido_total += investido;
-                    usuariosProcessados[usuarioId].valor_total += saldo + investido;
-
-                    logger.info(`Valor da soma para o usuário ${usuarioId}:`);
-                    logger.info(`Saldo total: ${usuariosProcessados[usuarioId].saldo_total.toFixed(8)}`);
-                    logger.info(`Investido total: ${usuariosProcessados[usuarioId].investido_total.toFixed(8)}`);
-                    logger.info(`Valor total: ${usuariosProcessados[usuarioId].valor_total.toFixed(8)}`);
-                    logger.info('----------------------------------------');
+                if (isNaN(pontos)) {
+                    logger.warn(`Pontos inválidos para o usuário ${usuarioId}`);
+                    continue;
                 }
 
-                logger.info('Processamento de dados concluído com sucesso');
+                if (!usuariosProcessados[usuarioId]) {
+                    usuariosProcessados[usuarioId] = {
+                        pontos_total: 0,
+                        valor_total: 0
+                    };
+                }
 
-                // Etapa 4: Verificar o ranking de cada usuário
-                logger.info('Iniciando verificação do ranking dos usuários');
+                usuariosProcessados[usuarioId].pontos_total += pontos;
+                // Para manter compatibilidade no ranking
+                usuariosProcessados[usuarioId].valor_total = usuariosProcessados[usuarioId].pontos_total;
 
-                // Ordenar os rankings por valor mínimo em ordem decrescente
-                const rankingsOrdenados = [...rankings].sort((a, b) => b.valorMinimo - a.valorMinimo);
+                logger.info(`Usuário ${usuarioId} → Pontos acumulados: ${usuariosProcessados[usuarioId].pontos_total.toFixed(8)}`);
+                logger.info('----------------------------------------');
+            }
 
-                // Determinar o ranking para cada usuário
-                for (const usuarioId in usuariosProcessados) {
-                    const valorTotal = usuariosProcessados[usuarioId].valor_total;
-                    let nomeRanking = 'Pioneiro Financeiro'; // Ranking padrão mais baixo
+            logger.info('Processamento de pontos concluído com sucesso');
 
-                    // Verificar assinatura
-                    const usuario = usuariosMap[usuarioId];
-                    if (usuario) {
-                        logger.info(`Assinatura do usuário ${usuarioId}: ${usuario.assinatura}`);
-                        if (usuario.assinatura === 'Poppy Basic') {
-                            nomeRanking = 'Pioneiro Financeiro';
-                        } else {
-                            // Encontrar o ranking adequado
-                            for (const ranking of rankingsOrdenados) {
-                                if (valorTotal >= ranking.valorMinimo) {
-                                    nomeRanking = ranking.nomeRanking;
-                                    break;
-                                }
+            // Etapa 4: Verificar o ranking de cada usuário
+            logger.info('Iniciando verificação do ranking dos usuários');
+            const rankingsOrdenados = [...rankings].sort((a, b) => b.valorMinimo - a.valorMinimo);
+
+            for (const usuarioId in usuariosProcessados) {
+                const valorTotal = usuariosProcessados[usuarioId].valor_total;
+                let nomeRanking = 'Pioneiro Financeiro'; // padrão mais baixo
+
+                const usuario = usuariosMap[usuarioId];
+                if (usuario) {
+                    logger.info(`Assinatura do usuário ${usuarioId}: ${usuario.assinatura}`);
+                    if (usuario.assinatura === 'Poppy Basic') {
+                        nomeRanking = 'Pioneiro Financeiro';
+                    } else {
+                        for (const ranking of rankingsOrdenados) {
+                            if (valorTotal >= ranking.valorMinimo) {
+                                nomeRanking = ranking.nomeRanking;
+                                break;
                             }
                         }
-                    } else {
-                        logger.warn(`Usuário ${usuarioId} não encontrado nos dados de usuários.`);
                     }
-
-                    logger.info(`Verificação do ranking para o usuário ${usuarioId}:`);
-                    logger.info(`Valor total: R$ ${valorTotal.toFixed(2)}`);
-                    logger.info(`Ranking determinado: ${nomeRanking}`);
-                    logger.info('----------------------------------------');
-
-                    // Atualizar os dados do usuário com o nome do ranking
-                    usuariosProcessados[usuarioId].nomeRanking = nomeRanking;
+                } else {
+                    logger.warn(`Usuário ${usuarioId} não encontrado nos dados de usuários.`);
                 }
 
-                // Etapa 5: Atualizar o ranking de cada usuário no banco de dados
-                logger.info('Iniciando atualização do ranking dos usuários no banco de dados');
+                logger.info(`Verificação do ranking para o usuário ${usuarioId}:`);
+                logger.info(`Pontos totais (valor para ranking): ${valorTotal.toFixed(2)}`);
+                logger.info(`Ranking determinado: ${nomeRanking}`);
+                logger.info('----------------------------------------');
 
-                try {
-                    // Preparar as atualizações
-                    const atualizacoes = [];
-                    for (const usuarioId in usuariosProcessados) {
-                        const ranking = usuariosProcessados[usuarioId].nomeRanking;
-                        atualizacoes.push(
-                            UpdateRankingUsuariosModel.executarUpdate(ranking, usuarioId)
-                        );
-                    }
-
-                    // Executar todas as atualizações em paralelo
-                    await Promise.all(atualizacoes);
-
-                    logger.info('Atualização do ranking dos usuários concluída com sucesso');
-
-                    // Resposta final com os dados processados
-                    return res.status(200).json({
-                        message: 'Rotinas executadas com sucesso',
-                        carteiras: carteiras,
-                        usuarios_processados: usuariosProcessados
-                    });
-
-                } catch (error) {
-                    logger.error(`Erro ao atualizar os rankings dos usuários: ${error.message}`);
-                    return res.status(500).json({
-                        error: 'Erro interno',
-                        message: 'Ocorreu um erro ao atualizar os rankings dos usuários'
-                    });
-                }
-
-            } catch (error) {
-                logger.error(`Erro ao processar os dados: ${error.message}`);
-                return res.status(500).json({
-                    error: 'Erro interno',
-                    message: 'Ocorreu um erro ao processar os dados de saldo e investido'
-                });
+                usuariosProcessados[usuarioId].nomeRanking = nomeRanking;
             }
+
+            // Etapa 5: Atualizar o ranking no banco de dados
+            logger.info('Iniciando atualização do ranking dos usuários no banco de dados');
+            const promessasUpdate = Object.entries(usuariosProcessados).map(
+                ([usuarioId, dados]) =>
+                    UpdateRankingUsuariosModel.executarUpdate(dados.nomeRanking, usuarioId)
+            );
+            await Promise.all(promessasUpdate);
+            logger.info('Atualização do ranking dos usuários concluída com sucesso');
+
+            return res.status(200).json({
+                message: 'Rotinas executadas com sucesso',
+                carteiras,
+                usuarios_processados: usuariosProcessados
+            });
 
         } catch (error) {
             logger.error(`Erro inesperado: ${error.message}`);

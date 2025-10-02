@@ -1,5 +1,5 @@
 // models/rotinas/model_poppy_buscar_emblemas_carteiras.js
-const connection = require('../../database/database_crowdfunding');
+const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const BuscarEmblemasCarteirasModel = {
