@@ -1245,6 +1245,14 @@ function generateUserInputFields(data) {
         <input type="number" id="numero_da_rua" name="numero_da_rua" maxlength="11" value="${data.numero_da_rua ?? ''}" readonly>
         <label for="complemento">Complemento:</label>
         <input type="text" id="complemento" name="complemento" value="${data.complemento ?? ''}" readonly>
+        <label for="pix_cpf">Pix CPF:</label>
+        <input type="number" id="pix_cpf" name="pix_cpf" maxlength="11" value="${data.pix_cpf ?? ''}" readonly>
+	<label for="pix_celular">Pix Celular:</label>
+        <input type="number" id="pix_celular" name="pix_celular" maxlength="11" value="${data.pix_celular ?? ''}" readonly>
+	<label for="pix_email">Pix E-mail:</label>
+        <input type="text" id="pix_email" name="pix_email" maxlength="50" value="${data.pix_email ?? ''}" readonly>
+	<label for="pix_chave">Pix Chave:</label>
+        <input type="text" id="pix_chave" name="pix_chave" maxlength="100" value="${data.pix_chave ?? ''}" readonly>
         <label for="termos_de_uso">Termos de Uso:</label>
         <input type="number" id="termos_de_uso" name="termos_de_uso" maxlength="11" value="${data.termos_de_uso ?? ''}" readonly>
         <label for="data_criacao">Data de Criação:</label>

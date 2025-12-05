@@ -1,19 +1,63 @@
-// routes/route_endpoints.js
-
 const express = require('express');
-const router = express.Router();
-const SaldoController = require('../controllers/endpoints/controller_saldo');
+const router  = express.Router();
+
+// IMPORTAÇÃO DOS VALIDADORES  <<<<<<<<<<
+const { param, body } = require('express-validator');
+
+const SaldoController     = require('../controllers/endpoints/controller_saldo');
 const InvestidoController = require('../controllers/endpoints/controller_investido');
-const EmblemasController = require('../controllers/endpoints/controller_emblemas');
+const EmblemasController  = require('../controllers/endpoints/controller_emblemas');
+const SaqueController     = require('../controllers/endpoints/controller_saque');
+const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
+const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
 
-// Rota para obter os dados de saldo do usuário
-router.get('/endpoints/saldo/:id', SaldoController.getSaldo);
+//------------ AUTENTICAÇÃO --------------//
 
-// Rota para obter os dados de investido do usuário
-router.get('/endpoints/investido/:id', InvestidoController.getInvestido);
+// Rota para login - Não requer autenticação
+router.post('/endpoints/login', AuthController.login);
 
-// Rota para obter os dados de emblemas do usuário
-router.get('/endpoints/emblemas/:id', EmblemasController.getEmblemas);
+// Rota para registro - Não requer autenticação
+router.post('/endpoints/register', AuthController.register);
+
+// Demais rotas requerem autenticação
+router.use('/endpoints/*', (req, res, next) => {
+    if (req.path === '/endpoints/login' || req.path === '/endpoints/register') {
+        next(); // Isenta login e register do middleware de autenticação
+    } else {
+        authMiddleware.checkAuthenticated(req, res, next); // Aplica o middleware
+    }
+});
+
+// Rota para logout
+router.post('/endpoints/logout', authMiddleware.checkAuthenticated, AuthController.logout);
+
+// Rota para check session
+router.post('/endpoints/check-session', authMiddleware.checkAuthenticated, AuthController.checkSession);
+
+//------------CONSULTAS------------
+
+// Rota para o saldo do usuário
+router.get('/endpoints/saldo/:id', authMiddleware.checkAuthenticated, SaldoController.getSaldo);
+
+// Rota para o valor investido do usuário
+router.get('/endpoints/investido/:id', authMiddleware.checkAuthenticated, InvestidoController.getInvestido);
+
+// Rota para os emblemas do usuário
+router.get('/endpoints/emblemas/:id', authMiddleware.checkAuthenticated, EmblemasController.getEmblemas);
+
+//------------AÇÕES------------
+//  POST /endpoints/saque/:id   { amount: 100.50 }
+router.post(
+  '/endpoints/saque/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt().withMessage('id deve ser inteiro'),
+    body('amount')
+      .isFloat({ gt: 0 })
+      .withMessage('amount deve ser número > 0'),
+  ],
+  SaqueController.executeSaque
+);
 
 module.exports = router;
 

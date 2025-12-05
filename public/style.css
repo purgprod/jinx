@@ -212,7 +212,7 @@ body {
     margin-bottom: 20px;
 }
 
-#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton, #receitasButton, #rotinasButton, #assinaturasButton, #emblemasButton {
+#usuariosButton, #configButton, #resultadosButton, #tokensButton, #ecossistemaButton, #receitasButton, #rotinasButton, #assinaturasButton, #emblemasButton, #saquesButton {
     display: block;
     width: 100%;
     font-size: 18px;
@@ -225,7 +225,7 @@ body {
     cursor: pointer;
 }
 
-#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover, #assinaturasButton:hover, #emblemasButton:hover {
+#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #tokensButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover, #assinaturasButton:hover, #emblemasButton:hover, #saquesButton:hover {
     background-color: #657BB4;
 }
 
@@ -433,7 +433,7 @@ body {
     background-color: #f4f4f4; /* Cor de fundo para o cabeçalho */
     color: #333; /* Cor do texto no cabeçalho */
     padding: 10px; /* Espaçamento interno */
-    text-align: left; /* Alinha o texto à esquerda */
+    text-align: center; /* Alinha o texto à esquerda */
     border-bottom: 2px solid #ddd; /* Linha inferior com maior espessura */
 }
 
@@ -441,6 +441,7 @@ body {
 .rotinas-table td {
     padding: 10px; /* Espaçamento interno */
     border-bottom: 1px solid #ddd; /* Linha inferior das células */
+    text-align: center;
     color: #333;
 }
 
@@ -466,5 +467,24 @@ body {
 /* Estilo para o botão ao passar o mouse */
 .rotinas-table button:hover {
     background-color: #45a049; /* Cor de fundo mais escura ao passar o mouse */
+}
+
+/* Estilo para o botão "Cancelar" */
+.rotinas-table .cancelar-button {
+    background-color: #FF5959; /* Cor de fundo vermelha */
+    color: white; /* Cor do texto */
+    border: none; /* Sem borda */
+    padding: 5px 10px; /* Espaçamento interno */
+    text-align: center; /* Centraliza o texto */
+    text-decoration: none; /* Remove sublinhado */
+    display: inline-block; /* Exibe como inline-block */
+    font-size: 14px; /* Tamanho da fonte */
+    border-radius: 5px; /* Bordas arredondadas */
+    cursor: pointer; /* Cursor de mãozinha ao passar sobre o botão */
+}
+
+/* Estilo para o botão "Cancelar" ao passar o mouse */
+.rotinas-table .cancelar-button:hover {
+    background-color: darkred; /* Cor de fundo mais escura ao passar o mouse */
 }
 

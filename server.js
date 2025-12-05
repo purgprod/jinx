@@ -4,7 +4,7 @@ const session = require('express-session');
 const logger = require('./logger');
 const cron = require('node-cron');
 const axios = require('axios');
-const controller_autenticacao = require('./controllers/controller_autenticacao');
+const controller_autenticacao_jinx = require('./controllers/controller_autenticacao_jinx');
 const route_resultados_financeiros = require('./routes/route_resultados_financeiros');
 const route_tokens = require('./routes/route_tokens');
 const route_usuarios = require('./routes/route_usuarios');
@@ -12,6 +12,7 @@ const route_ecossistema = require('./routes/route_ecossistema');
 const route_rotinas = require('./routes/route_rotinas');
 const route_assinaturas = require('./routes/route_assinaturas');
 const route_emblemas = require('./routes/route_emblemas');
+const route_saques = require('./routes/route_saques');
 const route_endpoints = require('./routes/route_endpoints');
 
 const app = express();
@@ -27,11 +28,12 @@ const sessionStore = new session.MemoryStore();
 app.use(session({
     store: sessionStore,
     secret: 'seuSegredoAqui', // Substitua por um segredo único e seguro
-    resave: false,
+    resave: true,
     saveUninitialized: false, // Salva a sessão apenas se algo foi armazenado
+    rolling: true, // Renova o tempo de expiração a cada requisição
     cookie: {
         secure: false, // Defina como true se estiver usando HTTPS
-        maxAge: 24 * 60 * 60 * 1000 // Expira após 24 horas
+        maxAge: 180000 // Expira após 3 minutos
     }
 }));
 
@@ -66,20 +68,20 @@ app.use((req, res, next) => {
 });
 
 // Endpoints de autenticação
-app.post('/auth/login', (req, res, next) => {
+app.post('/auth/login/jinx', (req, res, next) => {
     logger.info('Login attempt:', req.body);
     next();
-}, controller_autenticacao.login);
+}, controller_autenticacao_jinx.login);
 
-app.get('/auth/check-session', isAuthenticated, (req, res, next) => {
+app.get('/auth/check-session/jinx', isAuthenticated, (req, res, next) => {
     logger.info('Session check for user:', req.session.user);
     next();
-}, controller_autenticacao.checkSession);
+}, controller_autenticacao_jinx.checkSession);
 
-app.post('/auth/logout', (req, res, next) => {
+app.post('/auth/logout/jinx', (req, res, next) => {
     logger.info('Logout for user:', req.session.user);
     next();
-}, controller_autenticacao.logout);
+}, controller_autenticacao_jinx.logout);
 
 // Servir páginas estáticas para rotas específicas
 app.get('/login', (req, res) => {
@@ -112,6 +114,9 @@ app.use('/', route_assinaturas); // Prefixo das rotas para assinaturas
 
 //Usar o roteador para emblemas
 app.use('/', route_emblemas); // Prefixo das rotas para emblemas
+
+//Usar o roteador para saques
+app.use('/', route_saques); // Prefixo das rotas para saques
 
 //Usar o roteador para endpoints
 app.use('/', route_endpoints); // Prefixo das rotas para endpoints
