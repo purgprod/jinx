@@ -33,7 +33,7 @@ app.use(session({
     rolling: true, // Renova o tempo de expiração a cada requisição
     cookie: {
         secure: false, // Defina como true se estiver usando HTTPS
-        maxAge: 180000 // Expira após 3 minutos
+        maxAge: 600000 // Expira após 10 minutos
     }
 }));
 
