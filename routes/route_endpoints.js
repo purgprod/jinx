@@ -12,6 +12,7 @@ const CarteiraController     = require('../controllers/endpoints/controller_cart
 const DadosCadastroController     = require('../controllers/endpoints/controller_dados_cadastro');
 const DadosEmpresaController     = require('../controllers/endpoints/controller_dados_empresa');
 const PinsUsuarioController     = require('../controllers/endpoints/controller_pins_usuario');
+const RendimentosUsuarioController     = require('../controllers/endpoints/controller_rendimentos_usuario');
 const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
 const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
 
@@ -60,6 +61,9 @@ router.get('/endpoints/dados-empresa/:id', authMiddleware.checkAuthenticated, Da
 
 // Rota para os pins do usuário
 router.get('/endpoints/pins-usuario/:id', authMiddleware.checkAuthenticated, PinsUsuarioController.getPinsUsuario);
+
+// Rota para os rendimentos do usuário
+router.get('/endpoints/rendimentos-usuario/:id', authMiddleware.checkAuthenticated, RendimentosUsuarioController.getRendimentosUsuario);
 
 //------------AÇÕES------------
 //  POST /endpoints/saque/:id   { amount: 100.50 }
