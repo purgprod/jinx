@@ -17,7 +17,7 @@ const rankings = [
     { valorMinimo: 500, nomeRanking: 'Guia Financeiro' },
     { valorMinimo: 300, nomeRanking: 'Desbravador de Dívidas' },
     { valorMinimo: 150, nomeRanking: 'Explorador de Investimentos' },
-    { valorMinimo: 75, nomeRanking: 'Rastreador de Orçamento' },
+    { valorMinimo: 1, nomeRanking: 'Rastreador de Orçamento' },
     { valorMinimo: 0, nomeRanking: 'Pioneiro Financeiro' }
 ];
 

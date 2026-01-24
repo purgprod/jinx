@@ -8,11 +8,14 @@ const { param, body } = require('express-validator');
 //const InvestidoController = require('../controllers/endpoints/controller_investido');
 //const EmblemasController  = require('../controllers/endpoints/controller_emblemas');
 const SaqueController     = require('../controllers/endpoints/controller_saque');
+const CancelarSaqueController = require('../controllers/endpoints/controller_cancelar_saque');
 const CarteiraController     = require('../controllers/endpoints/controller_carteira');
 const DadosCadastroController     = require('../controllers/endpoints/controller_dados_cadastro');
 const DadosEmpresaController     = require('../controllers/endpoints/controller_dados_empresa');
 const PinsUsuarioController     = require('../controllers/endpoints/controller_pins_usuario');
 const RendimentosUsuarioController     = require('../controllers/endpoints/controller_rendimentos_usuario');
+const SaqueHistoricoUsuarioController = require('../controllers/endpoints/controller_saque_historico_do_usuario');
+const DepositoHistoricoUsuarioController = require('../controllers/endpoints/controller_deposito_historico_do_usuario');
 const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
 const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
 
@@ -65,6 +68,12 @@ router.get('/endpoints/pins-usuario/:id', authMiddleware.checkAuthenticated, Pin
 // Rota para os rendimentos do usuário
 router.get('/endpoints/rendimentos-usuario/:id', authMiddleware.checkAuthenticated, RendimentosUsuarioController.getRendimentosUsuario);
 
+// Rota para o histórico de saques do usuário
+router.get('/endpoints/saque-historico/:id', authMiddleware.checkAuthenticated, SaqueHistoricoUsuarioController.getSaqueHistoricoUsuario);
+
+// Rota para o histórico de depositos do usuário
+router.get('/endpoints/deposito-historico/:id', authMiddleware.checkAuthenticated, DepositoHistoricoUsuarioController.getDepositoHistoricoUsuario);
+
 //------------AÇÕES------------
 //  POST /endpoints/saque/:id   { amount: 100.50 }
 router.post(
@@ -77,6 +86,21 @@ router.post(
       .withMessage('amount deve ser número > 0'),
   ],
   SaqueController.executeSaque
+);
+
+// Rota para cancelar uma solicitação de saque específica
+router.post(
+  '/endpoints/cancelar-saque/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt().withMessage('O ID do saque deve ser um inteiro válido.'),
+    body('motivo')
+      .notEmpty()
+      .withMessage('O motivo do cancelamento é obrigatório.')
+      .isString()
+      .withMessage('O motivo deve ser um texto válido.')
+  ],
+  CancelarSaqueController.cancelarSaque
 );
 
 module.exports = router;

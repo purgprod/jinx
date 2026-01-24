@@ -13,6 +13,7 @@ const route_rotinas = require('./routes/route_rotinas');
 const route_assinaturas = require('./routes/route_assinaturas');
 const route_emblemas = require('./routes/route_emblemas');
 const route_saques = require('./routes/route_saques');
+const route_depositos = require('./routes/route_depositos');
 const route_endpoints = require('./routes/route_endpoints');
 
 const app = express();
@@ -117,6 +118,9 @@ app.use('/', route_emblemas); // Prefixo das rotas para emblemas
 
 //Usar o roteador para saques
 app.use('/', route_saques); // Prefixo das rotas para saques
+
+//Usar o roteador para depositos
+app.use('/', route_depositos); // Prefixo das rotas para depositos
 
 //Usar o roteador para endpoints
 app.use('/', route_endpoints); // Prefixo das rotas para endpoints

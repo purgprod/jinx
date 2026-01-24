@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const assinaturasButton = document.getElementById("assinaturasButton");
     const emblemasButton = document.getElementById("emblemasButton");
     const saquesButton = document.getElementById("saquesButton");
+    const depositosButton = document.getElementById("depositosButton");
 
     console.log("Element references initialized");
 
@@ -88,6 +89,14 @@ document.addEventListener("DOMContentLoaded", () => {
         saquesButton.addEventListener("click", () => {
             console.log("Botão 'Saques' clicado");
             loadSaquesResults();  // Chama a função no saques.js
+        });
+    }
+
+   // Adiciona evento ao botão "Depositos"
+    if (depositosButton) {
+        depositosButton.addEventListener("click", () => {
+            console.log("Botão 'Depositos' clicado");
+            loadDepositosResults();  // Chama a função no depositos.js
         });
     }
 

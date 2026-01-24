@@ -1,241 +1,125 @@
+// controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js
 const logger = require('../../logger');
 const BuscarRendimentosModel = require('../../models/rotinas/model_poppy_buscar_rendimentos');
 const BuscarAssinaturaModel = require('../../models/rotinas/model_poppy_buscar_assinantes');
 const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_atualizar_carteiras');
 const HistoricoPagamentoAssinaturaModel = require('../../models/rotinas/model_poppy_historico_pagamento_assinatura');
+const BuscarHistoricoRendimentoModel = require('../../models/rotinas/model_poppy_buscar_historico_rendimento');
+const AtualizarHistoricoRendimentoModel = require('../../models/rotinas/model_poppy_atualizar_historico_rendimento_com_assinatura');
 const axios = require('axios');
 
 const PagamentoAssinaturaController = {
     async executePagamentoAssinatura(req, res) {
-        logger.info('Iniciando pagamento da assinatura Poppy Pro');
+        logger.info('Iniciando rotina de pagamento da assinatura Poppy Pro');
+        const hoje = new Date().toISOString().split('T')[0];
+        
+        let porcentagemAssinatura = 0;
+        let porcentagemDecimal = 0;
 
         try {
-            // Buscar a porcentagem da assinatura do endpoint
-            let porcentagemAssinatura;
+            // --- CONFIGURAÇÃO INICIAL ---
             try {
                 const response = await axios.get('http://localhost:3000/api/assinaturas/buscar-porcentagem');
-                // Extract the porcentagem_assinatura from the response array
                 porcentagemAssinatura = parseFloat(response.data[0].porcentagem_assinatura);
-                logger.info(`Porcentagem de assinatura obtida com sucesso: ${porcentagemAssinatura}`);
+                porcentagemDecimal = porcentagemAssinatura / 100;
+                logger.info(`Configuração: ${porcentagemAssinatura}% | Fator: ${porcentagemDecimal}`);
             } catch (error) {
-                logger.error('Erro ao buscar porcentagem de assinatura:', error);
-                return res.status(500).json({
-                    error: 'Erro ao buscar porcentagem de assinatura',
-                    message: 'Não foi possível obter a porcentagem da assinatura',
-                    data: [],
-                    status_geral: {
-                        etapa1: 'falha',
-                        etapa2: 'nao_iniciada',
-                        etapa3: 'nao_iniciada',
-                        etapa4: 'nao_iniciada',
-                        etapa5: 'nao_iniciada',
-                        etapa6: 'nao_iniciada'
-                    }
-                });
+                logger.error('Erro ao buscar porcentagem:', error.message);
+                return res.status(500).json({ error: 'Falha na configuração inicial' });
             }
 
-            if (isNaN(porcentagemAssinatura) || porcentagemAssinatura <= 0) {
-                logger.error('Porcentagem de assinatura inválida ou não informada');
-                return res.status(400).json({
-                    error: 'Porcentagem inválida',
-                    message: 'O valor da porcentagem de assinatura é inválido',
-                    data: [],
-                    status_geral: {
-                        etapa1: 'falha',
-                        etapa2: 'nao_iniciada',
-                        etapa3: 'nao_iniciada',
-                        etapa4: 'nao_iniciada',
-                        etapa5: 'nao_iniciada',
-                        etapa6: 'nao_iniciada'
-                    }
-                });
+            // --- ETAPA 1: Buscar rendimentos do dia ---
+            const rendimentos = await BuscarRendimentosModel.getRendimentos(hoje);
+            if (!rendimentos || rendimentos.length === 0) {
+                logger.warn(`Nenhum rendimento encontrado para ${hoje}`);
+                return res.status(200).json({ message: 'Nada a processar' });
             }
 
-            // Convert percentage to decimal
-            const porcentagemDecimal = porcentagemAssinatura / 100;
-            logger.info(`Porcentagem decimalizada: ${porcentagemDecimal}`);
-
-            // Etapa 1: Buscar rendimentos do dia atual
-            logger.info(`Buscando rendimentos pagos na data: ${new Date().toISOString().split('T')[0]}`);
-            const rendimentos = await BuscarRendimentosModel.getRendimentos(new Date().toISOString().split('T')[0]);
-
-            if (!rendimentos || !rendimentos.length) {
-                logger.warn(`Nenhum rendimento encontrado na data: ${new Date().toISOString().split('T')[0]}`);
-                return res.status(200).json({
-                    message: `Nenhum rendimento encontrado na data: ${new Date().toISOString().split('T')[0]}`,
-                    data: [],
-                    data_consulta: new Date().toISOString().split('T')[0],
-                    status: 'concluido',
-                    etapas: {
-                        etapa1: 'concluida',
-                        etapa2: 'nao_executada',
-                        etapa3: 'nao_executada',
-                        etapa4: 'nao_executada',
-                        etapa5: 'nao_executada',
-                        etapa6: 'nao_executada'
-                    }
-                });
-            }
-
-            // Etapa 2: Coletar os usuários assinantes do dia atual
-            logger.info(`Coletando todos os usuários assinantes da data: ${new Date().toISOString().split('T')[0]}`);
             const rendimentosProcessados = [];
             const usuariosNaoProcessados = [];
-            const statusEtapas = {
-                etapa1: 'concluida',
-                etapa2: 'concluida',
-                etapa3: 'nao_iniciada',
-                etapa4: 'nao_iniciada',
-                etapa5: 'nao_iniciada',
-                etapa6: 'nao_iniciada'
-            };
 
+            // --- LOOP DE PROCESSAMENTO ---
             for (const rendimento of rendimentos) {
+                const usuarioId = rendimento.usuario_id;
+                const statusEtapas = { etapa1: 'concluida', etapa2: 'concluida' };
+
                 try {
-                    // Etapa 3: Buscar tipo de assinatura do usuário
+                    // ETAPA 3: Assinatura
+                    const assinaturaData = await BuscarAssinaturaModel.getAssinatura(usuarioId);
+                    if (!assinaturaData || assinaturaData.length === 0 || assinaturaData[0].assinatura !== 'Poppy Pro') {
+                        throw new Error('Não é assinante Poppy Pro');
+                    }
+                    statusEtapas.etapa3 = 'concluida';
+
+                    // ETAPA 4: Saldo
+                    const saldoResp = await axios.get(`http://localhost:3000/api/usuarios/${usuarioId}/dados-saldo`);
+                    const saldoAtual = Number(parseFloat(saldoResp.data.saldo || 0).toFixed(8));
+                    statusEtapas.etapa4 = 'concluida';
+
+                    // ETAPA 5: Débito na Carteira
+                    const valorAssinatura = Number((rendimento.rendimento_diario * porcentagemDecimal).toFixed(8));
+                    const novoSaldo = Number((saldoAtual - valorAssinatura).toFixed(8));
+                    await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(usuarioId, novoSaldo);
+                    statusEtapas.etapa5 = 'concluida';
+
+                    // ETAPA 6: Histórico de Pagamento
+                    await HistoricoPagamentoAssinaturaModel.historicoPagamentoAssinatura(usuarioId, valorAssinatura);
+                    statusEtapas.etapa6 = 'concluida';
+
+                    // --- ETAPA 7: ATUALIZAÇÃO DO RENDIMENTO LÍQUIDO ---
+                    logger.info(`[ETAPA 7] Iniciando para usuario ${usuarioId}`);
                     try {
-                        const assinatura = await BuscarAssinaturaModel.getAssinatura(rendimento.usuario_id);
-                        statusEtapas.etapa3 = 'concluida';
-
-                        if (!assinatura || !assinatura.length || assinatura[0].assinatura !== 'Poppy Pro') {
-                            statusEtapas.etapa3 = 'falha';
-                            throw new Error('Assinatura não é Poppy Pro');
-                        }
-
-                        // Etapa 4: Obter o saldo atual da carteira do usuário
-                        try {
-                            const saldoResponse = await axios.get(`http://localhost:3000/api/usuarios/${rendimento.usuario_id}/dados-saldo`);
-                            let saldoAtual = saldoResponse.data.saldo || '0.00';
+                        const registroRendimento = await BuscarHistoricoRendimentoModel.getHistoricoRendimento(usuarioId);
+                        
+                        if (registroRendimento) {
+                            // Correção de Timezone: Extração da data local (YYYY-MM-DD)
+                            const d = new Date(registroRendimento.data_criacao);
+                            const dataLocalHisto = d.getFullYear() + "-" + 
+                                                 String(d.getMonth() + 1).padStart(2, '0') + "-" + 
+                                                 String(d.getDate()).padStart(2, '0');
                             
-                            saldoAtual = Number(parseFloat(saldoAtual).toFixed(8));
-                            statusEtapas.etapa4 = 'concluida';
-
-                            // Etapa 5: Calcular o novo saldo
-                            try {
-                                // Calculate the subscription amount using the decimal percentage
-                                const valorAssinatura = Number((rendimento.rendimento_diario * porcentagemDecimal).toFixed(8));
-                                const novoSaldo = Number((Number(saldoAtual) - Number(valorAssinatura)).toFixed(8));
-
-                                // Atualizar a carteira com o novo saldo usando o modelo
-                                const resultadoAtualizacao = await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
-                                    rendimento.usuario_id,
-                                    novoSaldo
+                            if (dataLocalHisto === hoje) {
+                                const rendimentoLiquido = Number((registroRendimento.rendimento_diario - valorAssinatura).toFixed(8));
+                                
+                                logger.info(`[ETAPA 7] Atualizando rendimento ID ${registroRendimento.id} para ${rendimentoLiquido}`);
+                                
+                                await AtualizarHistoricoRendimentoModel.updateRendimentoComAssinatura(
+                                    registroRendimento.id, 
+                                    rendimentoLiquido
                                 );
-
-                                if (resultadoAtualizacao.affectedRows > 0) {
-                                    statusEtapas.etapa5 = 'concluida';
-                                    logger.info(`Saldo da carteira do usuário ${rendimento.usuario_id} atualizado com sucesso`);
-                                } else {
-                                    statusEtapas.etapa5 = 'falha';
-                                    logger.warn(`Falha ao atualizar o saldo da carteira do usuário ${rendimento.usuario_id}`);
-                                    throw new Error('Atualização do saldo não teve efeito algum');
-                                }
-
-                                // Etapa 6: Registrar o histórico de pagamento da assinatura
-                                try {
-                                    const resultadoHistorico = await HistoricoPagamentoAssinaturaModel.historicoPagamentoAssinatura(
-                                        rendimento.usuario_id,
-                                        valorAssinatura
-                                    );
-
-                                    if (resultadoHistorico.affectedRows > 0) {
-                                        statusEtapas.etapa6 = 'concluida';
-                                        logger.info(`Registro de histórico do pagamento da assinatura do usuário ${rendimento.usuario_id} realizado com sucesso`);
-                                    } else {
-                                        statusEtapas.etapa6 = 'falha';
-                                        logger.warn(`Falha ao registrar o histórico do pagamento da assinatura do usuário ${rendimento.usuario_id}`);
-                                        throw new Error('Registro do histórico não teve efeito algum');
-                                    }
-                                } catch (error) {
-                                    statusEtapas.etapa6 = 'falha';
-                                    logger.error(`Erro ao registrar o histórico do pagamento da assinatura do usuário ${rendimento.usuario_id}:`, error);
-                                    throw error;
-                                }
-
-                                rendimentosProcessados.push({
-                                    id: rendimento.id,
-                                    data_criacao: rendimento.data_criacao,
-                                    usuario_id: rendimento.usuario_id,
-                                    rendimento_diario: rendimento.rendimento_diario,
-                                    valorAssinatura: valorAssinatura,
-                                    saldoAtual: saldoAtual,
-                                    novoSaldo: novoSaldo,
-                                    assinatura: assinatura[0].assinatura,
-                                    status: {
-                                        etapa1: statusEtapas.etapa1,
-                                        etapa2: statusEtapas.etapa2,
-                                        etapa3: statusEtapas.etapa3,
-                                        etapa4: statusEtapas.etapa4,
-                                        etapa5: statusEtapas.etapa5,
-                                        etapa6: statusEtapas.etapa6
-                                    }
-                                });
-
-                            } catch (error) {
-                                statusEtapas.etapa5 = 'falha';
-                                logger.error(`Erro ao atualizar o saldo da carteira do usuário ${rendimento.usuario_id}:`, error);
-                                throw error;
+                                statusEtapas.etapa7 = 'concluida';
+                            } else {
+                                logger.info(`[ETAPA 7] Ignorada: data local ${dataLocalHisto} != hoje ${hoje}`);
+                                statusEtapas.etapa7 = 'ignorada_data';
                             }
-
-                        } catch (error) {
-                            statusEtapas.etapa4 = 'falha';
-                            logger.error(`Erro ao obter o saldo atual da carteira do usuário ${rendimento.usuario_id}:`, error);
-                            throw error;
+                        } else {
+                            logger.warn(`[ETAPA 7] Registro não encontrado para usuario ${usuarioId}`);
+                            statusEtapas.etapa7 = 'nao_encontrado';
                         }
-
-                    } catch (error) {
-                        statusEtapas.etapa3 = 'falha';
-                        logger.error(`Erro ao verificar a assinatura do usuário ${rendimento.usuario_id}:`, error);
-                        throw error;
+                    } catch (err) {
+                        logger.error(`[ETAPA 7] Erro interno: ${err.message}`);
+                        statusEtapas.etapa7 = 'falha';
                     }
 
+                    rendimentosProcessados.push({ usuario_id: usuarioId, valorAssinatura, statusEtapas });
+
                 } catch (error) {
-                    statusEtapas.etapa3 = 'falha';
-                    logger.error(`Erro ao processar rendimento do usuário ${rendimento.usuario_id}:`, error);
-                    usuariosNaoProcessados.push({
-                        usuario_id: rendimento.usuario_id,
-                        motivo: error.message || 'Erro ao processar rendimento'
-                    });
+                    logger.warn(`Erro no usuario ${usuarioId}: ${error.message}`);
+                    usuariosNaoProcessados.push({ usuario_id: usuarioId, motivo: error.message });
                 }
             }
 
-            // Resposta final com detalhes de processamento
-            logger.info(`Busca pelos usuários assinantes concluída com sucesso na data: ${new Date().toISOString().split('T')[0]}`);
             return res.status(200).json({
-                message: 'Rotinas executadas com sucesso',
-                data: rendimentosProcessados,
-                total_processados: rendimentosProcessados.length,
-                total_registrados: rendimentosProcessados.length,
-                usuarios_nao_processados: usuariosNaoProcessados,
-                data_consulta: new Date().toISOString().split('T')[0],
-                status_geral: {
-                    etapa1: statusEtapas.etapa1,
-                    etapa2: statusEtapas.etapa2,
-                    etapa3: statusEtapas.etapa3,
-                    etapa4: statusEtapas.etapa4,
-                    etapa5: statusEtapas.etapa5,
-                    etapa6: statusEtapas.etapa6
-                }
+                message: 'Processamento concluído',
+                sucesso: rendimentosProcessados,
+                falhas: usuariosNaoProcessados
             });
 
         } catch (error) {
-            logger.error('Erro inesperado:', error);
-            return res.status(500).json({
-                error: 'Erro interno',
-                message: 'Ocorreu um erro inesperado durante a execução da rotina',
-                data: [],
-                status_geral: {
-                    etapa1: 'concluida',
-                    etapa2: 'falha',
-                    etapa3: 'nao_iniciada',
-                    etapa4: 'nao_iniciada',
-                    etapa5: 'nao_iniciada',
-                    etapa6: 'nao_iniciada'
-                }
-            });
+            logger.error('Erro crítico no controller:', error);
+            return res.status(500).json({ error: 'Erro interno' });
         }
     }
 };
 
 module.exports = PagamentoAssinaturaController;
-

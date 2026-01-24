@@ -77,7 +77,7 @@ const rankingAcessoInvestimentos = [
     },
     { 
         nomeRanking: 'Pioneiro Financeiro',
-        acessoInvestimentos: ['AA', 'AR1', 'AR2', 'A1', 'A2', 'A3', 'BBR1', 'BBR2', 'BB', 'B1', 'B2', 'B3', 'BR1', 'BR2', 'B4', 'B5', 'B6', 'CR1', 'CR2', 'C1', 'C2', 'C3']
+        acessoInvestimentos: ['AA', 'AR1', 'AR2', 'A1', 'A2', 'A3', 'BBR1', 'BBR2', 'BB']
     }
 ];
 
