@@ -15,6 +15,7 @@ const BuscarDepositosModel = {
                 d.status_deposito 
             FROM depositos d
             INNER JOIN users u ON d.usuario_id = u.usuario_id
+	    AND d.status_deposito = 'Analisando'
         `;
         
         return new Promise((resolve, reject) => {

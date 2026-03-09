@@ -1,26 +1,12 @@
-#develop-55: 
-- Melhorias na assinatura: 
-	- Adicionada correção na rotina de pagamento da Assinatura para alterar o valor gravado do rendimento retirando o valor diário da assinatura
-	- Adicionada melhoria para garantir que usuários Poppy Basic só terão acesso a investimentos de rating AA, AR1, AR2, A1, A2, A3, BBR1, BBR2 e BB
-
-- Melhorias no saque:	
-	- Criado o cancelamento do saque via endpoint para utilizar no app www.purg.com.br/endpoints/cancelar-saque/id
-	- Criado o cancelamento do saque via Jinx /api/saques/cancelar-saque/${saqueId}
-	- Criada melhoria para que se já houver um saque em andamento ele não
-	permite criar outra solicitação
-	- Quando cancelar um saque pela Jinx tem que selecionar uma das
-	opções para gravar no campo "motivo":
-		- Chave Pix não existe.
-		- Titular do Pix é diferente do titular da Purg.
-	- Quando cancelar um saque pela Purg ele grava no campo "motivo": Saque
-	cancelado pelo cliente.
-	- Criada a execução do saque via Jinx para atualizar a carteira do
-	cliente
-
-- Novos endpoints:
-	- Histórico das solicitações de saque do usuário:
-	www.purg.com.br/endpoints/saque-historico/{{usuario_id}}
-
-
-	- Histórico das solicitações de deposito do usuário:
-	www.purg.com.br/endpoints/deposito-historico/{{usuario_id}}
+#develop-56: 
+- Melhorias no deposito: 
+	- Criado a tela de Depósitos na Jinx com as funções:
+		- Buscar depósitos com status Analisando;
+		- Botão para executar um depósito e creditar na conta do cliente;
+		- Botão para cancelar um depósito e alterar o status com o motivo do cancelamento;
+	- Criado o endpoint de solicitação de um depósito:
+		www.purg.com.br/endpoints/deposito/:id
+	- Criado o endpoint para executar um depósito no router de depositos:
+		router.post('/api/depositos/executar/:id', ExecutarDepositoController.execute);
+	- Criado o endpoint para cancelar um depósito no router de endpoints:
+		/endpoints/cancelar-deposito/:id

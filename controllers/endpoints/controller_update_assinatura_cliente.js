@@ -1,4 +1,5 @@
 const UpdateAssinaturaClienteModel = require('../../models/assinaturas/model_update_assinatura_cliente');
+const UpdateAssinaturaAceiteSuitabilityModel = require('../../models/assinaturas/model_update_assinatura_aceite_suitability.js');
 const logger = require('../../logger');
 
 const UpdateAssinaturaClienteController = {
@@ -40,9 +41,37 @@ const UpdateAssinaturaClienteController = {
             
             if (result.affectedRows > 0) {
                 logger.info(`Assinatura do usuário ${usuario_id} atualizada com sucesso`);
-                return res.status(200).json({
-                    message: 'Assinatura atualizada com sucesso'
-                });
+                
+                // Etapa 2: Verificar o valor da nova assinatura e gravar em aceiteSuitability
+                let aceiteSuitability;
+                
+                if (novaAssinatura === "Poppy Pro") {
+                    aceiteSuitability = 1;
+                } else if (novaAssinatura === "Poppy Basic") {
+                    aceiteSuitability = 0;
+                } else {
+                    logger.warn(`Valor da nova assinatura não reconhecido: ${novaAssinatura}`);
+                    return res.status(400).json({
+                        error: 'Bad Request',
+                        message: 'Valor da nova assinatura não é válido'
+                    });
+                }
+
+                // Atualizar o aceiteSuitability no banco de dados
+                const resultAceite = await UpdateAssinaturaAceiteSuitabilityModel.updateAceiteSuitability(aceiteSuitability, usuario_id);
+
+                if (resultAceite.affectedRows > 0) {
+                    logger.info(`Valor de aceiteSuitability do usuário ${usuario_id} atualizado com sucesso`);
+                    return res.status(200).json({
+                        message: 'Assinatura atualizada com sucesso',
+                        aceiteSuitability: aceiteSuitability
+                    });
+                } else {
+                    logger.warn(`Não foi possível atualizar o aceiteSuitability do usuário ${usuario_id}`);
+                    return res.status(200).json({
+                        message: 'Assinatura atualizada com sucesso, mas não foi possível atualizar o aceiteSuitability'
+                    });
+                }
             }
 
             logger.warn(`Nenhuma alteração realizada na assinatura do usuário ${usuario_id}`);

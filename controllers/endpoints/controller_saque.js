@@ -3,13 +3,13 @@ const logger = require('../../logger');
 
 // Models
 const BuscarSaquePendenteModel      = require('../../models/endpoints/model_saque_buscar_saque_pendente');
-const BuscarCarteiraModel           = require('../../models/endpoints/model_saque_buscar_carteira');
+const BuscarCarteiraModel           = require('../../models/endpoints/model_buscar_saldo_carteira');
 const BuscarTokensCarteirasModel      = require('../../models/endpoints/model_saque_buscar_tokens');
 const BuscarTokensCarteirasPurgModel  = require('../../models/endpoints/model_saque_buscar_tokens_purg');
 const TransacoesPinsModel             = require('../../models/endpoints/model_saque_transacoes_pins_para_purg');
 const MoverPinsModel                  = require('../../models/endpoints/model_saque_mover_pins');
 const SolicitacaoSaqueModel           = require('../../models/endpoints/model_saque_registro_solicitacao');
-const AtualizarCarteiraSaqueModel     = require('../../models/endpoints/model_saque_atualizar_carteira');
+const AtualizarCarteiraSaqueModel     = require('../../models/endpoints/model_atualizar_saldo_carteira');
 const DadosCadastraisModel            = require('../../models/endpoints/model_dados_cadastrais');
 
 const SCALE   = 8;

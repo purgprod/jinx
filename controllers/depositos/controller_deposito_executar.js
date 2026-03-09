@@ -5,7 +5,7 @@ const logger = require('../../logger');
 const BuscarCarteiraModel = require('../../models/endpoints/model_buscar_saldo_carteira');
 const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_saldo_carteira');
 // Novo Model importado
-const SolicitacaoExecutarSaqueModel = require('../../models/saques/model_saque_registro_executado');
+const SolicitacaoExecutarDepositoModel = require('../../models/depositos/model_deposito_registro_executado');
 
 const SCALE = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
@@ -28,7 +28,7 @@ function bigIntToDecimalString(bi) {
     return (bi < 0n ? '-' : '') + (fracPart ? `${intPart}.${fracPart}` : `${intPart}`);
 }
 
-const ExecutarSaqueController = {
+const ExecutarDepositoController = {
     async execute(req, res) {
         const { id } = req.params; 
         const { amount } = req.body;
@@ -43,38 +43,31 @@ const ExecutarSaqueController = {
             const carteiraRows = await BuscarCarteiraModel.getSaldosCarteiras(id);
             
             if (!carteiraRows?.length) {
-                logger.warn('Tentativa de saque em carteira inexistente', { userId: id });
+                logger.warn('Tentativa de deposito em carteira inexistente', { userId: id });
                 return res.status(404).json({ error: 'Carteira não localizada.' });
             }
 
             const carteira = carteiraRows[0];
             const saldoAtualBig = decimalToBigInt(String(carteira.saldo ?? '0'));
-            const saqueBig = decimalToBigInt(String(amount));
+            const depositoBig = decimalToBigInt(String(amount));
 
-            if (saldoAtualBig < saqueBig) {
-                return res.status(409).json({ 
-                    error: 'Saldo insuficiente para realizar a operação.',
-                    disponivel: bigIntToDecimalString(saldoAtualBig)
-                });
-            }
-
-            // 2. Persistência do Débito (Write Layer - Wallet)
-            const novoSaldoBig = saldoAtualBig - saqueBig;
+            // 2. Persistência do Crédito (Write Layer + Wallet)
+            const novoSaldoBig = saldoAtualBig + depositoBig;
             const novoSaldoStr = bigIntToDecimalString(novoSaldoBig);
 
             await AtualizarCarteiraModel.updateCarteira(novoSaldoStr, id);
 
             // 3. Atualização do Status da Solicitação (Side Effect / State Transition)
-            // Semântica: Executamos após o débito para garantir que o registro reflita a realidade financeira.
-            const registroResult = await SolicitacaoExecutarSaqueModel.executarSolicitacao(id);
+            // Semântica: Executamos após o crédito para garantir que o registro reflita a realidade financeira.
+            const registroResult = await SolicitacaoExecutarDepositoModel.executarSolicitacao(id);
 
             if (registroResult.affectedRows === 0) {
-                // Warning: O dinheiro foi debitado, mas o registro da solicitação não foi alterado.
+                // Warning: O dinheiro foi creditado, mas o registro da solicitação não foi alterado.
                 // Em um ambiente ideal, isso estaria dentro de uma transação para Rollback.
-                logger.error('Divergência de estado: Saldo debitado, mas solicitação não encontrada para atualização', { userId: id });
+                logger.error('Divergência de estado: Saldo creditado, mas solicitação não encontrada para atualização', { userId: id });
             }
 
-            logger.info('Fluxo de saque finalizado', { userId: id, montante: amount, status: 'Executado' });
+            logger.info('Fluxo de deposito finalizado', { userId: id, montante: amount, status: 'Executado' });
 
             return res.status(200).json({
                 success: true,
@@ -87,10 +80,10 @@ const ExecutarSaqueController = {
             });
 
         } catch (err) {
-            logger.error('Falha crítica na execução de saque', { userId: id, error: err.message });
+            logger.error('Falha crítica na execução de deposito', { userId: id, error: err.message });
             return res.status(500).json({ error: 'Erro interno ao processar a transação financeira.' });
         }
     }
 };
 
-module.exports = ExecutarSaqueController;
+module.exports = ExecutarDepositoController;

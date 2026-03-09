@@ -1,7 +1,7 @@
 const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
-const AtualizarCarteiraSaqueModel = {
+const AtualizarCarteiraModel = {
     async updateCarteira(novo_valor, usuario_id) {
         // Certifica-se que o novo_valor é uma string com até 8 casas decimais
         const formattedValue = parseFloat(novo_valor).toFixed(8);
@@ -26,5 +26,5 @@ const AtualizarCarteiraSaqueModel = {
     }
 };
 
-module.exports = AtualizarCarteiraSaqueModel;
+module.exports = AtualizarCarteiraModel;
 

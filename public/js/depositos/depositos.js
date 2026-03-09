@@ -1,4 +1,8 @@
-// Carrega os depositos pendentes do banco de dados e atualiza a tabela
+// public/js/depositos/depositos.js
+
+/**
+ * Carrega os depositos pendentes do banco de dados e atualiza a tabela.
+ */
 async function loadDepositosResults() {
     const centerPanel = document.querySelector('.center-panel');
     if (!centerPanel) {
@@ -6,12 +10,10 @@ async function loadDepositosResults() {
         return;
     }
 
-    // Limpa o conteúdo e define o título
     centerPanel.innerHTML = '<h2>Depositos Pendentes</h2>';
 
-    // Cria a estrutura da tabela
     const table = document.createElement('table');
-    table.classList.add('rotinas-table'); // Considere renomear para 'depositos-table' no CSS
+    table.classList.add('rotinas-table'); 
     table.innerHTML = `
         <thead>
             <tr>
@@ -26,30 +28,25 @@ async function loadDepositosResults() {
                 <th>Cancelar</th>
             </tr>
         </thead>
-        <tbody>
-            <!-- Os dados serão inseridos aqui -->
-        </tbody>
+        <tbody></tbody>
     `;
     const tbody = table.querySelector('tbody');
     centerPanel.appendChild(table);
 
     try {
-        // Buscar depositos pendentes da API
         const response = await fetch('/api/depositos/buscar-depositos-pendentes');
         if (!response.ok) {
             throw new Error(`Erro na requisição: ${response.statusText}`);
         }
         const depositos = await response.json();
 
-        // Limpa o corpo da tabela antes de adicionar novas linhas
         tbody.innerHTML = '';
 
         if (depositos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum deposito pendente encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Nenhum deposito pendente encontrado.</td></tr>';
             return;
         }
 
-        // Adiciona cada deposito na tabela
         depositos.forEach(deposito => {
             const dateOptions = {
                 timeZone: 'America/Sao_Paulo',
@@ -59,8 +56,12 @@ async function loadDepositosResults() {
                 hour: '2-digit',
                 minute: '2-digit'
             };
+            
             const formattedDate = new Intl.DateTimeFormat('pt-BR', dateOptions).format(new Date(deposito.data_criacao));
-            const formattedValue = `R$ ${parseFloat(deposito.valor_deposito).toFixed(2).replace('.', ',')}`;
+            
+            // Semântica: formattedValue para exibição, rawValue para processamento backend
+            const rawValue = deposito.valor_deposito; 
+            const formattedValue = `R$ ${parseFloat(rawValue).toFixed(2).replace('.', ',')}`;
             const status = `<span style="color: #D9AA1C;">${deposito.status_deposito}</span>`;
 
             const tr = document.createElement('tr');
@@ -73,11 +74,11 @@ async function loadDepositosResults() {
                 <td>${formattedValue}</td>
                 <td>${status}</td>
                 <td>
-                    <button onclick="executarDeposito(${deposito.id})">
+                    <button class="executar-button" onclick="executarDeposito(${deposito.id}, ${deposito.usuario_id}, '${rawValue}')">
                         Executar
                     </button>
-		</td>
-		<td>
+                </td>
+                <td>
                     <button class="cancelar-button" onclick="cancelarDeposito(${deposito.id})">
                         Cancelar
                     </button>
@@ -88,36 +89,100 @@ async function loadDepositosResults() {
 
     } catch (error) {
         console.error('Erro ao carregar depositos pendentes:', error);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Erro ao carregar os depositos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: red;">Erro ao carregar os depositos.</td></tr>`;
     }
 }
 
-// Função para executar o deposito (placeholder)
-// Você deve implementar a lógica de chamada da API aqui
-async function executarDeposito(depositoId) {
-    console.log(`Tentando executar o deposito com ID: ${depositoId}`);
+/**
+ * Executa a liquidação do deposito no backend.
+ * @param {number} depositoId - ID da solicitação de deposito.
+ * @param {number} usuarioId - ID do usuário (parâmetro de rota).
+ * @param {string} amount - Valor decimal puro para processamento BigInt.
+ */
+async function executarDeposito(depositoId, usuarioId, amount) {
+    const confirmacao = confirm(`CONFIRMAR EXECUÇÃO\n\nDeposito ID: #${depositoId}\nUsuário: ${usuarioId}\nValor: R$ ${amount}\n\nO saldo será creditado da carteira do usuário. Deseja prosseguir?`);
+    
+    if (!confirmacao) return;
+
     try {
-        // Exemplo de como chamar a API para executar o deposito
-        /*
-        const response = await fetch(`/api/depositos/executar/${depositoId}`, { method: 'POST' });
-        if (response.ok) {
-            alert('Deposito executado com sucesso!');
-            loadDepositosResults(); // Recarrega a lista de depositos
-        } else {
-            const errorData = await response.json();
-            alert(`Erro ao executar deposito: ${errorData.message}`);
-        }
-        */
-       alert(`Funcionalidade "Executar Deposito" para o ID ${depositoId} a ser implementada.`);
+        // Rota definida conforme controller_deposito_executar.js
+        const response = await fetch(`/api/depositos/executar/${usuarioId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                amount: amount,
+                deposito_id: depositoId 
+            })
+        });
 
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Sucesso: Crédito realizado e transação processada.');
+            await loadDepositosResults(); // Refresh da grid
+        } else {
+            // Captura erros de lógica (ex: 409 Conflict - Saldo Insuficiente)
+            const errorMsg = data.error || (data.errors && data.errors[0].msg) || 'Erro no processamento.';
+            alert(`Erro ao executar: ${errorMsg}`);
+        }
     } catch (error) {
-        console.error('Erro ao executar o deposito:', error);
-        alert('Ocorreu um erro na comunicação com o servidor.');
+        console.error('Erro na requisição de execução:', error);
+        alert('Erro de comunicação com o servidor. Verifique o log do console.');
     }
 }
 
-// Torna as funções acessíveis no escopo global para serem chamadas por 'script.js' e pelos 'onclick'
+/**
+ * Função para cancelar o deposito com seleção de motivo.
+ * @param {number} depositoId 
+ */
+async function cancelarDeposito(depositoId) {
+    const motivosValidos = {
+        "1": "Valor da solicitação é diferente do valor do Pix.",
+        "2": "Titular do Pix é diferente do titular da Purg."
+    };
+
+    const promptMensagem = `Cancelamento do Deposito #${depositoId}\n\n` +
+        `Selecione o motivo digitando o número:\n` +
+        `1 - Valor da solicitação é diferente do valor do Pix.\n` +
+        `2 - Titular do Pix é diferente do titular da Purg.\n`;
+
+    const inputRaw = prompt(promptMensagem);
+
+    if (inputRaw === null) return;
+
+    const motivoFinal = motivosValidos[inputRaw.trim()] || inputRaw.trim();
+
+    if (!motivoFinal) {
+        alert("É obrigatório informar um motivo para o cancelamento.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/endpoints/cancelar-deposito/${depositoId}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ motivo: motivoFinal })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            alert('Deposito cancelado com sucesso.');
+            await loadDepositosResults(); 
+        } else {
+            alert(`Erro: ${data.message || 'Não foi possível cancelar o deposito.'}`);
+        }
+    } catch (error) {
+        console.error('Erro na requisição de cancelamento:', error);
+        alert('Erro de conexão com o servidor ao tentar cancelar.');
+    }
+}
+
+// Exposição global para compatibilidade com os onclicks do HTML dinâmico
 window.loadDepositosResults = loadDepositosResults;
 window.executarDeposito = executarDeposito;
 window.cancelarDeposito = cancelarDeposito;
-

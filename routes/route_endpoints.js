@@ -7,8 +7,12 @@ const { param, body } = require('express-validator');
 //const SaldoController     = require('../controllers/endpoints/controller_saldo');
 //const InvestidoController = require('../controllers/endpoints/controller_investido');
 //const EmblemasController  = require('../controllers/endpoints/controller_emblemas');
+const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
+const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
 const SaqueController     = require('../controllers/endpoints/controller_saque');
 const CancelarSaqueController = require('../controllers/endpoints/controller_cancelar_saque');
+const DepositoController     = require('../controllers/endpoints/controller_deposito');
+const CancelarDepositoController = require('../controllers/endpoints/controller_cancelar_deposito');
 const CarteiraController     = require('../controllers/endpoints/controller_carteira');
 const DadosCadastroController     = require('../controllers/endpoints/controller_dados_cadastro');
 const DadosEmpresaController     = require('../controllers/endpoints/controller_dados_empresa');
@@ -16,8 +20,9 @@ const PinsUsuarioController     = require('../controllers/endpoints/controller_p
 const RendimentosUsuarioController     = require('../controllers/endpoints/controller_rendimentos_usuario');
 const SaqueHistoricoUsuarioController = require('../controllers/endpoints/controller_saque_historico_do_usuario');
 const DepositoHistoricoUsuarioController = require('../controllers/endpoints/controller_deposito_historico_do_usuario');
-const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
-const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
+const BuscarSaquesPendentesUsuarioController = require('../controllers/endpoints/controller_buscar_saques_pendentes_usuario');
+const BuscarDepositosPendentesUsuarioController = require('../controllers/endpoints/controller_buscar_depositos_pendentes_usuario');
+const UpdateAssinaturaClienteController = require('../controllers/endpoints/controller_update_assinatura_cliente');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -74,7 +79,17 @@ router.get('/endpoints/saque-historico/:id', authMiddleware.checkAuthenticated, 
 // Rota para o histórico de depositos do usuário
 router.get('/endpoints/deposito-historico/:id', authMiddleware.checkAuthenticated, DepositoHistoricoUsuarioController.getDepositoHistoricoUsuario);
 
+// Rota para carregar os saques pendentes do usuário
+router.get('/endpoints/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);
+
+// Rota para carregar os depósitos pendentes do usuário
+router.get('/endpoints/buscar-depositos-pendentes/:id', authMiddleware.checkAuthenticated, BuscarDepositosPendentesUsuarioController.getDepositosPendentes);
+
 //------------AÇÕES------------
+
+// Rota para atualizar a assinatura de um cliente
+router.put('/endpoints/atualizar-assinatura/:id', authMiddleware.checkAuthenticated, UpdateAssinaturaClienteController.updateAssinaturaCliente);
+
 //  POST /endpoints/saque/:id   { amount: 100.50 }
 router.post(
   '/endpoints/saque/:id',
@@ -102,6 +117,35 @@ router.post(
   ],
   CancelarSaqueController.cancelarSaque
 );
+
+//  POST /endpoints/deposito/:id   { amount: 100.50 }
+router.post(
+  '/endpoints/deposito/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt().withMessage('id deve ser inteiro'),
+    body('amount')
+      .isFloat({ gt: 0 })
+      .withMessage('amount deve ser número > 0'),
+  ],
+  DepositoController.executeDeposito
+);
+
+// Rota para cancelar uma solicitação de deposito específica
+router.post(
+  '/endpoints/cancelar-deposito/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt().withMessage('O ID do depósito deve ser um inteiro válido.'),
+    body('motivo')
+      .notEmpty()
+      .withMessage('O motivo do cancelamento é obrigatório.')
+      .isString()
+      .withMessage('O motivo deve ser um texto válido.')
+  ],
+  CancelarDepositoController.cancelarDeposito
+);
+
 
 module.exports = router;
 
