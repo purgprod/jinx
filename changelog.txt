@@ -1,4 +1,4 @@
-#develop-56: 
+#develop-57: 
 - Melhorias no deposito: 
 	- Criado a tela de Depósitos na Jinx com as funções:
 		- Buscar depósitos com status Analisando;
