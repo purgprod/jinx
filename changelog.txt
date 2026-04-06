@@ -1,3 +1,26 @@
+#develop-60:
+- Correções críticas de segurança (IDOR, autenticação, dados sensíveis):
+	- Adicionada validação de ownership em saque e depósito: usuário só pode operar sobre seu próprio ID;
+	- Adicionado middleware checkAuthenticated em todas as rotas /api/usuarios, /api/tokens e /api/assinaturas;
+	- Adicionado middleware rotinasAuth em todas as rotas /api/rotinas: permite apenas chamadas de localhost (cron) ou usuário autenticado;
+	- Removidos JSON.stringify(rows) dos logs em model_dados_cadastro, model_carteira e model_buscar_usuarios (dados bancários/PIX não são mais logados);
+	- Removida referência inválida a rows no bloco catch de model_buscar_usuarios;
+
+- Correções altas de segurança:
+	- Senha de reset alterada de hardcoded "purg123" para geração aleatória via crypto.randomBytes;
+	- Removida chamada fluxoRecuperacao() hardcoded com email pessoal em controller_recuperacao_de_senha.js;
+	- Cookie de sessão alterado de sameSite: 'none' para sameSite: 'strict';
+	- CORS alterado: fallback de true (qualquer origem) para false (bloqueia cross-origin); adicionado aviso no log se ALLOWED_ORIGINS não estiver definido no .env;
+
+- Correções médias de segurança:
+	- Removidos todos os console.log de controller_autenticacao_jinx.js, substituídos por logger sem dados sensíveis;
+	- Removidos logs com username e req.session.user do server.js;
+	- Adicionado rate limiting financeiro em /endpoints/saque e /endpoints/deposito: máx. 5 req/min por usuário;
+	- Validação de ID > 0 adicionada em controller_update_assinatura_cliente;
+
+- Correções no nginx:
+	- Adicionados headers de segurança: Strict-Transport-Security, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy;
+
 #develop-59:
 - Correção no redirect HTTP→HTTPS do Nginx (jinx-dev.purg.com.br):
 	- Alterado código de redirect de 301 para 308, preservando o método HTTP (POST) e o corpo da requisição no redirecionamento para HTTPS;

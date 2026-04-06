@@ -1,5 +1,6 @@
 // controllers/usuarios/controller_resetarsenha_usuarios.js
 
+const crypto = require('crypto');
 const UsuariosAtualizarSenhaModel = require('../../models/usuarios/model_atualizarsenha_usuarios');
 const logger = require('../../logger');
 
@@ -11,8 +12,8 @@ class UsuariosResetarSenhaController {
         const id = req.params.id;
 
         try {
-            // Aqui você pode gerar uma nova senha ou definir uma senha padrão
-            const novaSenha = "purg123";  // Você pode personalizar ou gerar uma nova senha
+            // Gera senha aleatória de 12 caracteres
+            const novaSenha = crypto.randomBytes(9).toString('base64');
 
             // Chama a função no modelo para atualizar a senha
             await UsuariosAtualizarSenhaModel.atualizarSenha(id, novaSenha);

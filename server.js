@@ -29,8 +29,12 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.set('trust proxy', 1);
 
 // Configuração de CORS
+// ALLOWED_ORIGINS deve ser definido no .env de cada servidor (ex: https://jinx.purg.com.br)
+if (!process.env.ALLOWED_ORIGINS) {
+    logger.warn('ALLOWED_ORIGINS não definido no .env — requisições cross-origin serão bloqueadas');
+}
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     credentials: true
@@ -64,7 +68,7 @@ app.use(session({
     rolling: true,
     cookie: {
         secure: true,
-        sameSite: 'none',
+        sameSite: 'strict',
         maxAge: 600000
     }
 }));
@@ -100,17 +104,17 @@ app.use((req, res, next) => {
 // --- ENDPOINTS DE AUTENTICAÇÃO ---
 
 app.post('/auth/login/jinx', loginLimiter, (req, res, next) => {
-    logger.info(`Login attempt for user: ${req.body?.username}`);
+    logger.info('Login attempt received');
     next();
 }, controller_autenticacao_jinx.login);
 
 app.get('/auth/check-session/jinx', isAuthenticated, (req, res, next) => {
-    logger.info('Session check for user:', req.session.user);
+    logger.info('Session check received');
     next();
 }, controller_autenticacao_jinx.checkSession);
 
 app.post('/auth/logout/jinx', (req, res, next) => {
-    logger.info('Logout for user:', req.session.user);
+    logger.info('Logout received');
     next();
 }, controller_autenticacao_jinx.logout);
 

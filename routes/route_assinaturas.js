@@ -1,6 +1,7 @@
 // routes/route_assinaturas.js
 const express = require('express');
 const router = express.Router();
+const { checkAuthenticated } = require('../middleware/auth');
 const PorcentagemAssinaturasBuscarController = require('../controllers/assinaturas/controller_buscar_porcentagem_assinaturas');
 const UpdatePorcentagemAssinaturasController = require('../controllers/assinaturas/controller_update_porcentagem_assinaturas');
 const PagamentosAssinaturasHistoricoController = require('../controllers/assinaturas/controller_buscar_pagamento_assinaturas_historicos');
@@ -9,6 +10,9 @@ const PlanosAssinaturasHistoricoController = require('../controllers/assinaturas
 const UpdateAssinaturaClienteController = require('../controllers/assinaturas/controller_update_assinatura_cliente');
 const UsuariosProTotalController = require('../controllers/assinaturas/controller_buscar_usuarios_pro_total');
 const UsuariosBasicTotalController = require('../controllers/assinaturas/controller_buscar_usuarios_basic_total');
+
+// Todas as rotas de assinaturas requerem autenticação
+router.use('/api/assinaturas', checkAuthenticated);
 
 // Rota para carregar o valor cobrado em porcentagem dos rendimentos das assinaturas
 router.get('/api/assinaturas/buscar-porcentagem', PorcentagemAssinaturasBuscarController.getPorcentagem);

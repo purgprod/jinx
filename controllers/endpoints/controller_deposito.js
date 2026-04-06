@@ -17,6 +17,12 @@ const DepositoController = {
         const { id } = req.params;
         const { amount } = req.body;
 
+        // Validação de ownership: apenas o próprio usuário pode solicitar depósito
+        if (req.session.user.id !== parseInt(id, 10)) {
+            logger.warn('Tentativa de depósito não autorizado', { sessionUserId: req.session.user.id, targetId: id });
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+
         // 1. Validação de Schema (Express-validator)
         // Por que: Garante que os dados atendam ao contrato antes de onerar o banco de dados.
         const errors = validationResult(req);

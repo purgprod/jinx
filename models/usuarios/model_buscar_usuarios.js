@@ -12,12 +12,10 @@ class UsersBuscarModel {
         try {
             const [rows] = await connection.promise().query(query);
             logger.info(`Número de usuários recuperados: ${rows.length}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
-	    return rows;
+            return rows;
         } catch (error) {
             logger.error(`Erro ao obter usuários: ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
-	    throw error;
+            throw error;
         }
     }
 }

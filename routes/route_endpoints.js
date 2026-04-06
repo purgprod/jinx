@@ -1,8 +1,19 @@
 const express = require('express');
 const router  = express.Router();
+const rateLimit = require('express-rate-limit');
 
 // IMPORTAÇÃO DOS VALIDADORES  <<<<<<<<<<
 const { param, body } = require('express-validator');
+
+// Rate limiting para operações financeiras: máx. 5 por minuto por usuário
+const financeiroLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    keyGenerator: (req) => String(req.session?.user?.id ?? req.ip),
+    message: { error: 'Muitas requisições. Aguarde antes de tentar novamente.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
 //const SaldoController     = require('../controllers/endpoints/controller_saldo');
 //const InvestidoController = require('../controllers/endpoints/controller_investido');
@@ -88,6 +99,7 @@ router.put('/endpoints/atualizar-assinatura/:id', authMiddleware.checkAuthentica
 router.post(
   '/endpoints/saque/:id',
   authMiddleware.checkAuthenticated,
+  financeiroLimiter,
   [
     param('id').isInt().withMessage('id deve ser inteiro'),
     body('amount')
@@ -116,6 +128,7 @@ router.post(
 router.post(
   '/endpoints/deposito/:id',
   authMiddleware.checkAuthenticated,
+  financeiroLimiter,
   [
     param('id').isInt().withMessage('id deve ser inteiro'),
     body('amount')

@@ -36,7 +36,4 @@ async function fluxoRecuperacao(emailUsuario) {
     }
 }
 
-// Execucao para teste
-fluxoRecuperacao("marcelosaquellesilva@gmail.com");
-
 module.exports = { fluxoRecuperacao };

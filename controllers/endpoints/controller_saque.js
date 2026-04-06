@@ -101,6 +101,12 @@ const SaqueController = {
         const { amount, chave_pix } = req.body;
         const validPixKeys = ['pix_cpf', 'pix_celular', 'pix_email', 'pix_chave'];
 
+        // Validação de ownership: apenas o próprio usuário pode solicitar saque
+        if (req.session.user.id !== parseInt(id, 10)) {
+            logger.warn('Tentativa de saque não autorizado', { sessionUserId: req.session.user.id, targetId: id });
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+
         // 1. Validação de Schema e Payload
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

@@ -29,7 +29,7 @@ const UpdateAssinaturaClienteController = {
 
             const usuario_id = parseInt(id, 10);
 
-            if (isNaN(usuario_id)) {
+            if (isNaN(usuario_id) || usuario_id <= 0) {
                 logger.error('O ID do usuário não é um número válido');
                 return res.status(400).json({
                     error: 'Bad Request',

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { checkAuthenticated } = require('../middleware/auth');
 const UsuariosBuscarController = require('../controllers/usuarios/controller_buscar_usuarios');
 const UsuariosCriarController = require('../controllers/usuarios/controller_criar_usuarios');
 const UsuariosNextUserIdController = require('../controllers/usuarios/controller_nextuserid_usuarios');
@@ -24,6 +25,9 @@ const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usua
 const UsuariosRankingController = require('../controllers/usuarios/controller_ranking_usuario');
 const UsuariosSinistroController = require('../controllers/usuarios/controller_sinistro_usuario');
 const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
+
+// Todas as rotas de usuários requerem autenticação
+router.use('/api/usuarios', checkAuthenticated);
 
 // Rota para criar um novo usuário
 router.post('/api/usuarios', UsuariosCriarController.createUser);
@@ -58,16 +62,16 @@ router.get('/api/usuarios/:id/dados-financeiros-historicos', UsuariosDadosFinanc
 // Rota para obter os dados de rendimentos históricos do usuário
 router.get('/api/usuarios/:id/dados-financeiros-rendimentos-historicos', UsuariosDadosRendimentosHistoricosController.getDadosRendimentosHistoricos);
 
-// Rota para obter o saldo do usuário 
+// Rota para obter o saldo do usuário
 router.get('/api/usuarios/:id/dados-saldo', UsuariosSaldosController.getSaldos);
 
-// Rota para obter o total de saques do usuário 
+// Rota para obter o total de saques do usuário
 router.get('/api/usuarios/:id/dados-saques', UsuariosSaquesController.getSaques);
 
-// Rota para obter o total de depositos do usuário 
+// Rota para obter o total de depositos do usuário
 router.get('/api/usuarios/:id/dados-depositos', UsuariosDepositosController.getDepositos);
 
-// Rota para obter o total de rendimentos do usuário 
+// Rota para obter o total de rendimentos do usuário
 router.get('/api/usuarios/:id/dados-rendimentos', UsuariosRendimentosController.getRendimentos);
 
 // Rota para obter o suitability do usuário
