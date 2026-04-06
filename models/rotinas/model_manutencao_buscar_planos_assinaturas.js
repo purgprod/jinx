@@ -12,11 +12,9 @@ const BuscarPlanosModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar planos dos usuários:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(new Error('Erro ao buscar planos dos usuários'));
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

@@ -15,10 +15,8 @@ const UpdatePorcentagemAssinaturasModel = {
                     reject(new Error(`Erro ao inativar token com ID: ${novoValor}`));
 		} else {
                     if (results.affectedRows > 0) {
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    } else {
                         logger.warn(`A porcentagem das assinaturas não foi alterada para o novo valor: ${novoValor}`);
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    }
                     resolve(results);
                 }

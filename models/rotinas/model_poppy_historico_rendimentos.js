@@ -31,7 +31,7 @@ const RendimentosPinsModel = {
 
             const [results] = await pool.promise().execute(sqlQuery, [usuario_id, rendimentoTotal]);
 
-            logger.info(`Registro de rendimento histórico concluído com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Registro de rendimento histórico concluído com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

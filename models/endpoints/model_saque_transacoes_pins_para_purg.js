@@ -17,7 +17,7 @@ const TransacoesPinsModel = {
 
             const [results] = await pool.promise().execute(sqlQuery, [usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente]);
 
-            logger.info(`Registro de transação concluído com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Registro de transação concluído com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

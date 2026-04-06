@@ -16,7 +16,7 @@ const AtualizarStatusExecucaoPendenteModel = {
 
             const [results] = await pool.promise().execute(sqlQuery);
 
-            logger.info(`Atualização concluída com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Atualização concluída com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

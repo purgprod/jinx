@@ -25,11 +25,9 @@ const BuscarPinsDisponiveisModel = {
             connection.query(sqlQuery, riscos, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar pins disponíveis:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar tokens'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

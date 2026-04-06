@@ -1,3 +1,28 @@
+#develop-61:
+- Padronização de logs e aumento do pool de conexões:
+
+- logger.js:
+	- Adicionado winston.format.errors({ stack: true }): erros passados como segundo argumento agora exibem stack trace completo no log;
+	- Formato atualizado para incluir metadata estruturada ao final da linha (ex: | {"userId": 42, "amount": "100"});
+
+- database_purg.js:
+	- connectionLimit aumentado de 10 para 50 conexões simultâneas no pool MySQL;
+	- Substituídos console.error e console.log por logger.error e logger.info (consistência com o restante da aplicação);
+
+- models (~86 arquivos):
+	- Removidas todas as linhas logger.info(`Resposta: ${JSON.stringify(results/rows)}`) do caminho de erro (results era undefined, causando log inválido);
+	- Substituídas todas as demais ocorrências de JSON.stringify(results/rows) por expressão inteligente: SELECT exibe contagem de registros ("N registro(s)"), INSERT/UPDATE exibe affectedRows ("affectedRows=N");
+
+- middleware/auth.js:
+	- Alterado logger.info para logger.warn na mensagem de acesso negado por sessão inexistente ou expirada (nível de severidade correto);
+
+- server.js:
+	- Removido timestamp manual [${new Date().toISOString()}] do middleware de log de requisições (Winston já adiciona timestamp automaticamente);
+
+- cron.js:
+	- Todos os 14 blocos catch agora identificam explicitamente o nome da rotina e horário agendado na mensagem de erro (ex: "Erro ao executar rotina poppy-compra-diaria-pins (17:00)");
+	- Erro estruturado com { message, stack } substituindo o objeto bruto;
+
 #develop-60:
 - Correções críticas de segurança (IDOR, autenticação, dados sensíveis):
 	- Adicionada validação de ownership em saque e depósito: usuário só pode operar sobre seu próprio ID;

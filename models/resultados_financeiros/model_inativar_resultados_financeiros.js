@@ -12,7 +12,6 @@ const ResultadosFinanceirosInativarModel = {
             connection.query(sqlQuery, [id], (error, results) => {
                 if (error) {
                     logger.error(`Erro ao inativar resultado financeiro com ID: ${id} - ${error.message}`);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(error);
                 } else {
                     if (results.affectedRows > 0) {
@@ -20,7 +19,6 @@ const ResultadosFinanceirosInativarModel = {
                     } else {
                         logger.warn(`Nenhum resultado financeiro foi inativado para o ID: ${id}. Verifique se este ID existe.`);
                     }
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });

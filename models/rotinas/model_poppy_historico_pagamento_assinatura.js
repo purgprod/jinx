@@ -31,7 +31,7 @@ const HistoricoPagamentoAssinaturaModel = {
 
             const [results] = await pool.promise().execute(sqlQuery, [usuario_id, valorAssinatura]);
 
-            logger.info(`Registro de histórico do pagamento da assinatura concluído com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Registro de histórico do pagamento da assinatura concluído com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

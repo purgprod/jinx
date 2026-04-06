@@ -22,11 +22,9 @@ class UsersUpdateModel {
             connection.query(sqlQuery, values, (error, results) => {
                 if (error) {
                     logger.error(`Erro ao atualizar usuario com ID: ${id} - ${error.message}`);
-                    logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		    reject(error);
                 } else {
                     logger.info(`Usuário com ID: ${id} atualizado com sucesso.`);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });

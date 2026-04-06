@@ -20,10 +20,8 @@ class PlanosAssinaturasHistoricosModel {
     	try {
         	const [rows] = await connection.promise().query(query);
         	return rows; // Retorna todos os dados de planos das assinaturas históricos
-    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
         	logger.error(`Erro ao buscar dados de planos das assinaturas históricos: ${error.message}`);
-        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}
 	}

@@ -12,14 +12,12 @@ const ResultadosFinanceirosAtivarModel = {
             connection.query(sqlQuery, [id], (error, results) => {
                 if (error) {
                     logger.error(`Erro ao ativar resultado financeiro com ID: ${id} - ${error.message}`);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(error);
                 } else {
                     if (results.affectedRows > 0) {
                         logger.info(`Resultado financeiro com ID: ${id} ativado com sucesso.`);
 		    } else {
                         logger.warn(`Nenhum resultado financeiro foi ativado para o ID: ${id}. Verifique se este ID existe.`);                    }
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });

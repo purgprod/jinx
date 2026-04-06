@@ -24,7 +24,7 @@ const InvestimentoRendimentoUsuarioModel = {
                     logger.error(`Erro ao buscar os valores de investimento e rendimento para o usuário ${idUsuario}:`, error);
                     reject(new Error('Erro ao buscar valores do usuário'));
                 } else {
-                    logger.info(`Resultado da consulta para usuário ${idUsuario}: ${JSON.stringify(results)}`);
+                    logger.info(`Resultado da consulta para usuário ${idUsuario}: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results[0] || null);
                 }
             });

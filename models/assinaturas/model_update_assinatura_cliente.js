@@ -15,10 +15,8 @@ const UpdateAssinaturaClienteModel = {
                     reject(new Error(`Erro ao alterar a nova assnatura para o usuário: ${usuario_id}`));
 		} else {
                     if (results.affectedRows > 0) {
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    } else {
                         logger.warn(`A nova assinaturas não foi alterada ${novaAssinatura} no usuário ${usuario_id}`);
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    }
                     resolve(results);
                 }

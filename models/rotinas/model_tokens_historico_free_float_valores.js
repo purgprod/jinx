@@ -25,7 +25,7 @@ const TokensHistoricoFreeFloatValoresModel = {
                     logger.error(`Erro ao buscar os valores de free float para o token ${idToken}:`, error);
                     reject(new Error('Erro ao buscar valores do token'));
                 } else {
-                    logger.info(`Resultado da consulta para token ${idToken}: ${JSON.stringify(results)}`);
+                    logger.info(`Resultado da consulta para token ${idToken}: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results[0] || null);
                 }
             });

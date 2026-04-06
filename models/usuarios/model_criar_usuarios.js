@@ -18,7 +18,7 @@ class UsersCriarModel {
             // Executa a query de inserção
             const [results] = await connection.promise().execute(query, [usuario_id, nome, email, hashedPassword]);
             logger.info('Usuário criado com sucesso.');
-            logger.info(`Resultados da inserção: ${JSON.stringify(results)}`); // Loga os resultados da inserção
+            logger.info(`Resultados da inserção: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`); // Loga os resultados da inserção
             return results; // Opcional: retorna os resultados
         } catch (error) {
             logger.error(`Erro ao criar usuário: ${error.message}`);

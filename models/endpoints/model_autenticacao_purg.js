@@ -13,7 +13,7 @@ exports.findUserByEmail = async (email) => {
         logger.debug(`Parâmetro(s) da query: ${email}`);
 
         const [results] = await executePromise(query, [email]);
-        logger.debug(`Resultados da query: ${JSON.stringify(results)}`);
+        logger.debug(`Resultados da query: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
 
         let user = null;
 

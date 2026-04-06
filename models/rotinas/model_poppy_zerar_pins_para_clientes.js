@@ -36,7 +36,7 @@ const ZerarPinsModel = {
 
             const [results] = await pool.promise().execute(sqlQuery, [token_Id, user_Id]);
 
-            logger.info(`Atualização concluída com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Atualização concluída com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

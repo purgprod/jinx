@@ -17,16 +17,13 @@ class EcossistemaTransacaoModel {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Transações encontrados para o ecossistema`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return rows; // Retorna todas as transações
             } else {
                 logger.warn(`Nenhuma transação encontrado para o ecossistema`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return []; // Retorna um array vazio se não houver transações
             }
         } catch (error) {
             logger.error(`Erro ao buscar transações para o ecossistema: ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             throw error;
         }
     }

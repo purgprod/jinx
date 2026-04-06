@@ -17,10 +17,8 @@ class PagamentosAssinaturasTotalModel {
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; // Retorna todos os dados de pagamento das assinaturas total
-    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
         	logger.error(`Erro ao buscar dados de pagamento das assinaturas total para o ecossistema: ${error.message}`);
-        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}
 	}

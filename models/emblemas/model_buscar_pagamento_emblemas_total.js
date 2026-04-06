@@ -19,10 +19,8 @@ class PagamentosEmblemasTotalModel {
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; 
-    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
         	logger.error(`Erro ao buscar dados de pagamentos totais dos emblemas para o ecossistema: ${error.message}`);
-        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}
 	}

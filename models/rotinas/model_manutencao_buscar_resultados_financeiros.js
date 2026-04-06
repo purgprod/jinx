@@ -12,11 +12,9 @@ const BuscarResultadosFinanceirosModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar resultados financeiros:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(new Error('Erro ao buscar resultados financeiros'));
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

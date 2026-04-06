@@ -17,7 +17,7 @@ const AtualizarDiasVencimentoModel = {
 
             const [results] = await connection.promise().execute(sqlQuery, [dias_vencimento, id_token]);
 
-            logger.info(`Atualização concluída com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Atualização concluída com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

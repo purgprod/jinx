@@ -10,36 +10,36 @@ const logger = require('../../logger');
 cron.schedule('01 00 * * *', async () => {
     try {
         logger.info('[Manutenção] - Iniciando execução da rotina de [Manutenção] - Histórico de free float dos Pins agendada às 00:01:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/tokens-historico-free-float';
-        
+
         // Chamar o endpoint principal (POST)
         const mainResponse = await axios.post(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/1/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/1/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/1/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-    
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina tokens-historico-free-float (00:01)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -47,36 +47,36 @@ cron.schedule('01 00 * * *', async () => {
 cron.schedule('30 0 * * *', async () => {
     try {
         logger.info('[Manutenção] - Iniciando execução da rotina [Manutenção] -Histórico do valor investido e rendimentos por usuário agendada às 00:30:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/investimento-rendimento-historico';
-        
+
         // Chamar o endpoint principal (POST)
         const mainResponse = await axios.post(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/2/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/2/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/2/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina investimento-rendimento-historico (00:30)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -85,36 +85,36 @@ cron.schedule('30 0 * * *', async () => {
 cron.schedule('45 0 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Checagem de Pins em modo sinistro agendada às 00:45:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/checagem-pins-sinistro';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/3/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/3/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/3/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina checagem-pins-sinistro (00:45)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -122,36 +122,36 @@ cron.schedule('45 0 * * *', async () => {
 cron.schedule('0 1 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Checagem de Resultados Financeiros vencidos agendada às 01:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-inativar-resultado-financeiro-vencido';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
-        logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);     
-            
+
+        logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/4/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/4/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/4/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina manutencao-inativar-resultado-financeiro-vencido (01:00)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -159,36 +159,36 @@ cron.schedule('0 1 * * *', async () => {
 cron.schedule('0 16 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Atualizar o ranking dos usuários às 16:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-ranking-usuarios';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-       
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/9/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/9/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/9/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina manutencao-ranking-usuarios (16:00)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -196,36 +196,36 @@ cron.schedule('0 16 * * *', async () => {
 cron.schedule('10 16 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Atualizar o sinistro dos usuários às 16:10:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-sinistro-usuarios';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-       
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/10/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/10/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/10/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina manutencao-sinistro-usuarios (16:10)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -233,36 +233,36 @@ cron.schedule('10 16 * * *', async () => {
 cron.schedule('0 19 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Histórico dos planos dos usuários às 19:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-planos-assinaturas-historico';
-        
+
         // Chamar o endpoint principal (POST)
         const mainResponse = await axios.post(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-       
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/13/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/13/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/13/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina manutencao-planos-assinaturas-historico (19:00)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -270,36 +270,36 @@ cron.schedule('0 19 * * *', async () => {
 cron.schedule('58 23 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Manutenção] - Atualizar o status execução para Pendente às 23:58:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/manutencao-update-status-execucao-pendente';
-        
+
         // Chamar o endpoint principal (GET)
         const mainResponse = await axios.get(mainUrl);
-        
+
         logger.info(`[Manutenção] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-       
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/14/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/14/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/14/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Manutenção] - Erro ao executar rotina manutencao-update-status-execucao-pendente (23:58)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -311,36 +311,36 @@ cron.schedule('58 23 * * *', async () => {
 cron.schedule('0 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Recompra de Pins em modo sinistro agendada às 15:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-recompra-pins-sinistro';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/5/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/5/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/5/manutencao-atualizar-ultima-execucao';
 	    const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-recompra-pins-sinistro (15:00)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -348,36 +348,36 @@ cron.schedule('0 15 * * *', async () => {
 cron.schedule('10 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Recompra de Pins vencidos agendada às 15:10:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-recompra-pins-vencidos';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/6/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/6/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/6/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-recompra-pins-vencidos (15:10)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -386,36 +386,36 @@ cron.schedule('10 15 * * *', async () => {
 cron.schedule('15 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Pagamento dos rendimentos diário agendada às 15:15:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-pagamento-rendimento-diario';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/7/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/7/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/7/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-pagamento-rendimento-diario (15:15)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -423,36 +423,36 @@ cron.schedule('15 15 * * *', async () => {
 cron.schedule('20 15 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Pagamento das assinaturas diário agendada às 15:20:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-pagamento-assinatura-diario';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/8/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/8/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/8/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-pagamento-assinatura-diario (15:20)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -460,36 +460,36 @@ cron.schedule('20 15 * * *', async () => {
 cron.schedule('0 17 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Compra diária de Pins agendada às 17:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-compra-diaria-pins';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/11/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/11/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/11/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-compra-diaria-pins (17:00)', { message: error.message, stack: error.stack });
     }
 });
 
@@ -497,36 +497,36 @@ cron.schedule('0 17 * * *', async () => {
 cron.schedule('0 18 * * *', async () => {
     try {
         logger.info('Iniciando execução da rotina [Poppy] - Pagamento dos emblemas diário agendada às 18:00:00');
-        
+
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/poppy-pagamento-emblema-diario';
-        
+
         // Chamar o endpoint principal (PUT)
         const mainResponse = await axios.put(mainUrl);
-        
+
         logger.info(`[Poppy] - Execução das regras de negócio da rotina concluída com sucesso. Resposta: ${mainResponse.data.message}`);
-        
+
         // Chamar o primeiro endpoint adicional (POST)
         if (mainResponse.data.message === 'Rotinas executadas com sucesso') {
         const executarUrl = 'http://localhost:3000/api/rotinas/12/manutencao-status-execucao-sucesso';
         const executarResponse = await axios.post(executarUrl);
-    
+
         logger.info(`[Manutenção] - Status da última execução da rotina alterado com sucesso. Resposta: ${executarResponse.data.message}`);
         } else {
         // Caso a resposta não seja 'Rotinas executadas com sucesso', executar o seguinte endpoint
                 const falhaUrl = 'http://localhost:3000/api/rotinas/12/manutencao-status-execucao-falha';
                 const falhaResponse = await axios.put(falhaUrl);
-    
+
                 logger.info(`[Manutenção] - Status da execução com falha atualizado com sucesso. Resposta: ${falhaResponse.data.message}`);
-                } 
+                }
        // Chamar o segundo endpoint adicional (PUT)
             const atualizarUrl = 'http://localhost:3000/api/rotinas/12/manutencao-atualizar-ultima-execucao';
             const atualizarResponse = await axios.put(atualizarUrl);
-            
+
             logger.info(`[Manutenção] - Último horário de execução da rotina alterado com sucesso. Resposta: ${atualizarResponse.data.message}`);
-        
+
     } catch (error) {
-        logger.error(`[Manutenção] - Erro ao executar tarefa agendada:`, error);
+        logger.error('[Poppy] - Erro ao executar rotina poppy-pagamento-emblema-diario (18:00)', { message: error.message, stack: error.stack });
     }
 });
 

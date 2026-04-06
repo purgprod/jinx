@@ -16,10 +16,9 @@ const BuscarResultadosSinistroModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar resultados financeiros em sinistro:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar resultados financeiros em sinistro'));
                 } else {
-                    logger.info(`Resultados encontrados: ${JSON.stringify(results)}`);
+                    logger.info(`Resultados encontrados: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results);
                 }
             });

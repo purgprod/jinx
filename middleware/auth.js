@@ -2,7 +2,7 @@ const logger = require('../logger');
 
 exports.checkAuthenticated = (req, res, next) => {
     if (!req.session.user) {
-        logger.info('Acesso negado - Sessão não existe ou está expirada');
+        logger.warn('Acesso negado - Sessão não existe ou está expirada');
         return res.status(401).json({ 
             authenticated: false,
             message: 'Acesso negado. Por favor, faça login primeiro.'

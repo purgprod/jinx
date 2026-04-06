@@ -18,16 +18,13 @@ class DadosEmpresaModel {
             const [rows] = await connection.promise().query(query, [id_empresa]);
             if (rows.length > 0) {
                 logger.info(`Dados cadastrais encontrados para a empresa ID: ${id_empresa}`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return rows[0];
             } else {
                 logger.warn(`Nenhum dado cadastral encontrado para a empresa ID: ${id_empresa}`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return null;
             }
         } catch (error) {
             logger.error(`Erro ao buscar dados cadastrais para o empresa com ID: ${id_empresa} - ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             throw error;
         }
     }

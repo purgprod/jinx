@@ -12,11 +12,9 @@ const BuscarRendimentosModel = {
             connection.query(sqlQuery, [data], (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar rendimentos:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar rendimentos'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

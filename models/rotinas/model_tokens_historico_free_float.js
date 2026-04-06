@@ -12,7 +12,7 @@ const TokensModel = {
                     logger.error('Erro ao buscar tokens ativos:', error);
                     reject(new Error('Erro ao buscar tokens ativos: ' + error.message));
                 } else {
-                    logger.info(`Resultado da consulta: ${JSON.stringify(results)}`);
+                    logger.info(`Resultado da consulta: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results);
                 }
             });

@@ -13,11 +13,9 @@ const BuscarPinsModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar Pins ativos:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(new Error('Erro ao buscar Pins ativos'));
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

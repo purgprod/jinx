@@ -21,7 +21,7 @@ class UsersInativarModel {
                     } else {
                         logger.warn(`Nenhum usuario foi inativado para o ID: ${id}. Verifique se este ID existe.`);
                     }
-                    logger.info(`Resultados da query: ${JSON.stringify(results)}`);
+                    logger.info(`Resultados da query: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results);
                 }
             });

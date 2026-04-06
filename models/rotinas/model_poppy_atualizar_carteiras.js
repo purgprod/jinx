@@ -20,7 +20,7 @@ const AtualizarCarteiraUsuarioModel = {
 
             const [results] = await pool.promise().execute(sqlQuery, [novo_saldo, data_atual, usuario_id]);
 
-            logger.info(`Saldo da carteira atualizado com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Saldo da carteira atualizado com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de carteiras afetadas: ${results.affectedRows}`);
             logger.info(`Data da última alteração: ${data_atual.toISOString()}`);
 

@@ -18,7 +18,6 @@ class PurgDadosRendimentosHistoricosModel {
         
         try {
             const [rows] = await connection.promise().query(query, [usuarioId]);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`); // Logando a resposta aqui, após `rows` ser definido
             return rows; // Retorna todos os dados financeiros históricos
         } catch (error) {
             logger.error(`Erro ao buscar dados de rendimentos históricos para a Purg: ${error.message}`);

@@ -12,11 +12,9 @@ const BuscarSaldosCarteirasModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar saldos das carteiras:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(new Error('Erro ao buscar saldos das carteiras'));
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

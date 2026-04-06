@@ -12,11 +12,9 @@ const BuscarAssinaturaModel = {
             connection.query(sqlQuery, [data], (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar assinatura do usuário:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar assinatura do usuário'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

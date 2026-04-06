@@ -17,10 +17,8 @@ class EcossistemaSaquesHistoricosModel {
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; // Retorna todos os dados de saques históricos
-    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
         	logger.error(`Erro ao buscar dados de saques históricos para o ecossistema: ${error.message}`);
-        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}
 	}

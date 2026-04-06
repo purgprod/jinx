@@ -12,7 +12,7 @@ const UsuariosModel = {
                     logger.error('Erro ao buscar usuários ativos:', error);
                     reject(new Error('Erro ao buscar usuários ativos: ' + error.message));
                 } else {
-                    logger.info(`Resultado da consulta: ${JSON.stringify(results)}`);
+                    logger.info(`Resultado da consulta: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
                     resolve(results);
                 }
             });

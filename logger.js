@@ -19,11 +19,22 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 const logFormat = winston.format.combine(
     winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) => {
+    winston.format.errors({ stack: true }),
+    winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
         const parts = dateFormatter.formatToParts(new Date(timestamp));
         const get = (type) => parts.find(p => p.type === type).value;
         const formattedDate = `${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}:${get('second')}`;
-        return `${formattedDate} [${level}]: ${message}`;
+
+        let log = `${formattedDate} [${level}]: ${message}`;
+
+        if (stack) log += `\n${stack}`;
+
+        const metaKeys = Object.keys(meta).filter(k => k !== 'service');
+        if (metaKeys.length > 0) {
+            log += ` | ${JSON.stringify(meta)}`;
+        }
+
+        return log;
     })
 );
 

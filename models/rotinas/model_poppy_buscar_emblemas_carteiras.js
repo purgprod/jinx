@@ -13,11 +13,9 @@ const BuscarEmblemasCarteirasModel = {
             connection.query(sqlQuery, [usuario_id], (error, results) => { // Passei usuario_id como parâmetro
                 if (error) {
                     logger.error('Erro ao buscar emblemas das carteiras:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar emblemas das carteiras'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

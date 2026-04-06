@@ -97,7 +97,7 @@ const isAuthenticated = (req, res, next) => {
 
 // Log de requisições
 app.use((req, res, next) => {
-    logger.info(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    logger.info(`${req.method} ${req.url}`);
     next();
 });
 

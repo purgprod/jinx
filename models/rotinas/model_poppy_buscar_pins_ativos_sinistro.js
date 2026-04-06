@@ -13,11 +13,9 @@ const BuscarPinsSinistroModel = {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar pins em sinistro:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    reject(new Error('Erro ao buscar pins em sinistro'));
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

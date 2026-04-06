@@ -16,7 +16,6 @@ class UsuariosProTotalModel {
         logger.info(`Recuperando total de usuários com assinatura Poppy Pro`);
         try {
             const [rows] = await connection.promise().query(query);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             return rows; 
         } catch (error) {
             logger.error(`Erro ao buscar total de assinaturas Poppy Pro: ${error.message}`);

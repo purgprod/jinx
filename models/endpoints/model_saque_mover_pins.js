@@ -44,7 +44,7 @@ const MoverPinsModel = {
                 token_Id
             ]);
 
-            logger.info(`Atualização concluída com sucesso: ${JSON.stringify(results)}`);
+            logger.info(`Atualização concluída com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;
@@ -104,7 +104,7 @@ const MoverPinsModel = {
                 usuario_Id
             ]);
 
-            logger.info(`Atualização para usuário concluída: ${JSON.stringify(results)}`);
+            logger.info(`Atualização para usuário concluída: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);
 
             return results;

@@ -18,15 +18,12 @@ class UsersSuitabilityComplementarModel {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Suitability complementar encontrado para o usuário com ID: ${usuarioId}`);
-		logger.info(`Resposta: ${JSON.stringify(rows)}`);
             } else {
                 logger.warn(`Nenhum suitability complementar encontrado para o usuário com ID: ${usuarioId}`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	    }
             return rows;
         } catch (error) {
             logger.error(`Erro ao buscar suitability complementar para o usuário com ID: ${usuarioId} - ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	    throw error;
         }
     }

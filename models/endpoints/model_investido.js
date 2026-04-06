@@ -17,16 +17,13 @@ class InvestidoModel {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Investido encontrados para o usuário ID: ${usuarioId}`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return rows[0];
             } else {
                 logger.warn(`Nenhum investido encontrado para o usuário ID: ${usuarioId}`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
                 return null;
             }
         } catch (error) {
             logger.error(`Erro ao buscar investido para o usuário com ID: ${usuarioId} - ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             throw error;
         }
     }

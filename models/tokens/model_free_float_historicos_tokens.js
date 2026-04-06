@@ -16,7 +16,6 @@ class UsersFreeFloatTokensHistoricosModel {
         
         try {
             const [rows] = await connection.promise().query(query, [tokenId]);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             return rows;
         } catch (error) {
             logger.error(`Erro ao buscar dados de free float históricos para o token ID: ${tokenId} - ${error.message}`);

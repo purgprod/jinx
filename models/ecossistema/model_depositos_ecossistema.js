@@ -17,16 +17,13 @@ class EcossistemaDepositosModel {
             const [rows] = await connection.promise().query(query, [usuarioId]);
             if (rows.length > 0) {
                 logger.info(`Depositos encontrados para o ecossistema`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		return rows[0];
             } else {
                 logger.warn(`Nenhum deposito encontrado para o ecossistema`);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		return null;
             }
         } catch (error) {
             logger.error(`Erro ao buscar depositos para o ecossistema: ${error.message}`);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	    throw error;
         }
     }

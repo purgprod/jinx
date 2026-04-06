@@ -11,11 +11,9 @@ const BuscarRatingsPinsSinistroModel = {
             connection.query(sqlQuery, [id_token], (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar ratings dos Pins em sinistro:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar ratings dos Pins em sinistro'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

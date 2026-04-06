@@ -13,11 +13,9 @@ const BuscarDepositoPendenteModel = {
             connection.query(sqlQuery, [usuario_id], (error, results) => {
                 if (error) {
                     logger.error('Erro ao buscar depositos do usuario_id:', error);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     reject(new Error('Erro ao buscar depositos do usuario_id'));
                 } else {
                     resolve(results);
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

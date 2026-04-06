@@ -28,7 +28,7 @@ const BuscarUsuariosQuantidadeRendimentoPinsModel = {
 
       const [results] = await pool.promise().execute(sqlQuery, [token_Id]);
 
-      logger.info(`Resultado da consulta: ${JSON.stringify(results)}`);
+      logger.info(`Resultado da consulta: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
       logger.info(`Número de usuários encontrados: ${results.length}`);
 
       return results;

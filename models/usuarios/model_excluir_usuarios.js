@@ -14,14 +14,11 @@ class UsersExcluirModel {
             if (result.affectedRows === 0) {
                 const message = 'Usuário não encontrado.';
                 logger.warn(message);
-                logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw new Error(message);
             }
             logger.info('Usuário excluído com sucesso.');
-	    logger.info(`Resposta: ${JSON.stringify(rows)}`);
         } catch (error) {
             logger.error(`Erro ao excluir usuário: ${error.message}`);
-	    logger.info(`Resposta: ${JSON.stringify(rows)}`);
             throw error;
         }
     }

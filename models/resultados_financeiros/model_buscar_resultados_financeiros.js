@@ -12,10 +12,8 @@ const ResultadosFinanceirosBuscarModel = {
                 if (error) {
                     logger.error('Erro ao executar query de obter resultados financeiros: ' + error.message);
                     reject(error);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 } else {
                     logger.info('Query de obter resultados financeiros executada com sucesso.');
-                    logger.info(`Resposta: ${JSON.stringify(results)}`);
                     resolve(results);
                 }
             });

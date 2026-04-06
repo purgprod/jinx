@@ -15,10 +15,8 @@ const UpdateAssinaturaAceiteSuitabilityModel = {
                     reject(new Error(`Erro ao alterar o novo aceite de suitability para o usuário: ${usuario_id}`));
 		} else {
                     if (results.affectedRows > 0) {
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    } else {
                         logger.warn(`O novo aceite de suitability foi alterada para ${aceiteSuitability} no usuário ${usuario_id}`);
-                        logger.info(`Resposta: ${JSON.stringify(results)}`);
 		    }
                     resolve(results);
                 }

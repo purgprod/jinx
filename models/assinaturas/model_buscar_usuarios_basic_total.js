@@ -16,7 +16,6 @@ class UsuariosBasicTotalModel {
         logger.info(`Recuperando total de usuários com assinatura Poppy Basic`);
         try {
             const [rows] = await connection.promise().query(query);
-            logger.info(`Resposta: ${JSON.stringify(rows)}`);
             return rows; 
         } catch (error) {
             logger.error(`Erro ao buscar total de assinaturas Poppy Basic: ${error.message}`);

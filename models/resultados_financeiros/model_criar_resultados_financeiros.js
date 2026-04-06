@@ -31,10 +31,8 @@ const ResultadosFinanceirosCriarModel = {
             connection.query(sqlQuery, values, (error, results) => {
                 if (error) {
                     reject(error);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 } else {
                     resolve(results);
-		    logger.info(`Resposta: ${JSON.stringify(results)}`);
                 }
             });
         });

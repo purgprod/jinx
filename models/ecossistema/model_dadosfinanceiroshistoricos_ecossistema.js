@@ -20,10 +20,8 @@ class EcossistemaDadosFinanceirosHistoricosModel {
     	try {
         	const [rows] = await connection.promise().query(query, [usuarioId]);
         	return rows; // Retorna todos os dados financeiros históricos
-    		logger.info(`Resposta: ${JSON.stringify(rows)}`);
 	} catch (error) {
         	logger.error(`Erro ao buscar dados de valor da carteira históricos para o ecossistema: ${error.message}`);
-        	logger.info(`Resposta: ${JSON.stringify(rows)}`);
 		throw error;
     	}
 	}
