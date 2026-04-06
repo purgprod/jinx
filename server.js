@@ -1,9 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const cors = require('cors'); // <--- CORREÇÃO: Necessário para evitar o erro de CORS
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const logger = require('./logger');
-const cron = require('node-cron');
 const axios = require('axios');
 const controller_autenticacao_jinx = require('./controllers/controller_autenticacao_jinx');
 const route_resultados_financeiros = require('./routes/route_resultados_financeiros');
@@ -18,37 +20,52 @@ const route_depositos = require('./routes/route_depositos');
 const route_endpoints = require('./routes/route_endpoints');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Se o seu servidor está atrás de um proxy (Nginx/HTTPS), isso é necessário para cookies
+// Headers de segurança (XSS, CSP, etc.)
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Se o servidor está atrás de um proxy (Nginx/HTTPS)
 app.set('trust proxy', 1);
 
-// 1. CONFIGURAÇÃO DE CORS
-// Isso resolve o erro "CORS error" e o "401 preflight" no navegador
+// Configuração de CORS
 app.use(cors({
-    origin: true, // Permite a origem que está requisitando
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-    credentials: true // Permite o envio de cookies/sessões entre domínios
+    credentials: true
 }));
 
+// Rate limiting no login (máx. 10 tentativas por 15 min por IP)
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 // Executa as crons
-const cronPath = path.join(__dirname, 'controllers/rotinas/cron.js');
-require(cronPath);
+try {
+    const cronPath = path.join(__dirname, 'controllers/rotinas/cron.js');
+    require(cronPath);
+} catch (err) {
+    logger.error('Erro ao carregar cron.js:', err.message);
+}
 
 // Configuração do store de sessão
 const sessionStore = new session.MemoryStore();
 
 app.use(session({
     store: sessionStore,
-    secret: 'seuSegredoAqui', 
-    resave: false, // Alterado para false para melhor performance com MemoryStore
-    saveUninitialized: false, 
-    rolling: true, 
+    secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET não definido no .env'); })(),
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
     cookie: {
-        secure: true, // Mantenha true se usar HTTPS. Se testar em localhost puro (HTTP), mude para false.
-        sameSite: 'none', // Necessário para cookies em domínios diferentes com HTTPS
-        maxAge: 600000 
+        secure: true,
+        sameSite: 'none',
+        maxAge: 600000
     }
 }));
 
@@ -82,8 +99,8 @@ app.use((req, res, next) => {
 
 // --- ENDPOINTS DE AUTENTICAÇÃO ---
 
-app.post('/auth/login/jinx', (req, res, next) => {
-    logger.info('Login attempt:', req.body);
+app.post('/auth/login/jinx', loginLimiter, (req, res, next) => {
+    logger.info(`Login attempt for user: ${req.body?.username}`);
     next();
 }, controller_autenticacao_jinx.login);
 
@@ -121,6 +138,15 @@ app.use('/', route_depositos);
 app.use('/', route_endpoints);
 
 // Iniciar o servidor
-app.listen(port, () => {
+const server = app.listen(port, () => {
     logger.info(`Servidor rodando em http://localhost:${port}`);
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        logger.error(`Porta ${port} já está em uso.`);
+    } else {
+        logger.error('Erro ao iniciar o servidor:', err.message);
+    }
+    process.exit(1);
 });
