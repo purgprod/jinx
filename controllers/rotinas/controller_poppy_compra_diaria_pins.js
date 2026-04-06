@@ -175,31 +175,27 @@ const CompraDiariaPinsController = {
 
                         const totalTokens = tokens.reduce((acc, token) => acc + token.quantidade_tokens, 0);
 
-                        tokens.forEach(token => {
-                            riscos[token.risco] = (token.quantidade_tokens / totalTokens) * 100;
-                        });
+                        tokens.reduce((acc, token) => {
+                            acc[token.risco] = (token.quantidade_tokens / totalTokens) * 100;
+                            return acc;
+                        }, riscos);
 
                         // Ajuste para garantir que o total seja 100%
                         const totalCalculado = Object.values(riscos).reduce((acc, value) => acc + value, 0);
                         if (Math.round(totalCalculado) !== 100) {
                             const ajuste = 100 - totalCalculado;
-                            const maiorRisco = Object.keys(riscos).reduce((a, b) => 
+                            const maiorRisco = Object.keys(riscos).reduce((a, b) =>
                                 riscos[a] > riscos[b] ? a : b
                             );
                             riscos[maiorRisco] += ajuste;
                         }
 
                         // Calculando distribuição por perfil
-                        Object.keys(riscos).forEach(risco => {
+                        Object.keys(riscos).reduce((acc, risco) => {
                             const perfil = ratings.find(r => r.rating === risco)?.perfil || 'Não Classificado';
-                            const percentagem = riscos[risco];
-                            
-                            if (perfis[perfil]) {
-                                perfis[perfil] += percentagem;
-                            } else {
-                                perfis[perfil] = percentagem;
-                            }
-                        });
+                            acc[perfil] = (acc[perfil] || 0) + riscos[risco];
+                            return acc;
+                        }, perfis);
 
                         Object.keys(perfis).forEach(perfil => {
                             perfis[perfil] = Number(perfis[perfil].toFixed(2));

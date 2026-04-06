@@ -21,5 +21,14 @@ pool.getConnection((err, connection) => {
     connection.release();
 });
 
+// Health check periódico a cada 30 segundos para detectar falhas de conexão cedo
+setInterval(() => {
+    pool.query('SELECT 1', (err) => {
+        if (err) {
+            logger.error('Health check do banco de dados falhou:', { message: err.message, code: err.code });
+        }
+    });
+}, 30000);
+
 module.exports = pool;
 

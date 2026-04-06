@@ -1,3 +1,20 @@
+#develop-62:
+- Melhorias de performance (itens seguros):
+
+- database_purg.js (#13):
+	- Adicionado health check periódico (SELECT 1 a cada 30s) para detectar falhas de conexão proativamente e registrar no log;
+
+- controller_poppy_compra_diaria_pins.js (#12):
+	- Substituídos forEach com efeitos colaterais por reduce na construção dos objetos riscos e perfis (linhas 178-206);
+
+- Banco de dados — novos indexes (#11):
+	- saques: criado idx_saques_usuario_id (usuario_id);
+	- depositos: criado idx_depositos_usuario_id (usuario_id);
+	- rendimentos: criado idx_rendimentos_usuario_id (usuario_id);
+	- transacoes: criados idx_transacoes_usuario_id (usuario_id) e idx_transacoes_id_token (id_token);
+	- resultados_financeiros: criados idx_rf_status_ativo (status_ativo) e idx_rf_flag_sinistro (flag_sinistro);
+	- Todos aplicados com ALGORITHM=INPLACE, LOCK=NONE (sem downtime);
+
 #develop-61:
 - Padronização de logs e aumento do pool de conexões:
 
