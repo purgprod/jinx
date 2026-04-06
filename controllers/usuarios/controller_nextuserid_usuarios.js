@@ -10,7 +10,7 @@ class UsuariosNextUserIdController {
         logger.info('Tentativa de obtenção do próximo usuario_id');
 
         try {
-            const nextId = await UsuariosModel.getNextUserId();
+            const nextId = await UsuariosNextUserIdModel.getNextUserId();
             logger.info('Próximo usuario_id obtido com sucesso', { nextId });
             res.json({ nextId });
         } catch (error) {

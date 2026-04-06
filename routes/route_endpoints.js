@@ -33,13 +33,7 @@ router.post('/endpoints/login', AuthController.login);
 router.post('/endpoints/register', AuthController.register);
 
 // Demais rotas requerem autenticação
-router.use('/endpoints/*', (req, res, next) => {
-    if (req.path === '/endpoints/login' || req.path === '/endpoints/register') {
-        next(); // Isenta login e register do middleware de autenticação
-    } else {
-        authMiddleware.checkAuthenticated(req, res, next); // Aplica o middleware
-    }
-});
+router.use('/endpoints/*', authMiddleware.checkAuthenticated);
 
 // Rota para logout
 router.post('/endpoints/logout', authMiddleware.checkAuthenticated, AuthController.logout);

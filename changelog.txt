@@ -1,3 +1,15 @@
+#develop-59:
+- Correção no redirect HTTP→HTTPS do Nginx (jinx-dev.purg.com.br):
+	- Alterado código de redirect de 301 para 308, preservando o método HTTP (POST) e o corpo da requisição no redirecionamento para HTTPS;
+
+- Correção no middleware de autenticação de endpoints (route_endpoints.js):
+	- Removido bloco if/else redundante e ineficaz que tentava isentar login e register da autenticação via req.path (o path já estava incorreto neste contexto);
+	- Middleware de autenticação agora é aplicado diretamente via router.use('/endpoints/*', authMiddleware.checkAuthenticated);
+	- Login e register continuam isentos por estarem definidos antes do middleware;
+
+- Correção no controller de próximo ID de usuário (controller_nextuserid_usuarios.js):
+	- Corrigida referência de model de UsuariosModel para UsuariosNextUserIdModel na chamada getNextUserId();
+
 #develop-58:
 - Correções e melhorias no servidor (server.js):
 	- Adicionado suporte a CORS com configuração de origens, métodos e headers permitidos;
