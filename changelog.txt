@@ -1,4 +1,27 @@
-#develop-57: 
+#develop-58:
+- Correções e melhorias no servidor (server.js):
+	- Adicionado suporte a CORS com configuração de origens, métodos e headers permitidos;
+	- Adicionado `trust proxy` para compatibilidade com servidores atrás de Nginx/HTTPS;
+	- Alterado `resave` de `true` para `false` para melhor performance com MemoryStore;
+	- Adicionado `sameSite: 'none'` no cookie de sessão para suporte a domínios diferentes com HTTPS;
+	- Ativado `secure: true` nos cookies de sessão;
+	- Removido log de `req.query` e `req.body` das requisições (evita exposição de dados sensíveis nos logs);
+	- Removido logs desnecessários nas rotas de páginas estáticas (/login e /config);
+	- Limpeza geral de comentários redundantes nas declarações de rotas;
+
+- Atualização de dependências (package.json):
+	- Adicionado pacote `cors` ^2.8.6;
+	- Adicionado pacote `dotenv` ^17.4.0;
+	- Adicionado pacote `nodemailer` ^8.0.4;
+	- Atualizado `bcrypt` de ^5.1.1 para ^6.0.0;
+
+- Correção no controller de pagamento de assinatura diária (controller_poppy_pagamento_assinatura_diario.js):
+	- Alterada mensagem de retorno de 'Processamento concluído' para 'Rotinas executadas com sucesso';
+
+- Correção no banco de dados (database_purg.js):
+	- Alterado host do banco de dados de 'dev-purg.c1geomm2m0qt.us-east-2.rds.amazonaws.com' para 'localhost';
+
+#develop-57:
 - Melhorias no deposito: 
 	- Criado a tela de Depósitos na Jinx com as funções:
 		- Buscar depósitos com status Analisando;

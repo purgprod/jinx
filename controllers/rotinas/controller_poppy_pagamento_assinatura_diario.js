@@ -110,7 +110,7 @@ const PagamentoAssinaturaController = {
             }
 
             return res.status(200).json({
-                message: 'Processamento concluído',
+                message: 'Rotinas executadas com sucesso',
                 sucesso: rendimentosProcessados,
                 falhas: usuariosNaoProcessados
             });

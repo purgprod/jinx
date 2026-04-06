@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const cors = require('cors'); // <--- CORREÇÃO: Necessário para evitar o erro de CORS
 const logger = require('./logger');
 const cron = require('node-cron');
 const axios = require('axios');
@@ -19,6 +20,18 @@ const route_endpoints = require('./routes/route_endpoints');
 const app = express();
 const port = 3000;
 
+// Se o seu servidor está atrás de um proxy (Nginx/HTTPS), isso é necessário para cookies
+app.set('trust proxy', 1);
+
+// 1. CONFIGURAÇÃO DE CORS
+// Isso resolve o erro "CORS error" e o "401 preflight" no navegador
+app.use(cors({
+    origin: true, // Permite a origem que está requisitando
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    credentials: true // Permite o envio de cookies/sessões entre domínios
+}));
+
 // Executa as crons
 const cronPath = path.join(__dirname, 'controllers/rotinas/cron.js');
 require(cronPath);
@@ -28,13 +41,14 @@ const sessionStore = new session.MemoryStore();
 
 app.use(session({
     store: sessionStore,
-    secret: 'seuSegredoAqui', // Substitua por um segredo único e seguro
-    resave: true,
-    saveUninitialized: false, // Salva a sessão apenas se algo foi armazenado
-    rolling: true, // Renova o tempo de expiração a cada requisição
+    secret: 'seuSegredoAqui', 
+    resave: false, // Alterado para false para melhor performance com MemoryStore
+    saveUninitialized: false, 
+    rolling: true, 
     cookie: {
-        secure: false, // Defina como true se estiver usando HTTPS
-        maxAge: 600000 // Expira após 10 minutos
+        secure: true, // Mantenha true se usar HTTPS. Se testar em localhost puro (HTTP), mude para false.
+        sameSite: 'none', // Necessário para cookies em domínios diferentes com HTTPS
+        maxAge: 600000 
     }
 }));
 
@@ -47,7 +61,7 @@ sessionStore.clear((err) => {
     }
 });
 
-// Middleware para servir arquivos estáticos e processar JSON
+// 2. PARSERS E ARQUIVOS ESTÁTICOS (Devem vir antes das rotas)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -60,15 +74,14 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
-// Adicionando log para cada requisição recebida
+// Log de requisições
 app.use((req, res, next) => {
     logger.info(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    logger.info('Query Params:', req.query);
-    logger.info('Body:', req.body);
     next();
 });
 
-// Endpoints de autenticação
+// --- ENDPOINTS DE AUTENTICAÇÃO ---
+
 app.post('/auth/login/jinx', (req, res, next) => {
     logger.info('Login attempt:', req.body);
     next();
@@ -84,46 +97,28 @@ app.post('/auth/logout/jinx', (req, res, next) => {
     next();
 }, controller_autenticacao_jinx.logout);
 
-// Servir páginas estáticas para rotas específicas
+// --- PÁGINAS ESTÁTICAS ---
+
 app.get('/login', (req, res) => {
-    logger.info('Serving login page');
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/config', (req, res) => {
-    logger.info('Serving config page');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Usar o roteador para resultados financeiros
-app.use('/', route_resultados_financeiros); // Prefixo das rotas para resultados financeiros
+// --- ROTAS DO SISTEMA ---
 
-// Usar o roteador para tokens
-app.use('/', route_tokens); // Prefixo das rotas para tokens
-
-//Usar o roteador para usuarios
-app.use('/', route_usuarios); // Prefixo das rotas para usuarios
-
-//Usar o roteador para ecossistema
-app.use('/', route_ecossistema); // Prefixo das rotas para ecossistema
-
-//Usar o roteador para rotinas
-app.use('/', route_rotinas); // Prefixo das rotas para rotinas
-
-//Usar o roteador para assinaturas
-app.use('/', route_assinaturas); // Prefixo das rotas para assinaturas
-
-//Usar o roteador para emblemas
-app.use('/', route_emblemas); // Prefixo das rotas para emblemas
-
-//Usar o roteador para saques
-app.use('/', route_saques); // Prefixo das rotas para saques
-
-//Usar o roteador para depositos
-app.use('/', route_depositos); // Prefixo das rotas para depositos
-
-//Usar o roteador para endpoints
-app.use('/', route_endpoints); // Prefixo das rotas para endpoints
+app.use('/', route_resultados_financeiros);
+app.use('/', route_tokens);
+app.use('/', route_usuarios);
+app.use('/', route_ecossistema);
+app.use('/', route_rotinas);
+app.use('/', route_assinaturas);
+app.use('/', route_emblemas);
+app.use('/', route_saques);
+app.use('/', route_depositos);
+app.use('/', route_endpoints);
 
 // Iniciar o servidor
 app.listen(port, () => {
