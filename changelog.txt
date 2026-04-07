@@ -1,3 +1,14 @@
+#develop-64:
+- Correções de segurança HTTP/HTTPS e rate limiting:
+
+- nginx (jinx-dev.purg.com.br):
+	- proxy_set_header X-Forwarded-For alterado de $proxy_add_x_forwarded_for para $remote_addr;
+	- Motivo: $proxy_add_x_forwarded_for permitia que clientes forjassem seu IP enviando um cabeçalho X-Forwarded-For falso, burlando o rate limiting;
+
+- server.js:
+	- Adicionado keyGenerator no loginLimiter: normaliza IPs IPv4-mapped-IPv6 (::ffff:x.x.x.x) para o formato IPv4 puro, corrigindo o erro ERR_ERL_KEY_GEN_IPV6 que deixava o rate limiting inoperante para clientes IPv6;
+	- Adicionado httpOnly: true explícito no cookie de sessão (era o padrão implícito do express-session, agora documentado explicitamente);
+
 #develop-63:
 - Roteamento client-side via History API (SPA sem dependências novas):
 

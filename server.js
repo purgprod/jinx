@@ -46,7 +46,8 @@ const loginLimiter = rateLimit({
     max: 10,
     message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req) => req.ip?.replace(/^::ffff:/, '') ?? 'unknown'
 });
 
 // Executa as crons
@@ -68,6 +69,7 @@ app.use(session({
     rolling: true,
     cookie: {
         secure: true,
+        httpOnly: true,
         sameSite: 'strict',
         maxAge: 600000
     }
