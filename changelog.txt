@@ -1,3 +1,47 @@
+#develop-65:
+- Novo endpoint de cadastro de usuário e melhorias de segurança em senhas:
+
+- routes/route_endpoints.js:
+	- Adicionada rota POST /endpoints/cadastro para cadastro de novos usuários (sem autenticação);
+	- Validações: nome_completo (apenas letras, mín. 3 chars), CPF (11 dígitos), celular (10-11 dígitos), e-mail válido, senha forte;
+	- Validação de força de senha no endpoint PUT /endpoints/troca-senha/:id atualizada: mínimo 6→8 caracteres, obriga ao menos uma letra maiúscula e um caractere especial (! @ # $ % *);
+
+- controllers/endpoints/controller_cadastro_usuario.js (novo):
+	- Fluxo: valida entrada → checa e-mail duplicado → checa CPF duplicado → hash bcrypt → INSERT;
+	- nome_completo gravado em maiúsculas (toUpperCase) com trim;
+	- Respostas: 201 (sucesso), 400 (validação), 409 (e-mail ou CPF já cadastrado), 500 (erro);
+
+- models/endpoints/model_criar_novo_usuario.js (reescrito):
+	- Migrado de callback para promise-based (pool.promise().execute);
+	- Path do pool corrigido (../../database/database_purg);
+	- INSERT corrigido: coluna nome → nome_completo, termos_de_uso hardcoded como 1;
+	- Adicionados métodos findByEmail e findByCpf para checagem de duplicatas;
+
+- controllers/endpoints/controller_troca_senha.js (novo):
+	- Controller dedicado para troca de senha do usuário autenticado;
+	- Proteção contra IDOR: valida que req.session.user.id === params.id;
+
+- models/endpoints/model_troca_senha.js (novo):
+	- buscarSenhaPorId e atualizarSenha com hash bcrypt;
+
+- controllers/mailing/controller_recuperacao_de_senha.js:
+	- Gerador de senha substituído: era numérico de 6 dígitos, agora usa gerarSenhaAleatoria() com crypto.randomInt;
+	- Senha gerada garante mín. 8 chars, ao menos 1 maiúscula e 1 caractere especial (embaralhamento Fisher-Yates);
+
+- controllers/usuarios/controller_resetarsenha_usuarios.js:
+	- Mesmo gerador gerarSenhaAleatoria() aplicado ao reset admin (substituiu crypto.randomBytes().toString('base64'));
+
+- controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js:
+	- Substituídas chamadas axios internas por chamadas diretas aos models PorcentagemAssinaturaBuscarModel e UsersSaldosModel;
+	- Reduz latência e elimina dependência de HTTP interno na rotina de pagamento de assinatura;
+
+- Banco de dados:
+	- Trigger before_insert_users corrigido: referência quebrada usuarios.users → users (banco foi renomeado de usuarios para purg);
+	- Coluna nome da tabela users alterada de NOT NULL para NULL DEFAULT NULL;
+
+- package.json:
+	- Adicionada dependência connect-redis ^9.0.0;
+
 #develop-64:
 - Correções de segurança HTTP/HTTPS e rate limiting:
 

@@ -6,7 +6,8 @@ const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_
 const HistoricoPagamentoAssinaturaModel = require('../../models/rotinas/model_poppy_historico_pagamento_assinatura');
 const BuscarHistoricoRendimentoModel = require('../../models/rotinas/model_poppy_buscar_historico_rendimento');
 const AtualizarHistoricoRendimentoModel = require('../../models/rotinas/model_poppy_atualizar_historico_rendimento_com_assinatura');
-const axios = require('axios');
+const PorcentagemAssinaturaBuscarModel = require('../../models/assinaturas/model_buscar_porcentagem_assinaturas');
+const UsersSaldosModel = require('../../models/usuarios/model_saldos_usuarios');
 
 const PagamentoAssinaturaController = {
     async executePagamentoAssinatura(req, res) {
@@ -19,8 +20,8 @@ const PagamentoAssinaturaController = {
         try {
             // --- CONFIGURAÇÃO INICIAL ---
             try {
-                const response = await axios.get('http://localhost:3000/api/assinaturas/buscar-porcentagem');
-                porcentagemAssinatura = parseFloat(response.data[0].porcentagem_assinatura);
+                const resultado = await PorcentagemAssinaturaBuscarModel.getPorcentagem();
+                porcentagemAssinatura = parseFloat(resultado[0].porcentagem_assinatura);
                 porcentagemDecimal = porcentagemAssinatura / 100;
                 logger.info(`Configuração: ${porcentagemAssinatura}% | Fator: ${porcentagemDecimal}`);
             } catch (error) {
@@ -52,8 +53,8 @@ const PagamentoAssinaturaController = {
                     statusEtapas.etapa3 = 'concluida';
 
                     // ETAPA 4: Saldo
-                    const saldoResp = await axios.get(`http://localhost:3000/api/usuarios/${usuarioId}/dados-saldo`);
-                    const saldoAtual = Number(parseFloat(saldoResp.data.saldo || 0).toFixed(8));
+                    const saldoDados = await UsersSaldosModel.getSaldos(usuarioId);
+                    const saldoAtual = Number(parseFloat(saldoDados?.saldo || 0).toFixed(8));
                     statusEtapas.etapa4 = 'concluida';
 
                     // ETAPA 5: Débito na Carteira

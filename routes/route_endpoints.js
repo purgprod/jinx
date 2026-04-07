@@ -3,7 +3,7 @@ const router  = express.Router();
 const rateLimit = require('express-rate-limit');
 
 // IMPORTAÇÃO DOS VALIDADORES  <<<<<<<<<<
-const { param, body } = require('express-validator');
+const { param, body, validationResult } = require('express-validator');
 
 // Rate limiting para operações financeiras: máx. 5 por minuto por usuário
 const financeiroLimiter = rateLimit({
@@ -34,6 +34,9 @@ const DepositoHistoricoUsuarioController = require('../controllers/endpoints/con
 const BuscarSaquesPendentesUsuarioController = require('../controllers/endpoints/controller_buscar_saques_pendentes_usuario');
 const BuscarDepositosPendentesUsuarioController = require('../controllers/endpoints/controller_buscar_depositos_pendentes_usuario');
 const UpdateAssinaturaClienteController = require('../controllers/endpoints/controller_update_assinatura_cliente');
+const TrocaSenhaController = require('../controllers/endpoints/controller_troca_senha');
+const RecuperacaoSenhaController = require('../controllers/mailing/controller_recuperacao_de_senha');
+const CadastroUsuarioController = require('../controllers/endpoints/controller_cadastro_usuario');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -42,6 +45,61 @@ router.post('/endpoints/login', AuthController.login);
 
 // Rota para registro - Não requer autenticação
 router.post('/endpoints/register', AuthController.register);
+
+// Rota para cadastro de novo usuário - Não requer autenticação
+router.post(
+  '/endpoints/cadastro',
+  [
+    body('nome_completo')
+      .notEmpty().withMessage('O nome completo é obrigatório.')
+      .isString().withMessage('O nome completo deve ser um texto válido.')
+      .isLength({ min: 3 }).withMessage('O nome completo deve ter no mínimo 3 caracteres.')
+      .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome completo deve conter apenas letras.'),
+    body('cpf')
+      .notEmpty().withMessage('O CPF é obrigatório.')
+      .matches(/^\d{11}$/).withMessage('O CPF deve conter exatamente 11 dígitos numéricos.'),
+    body('celular')
+      .notEmpty().withMessage('O celular é obrigatório.')
+      .matches(/^\d{10,11}$/).withMessage('O celular deve conter 10 ou 11 dígitos numéricos.'),
+    body('email')
+      .notEmpty().withMessage('O e-mail é obrigatório.')
+      .isEmail().withMessage('Informe um e-mail válido.')
+      .normalizeEmail(),
+    body('password')
+      .notEmpty().withMessage('A senha é obrigatória.')
+      .isLength({ min: 8 }).withMessage('A senha deve ter no mínimo 8 caracteres.')
+      .matches(/[A-Z]/).withMessage('A senha deve conter pelo menos uma letra maiúscula.')
+      .matches(/[!@#$%*]/).withMessage('A senha deve conter pelo menos um caractere especial (! @ # $ % *).'),
+  ],
+  CadastroUsuarioController.cadastrarUsuario
+);
+
+// Rota para recuperação de senha - Não requer autenticação
+router.post(
+  '/endpoints/recuperar-senha',
+  [
+    body('email')
+      .notEmpty().withMessage('O e-mail é obrigatório.')
+      .isEmail().withMessage('Informe um e-mail válido.')
+      .normalizeEmail(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const resultado = await RecuperacaoSenhaController.fluxoRecuperacao(email);
+
+    // Resposta genérica independente de o e-mail existir (evita enumeração)
+    if (!resultado.usuarioEncontrado || resultado.sucesso) {
+      return res.status(200).json({ success: true, message: 'Se o e-mail estiver cadastrado, você receberá a nova senha em breve.' });
+    }
+
+    return res.status(500).json({ success: false, message: 'Erro ao processar a solicitação.' });
+  }
+);
 
 // Demais rotas requerem autenticação
 router.use('/endpoints/*', authMiddleware.checkAuthenticated);
@@ -94,6 +152,24 @@ router.get('/endpoints/buscar-depositos-pendentes/:id', authMiddleware.checkAuth
 
 // Rota para atualizar a assinatura de um cliente
 router.put('/endpoints/atualizar-assinatura/:id', authMiddleware.checkAuthenticated, UpdateAssinaturaClienteController.updateAssinaturaCliente);
+
+// Rota para troca de senha do usuário
+router.put(
+  '/endpoints/troca-senha/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('senhaAtual')
+      .notEmpty().withMessage('A senha atual é obrigatória.')
+      .isString().withMessage('A senha atual deve ser um texto válido.'),
+    body('novaSenha')
+      .notEmpty().withMessage('A nova senha é obrigatória.')
+      .isLength({ min: 8 }).withMessage('A nova senha deve ter no mínimo 8 caracteres.')
+      .matches(/[A-Z]/).withMessage('A nova senha deve conter pelo menos uma letra maiúscula.')
+      .matches(/[!@#$%*]/).withMessage('A nova senha deve conter pelo menos um caractere especial (! @ # $ % *).'),
+  ],
+  TrocaSenhaController.trocarSenha
+);
 
 //  POST /endpoints/saque/:id   { amount: 100.50 }
 router.post(
