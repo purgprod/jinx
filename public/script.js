@@ -20,85 +20,132 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("Element references initialized");
 
-    // Adiciona evento ao botão "Usuários"
+    // -------------------------------------------------------
+    // Roteamento client-side via History API
+    // -------------------------------------------------------
+
+    // Atualiza a URL sem recarregar a página (no-op se já estiver no mesmo path)
+    function pushRoute(path) {
+        if (window.location.pathname !== path) {
+            window.history.pushState({ path }, '', path);
+        }
+    }
+
+    // Mapa de path → botão responsável por carregar o conteúdo da aba
+    const tabRouteMap = {
+        '/usuarios':               usuariosButton,
+        '/resultados-financeiros': resultadosButton,
+        '/pins':                   tokensButton,
+        '/ecossistema':            ecossistemaButton,
+        '/receitas':               receitasButton,
+        '/assinaturas':            assinaturasButton,
+        '/emblemas':               emblemasButton,
+        '/saques':                 saquesButton,
+        '/depositos':              depositosButton,
+        '/rotinas':                rotinasButton,
+    };
+
+    // Carrega o conteúdo da aba correspondente ao path (simula clique no botão)
+    function loadTabFromPath(pathname) {
+        const btn = tabRouteMap[pathname];
+        if (btn) btn.click();
+    }
+
+    // Navegar pelo histórico do browser (botões Voltar / Avançar)
+    window.addEventListener('popstate', (event) => {
+        loadTabFromPath(event.state?.path || '/home');
+    });
+
+    // Após autenticação confirmada: define o estado inicial do histórico e
+    // carrega a aba correspondente à URL atual (ex: acesso direto a /usuarios)
+    document.addEventListener('jinx:auth-ready', () => {
+        const currentPath = window.location.pathname;
+        window.history.replaceState({ path: currentPath }, '', currentPath);
+        loadTabFromPath(currentPath);
+    });
+
+    // -------------------------------------------------------
+    // Event listeners dos botões (com atualização de URL)
+    // -------------------------------------------------------
+
     if (usuariosButton) {
         usuariosButton.addEventListener("click", () => {
             console.log("Botão 'Usuários' clicado");
-            showUserCards(); // Mostra os cartões de criação e alteração de usuários
+            pushRoute('/usuarios');
+            showUserCards();
         });
     }
 
-    // Adiciona evento ao botão "Resultados Financeiros"
     if (resultadosButton) {
         resultadosButton.addEventListener("click", () => {
             console.log("Botão 'Resultados Financeiros' clicado");
-            loadFinancialResults(); // Chama a função no resultados_financeiros.js
+            pushRoute('/resultados-financeiros');
+            loadFinancialResults();
         });
     }
 
-    // Adiciona evento ao botão "Pins"
     if (tokensButton) {
         tokensButton.addEventListener("click", () => {
             console.log("Botão 'Pins' clicado");
-            loadTokensResults();  // Chama a função no tokens.js
+            pushRoute('/pins');
+            loadTokensResults();
         });
     }
 
-   // Adiciona evento ao botão "Ecossistema"
     if (ecossistemaButton) {
         ecossistemaButton.addEventListener("click", () => {
             console.log("Botão 'Ecossistema' clicado");
-            loadEcossistemaResults();  // Chama a função no ecossistema.js
+            pushRoute('/ecossistema');
+            loadEcossistemaResults();
         });
     }
 
-   // Adiciona evento ao botão "Receitas"
     if (receitasButton) {
         receitasButton.addEventListener("click", () => {
             console.log("Botão 'Receitas' clicado");
-            loadReceitasResults();  // Chama a função no receitas.js
+            pushRoute('/receitas');
+            loadReceitasResults();
         });
     }
 
-   // Adiciona evento ao botão "Rotinas"
     if (rotinasButton) {
         rotinasButton.addEventListener("click", () => {
             console.log("Botão 'Rotinas' clicado");
-            loadRotinasResults();  // Chama a função no rotinas.js
+            pushRoute('/rotinas');
+            loadRotinasResults();
         });
     }
 
-   // Adiciona evento ao botão "Assinaturas"
     if (assinaturasButton) {
         assinaturasButton.addEventListener("click", () => {
             console.log("Botão 'Assinaturas' clicado");
-            loadAssinaturasResults();  // Chama a função no assinaturas.js
+            pushRoute('/assinaturas');
+            loadAssinaturasResults();
         });
     }
 
-   // Adiciona evento ao botão "Emblemas"
     if (emblemasButton) {
         emblemasButton.addEventListener("click", () => {
             console.log("Botão 'Emblemas' clicado");
-            loadEmblemasResults();  // Chama a função no emblemas.js
+            pushRoute('/emblemas');
+            loadEmblemasResults();
         });
     }
 
-   // Adiciona evento ao botão "Saques"
     if (saquesButton) {
         saquesButton.addEventListener("click", () => {
             console.log("Botão 'Saques' clicado");
-            loadSaquesResults();  // Chama a função no saques.js
+            pushRoute('/saques');
+            loadSaquesResults();
         });
     }
 
-   // Adiciona evento ao botão "Depositos"
     if (depositosButton) {
         depositosButton.addEventListener("click", () => {
             console.log("Botão 'Depositos' clicado");
-            loadDepositosResults();  // Chama a função no depositos.js
+            pushRoute('/depositos');
+            loadDepositosResults();
         });
     }
 
 });
-

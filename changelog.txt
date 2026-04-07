@@ -1,3 +1,22 @@
+#develop-63:
+- Roteamento client-side via History API (SPA sem dependências novas):
+
+- server.js:
+	- Adicionado middleware isAuthenticatedPage: redireciona para /login ao invés de retornar JSON 401 (usado em rotas de página);
+	- Adicionadas rotas SPA protegidas: /home, /usuarios, /resultados-financeiros, /pins, /ecossistema, /assinaturas, /emblemas, /saques, /depositos, /rotinas — todas servem index.html com autenticação obrigatória;
+
+- public/js/autenticacao/autenticacao_jinx.js:
+	- Redirect pós-login alterado de '/' para '/home';
+	- Após sessão verificada com sucesso, dispara CustomEvent 'jinx:auth-ready' para script.js inicializar a rota correta;
+
+- public/script.js:
+	- Adicionada função pushRoute(path): atualiza a URL via window.history.pushState sem recarregar a página (no-op se já estiver no mesmo path);
+	- Adicionado mapa tabRouteMap vinculando cada path ao botão correspondente;
+	- Adicionada função loadTabFromPath(pathname): simula clique no botão da aba correta;
+	- Adicionado listener 'popstate': restaura a aba correta ao navegar pelo histórico do browser (Voltar / Avançar);
+	- Adicionado listener 'jinx:auth-ready': define estado inicial do histórico e carrega a aba correspondente à URL ao abrir a página diretamente (ex: /usuarios);
+	- Todos os botões de navegação agora chamam pushRoute antes de carregar o conteúdo;
+
 #develop-62:
 - Melhorias de performance (itens seguros):
 

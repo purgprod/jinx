@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.log("Usuário autenticado");
                     mainContainer.style.display = 'flex';
                     mainContainer.classList.add("fade-in");
+                    document.dispatchEvent(new CustomEvent('jinx:auth-ready'));
                 }
             })
             .catch(error => {
@@ -61,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     document.body.classList.add("fade-out");
                     setTimeout(() => {
-                        window.location.href = '/'; // Redireciona após o login.
+                        window.location.href = '/home'; // Redireciona após o login.
                     }, 1000);
                 } else {
                     errorMessage.style.display = 'block'; // Mensagem de erro ao fazer login.

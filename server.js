@@ -86,13 +86,21 @@ sessionStore.clear((err) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Middleware para verificar se o usuário está autenticado
+// Middleware para verificar se o usuário está autenticado (retorna JSON 401 — usado por chamadas AJAX)
 const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
     } else {
         return res.status(401).json({ authenticated: false });
     }
+};
+
+// Middleware de autenticação para rotas de página (redireciona para /login em vez de retornar JSON)
+const isAuthenticatedPage = (req, res, next) => {
+    if (req.session.user) {
+        return next();
+    }
+    return res.redirect('/login');
 };
 
 // Log de requisições
@@ -126,6 +134,27 @@ app.get('/login', (req, res) => {
 
 app.get('/config', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// --- ROTAS DE NAVEGAÇÃO SPA (todas servem index.html, autenticação obrigatória) ---
+
+const rotasSPA = [
+    '/home',
+    '/usuarios',
+    '/resultados-financeiros',
+    '/pins',
+    '/ecossistema',
+    '/assinaturas',
+    '/emblemas',
+    '/saques',
+    '/depositos',
+    '/rotinas',
+];
+
+rotasSPA.forEach(rota => {
+    app.get(rota, isAuthenticatedPage, (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
 });
 
 // --- ROTAS DO SISTEMA ---
