@@ -9,7 +9,7 @@ const { param, body, validationResult } = require('express-validator');
 const financeiroLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 5,
-    keyGenerator: (req) => String(req.session?.user?.id ?? req.ip),
+    keyGenerator: (req) => String(req.session?.user?.id ?? req.ip?.replace(/^::ffff:/, '') ?? 'unknown'),
     message: { error: 'Muitas requisições. Aguarde antes de tentar novamente.' },
     standardHeaders: true,
     legacyHeaders: false
