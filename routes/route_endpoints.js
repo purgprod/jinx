@@ -12,7 +12,8 @@ const financeiroLimiter = rateLimit({
     keyGenerator: (req) => String(req.session?.user?.id ?? req.ip?.replace(/^::ffff:/, '') ?? 'unknown'),
     message: { error: 'Muitas requisições. Aguarde antes de tentar novamente.' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    validate: { keyGeneratorIpFallback: false },
 });
 
 //const SaldoController     = require('../controllers/endpoints/controller_saldo');

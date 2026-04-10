@@ -47,7 +47,8 @@ const loginLimiter = rateLimit({
     message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip?.replace(/^::ffff:/, '') ?? 'unknown'
+    keyGenerator: (req) => req.ip?.replace(/^::ffff:/, '') ?? 'unknown',
+    validate: { keyGeneratorIpFallback: false },
 });
 
 // Executa as crons
