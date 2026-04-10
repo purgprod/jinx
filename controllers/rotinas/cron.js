@@ -43,10 +43,10 @@ cron.schedule('01 00 * * *', async () => {
     }
 });
 
-// Agendar execução da rotina de histórico do valor investido e rendimentos por usuário às 00:30:00 todos os dias
-cron.schedule('30 0 * * *', async () => {
+// Agendar execução da rotina de histórico do valor investido e rendimentos por usuário às 15:30:00 todos os dias
+cron.schedule('30 15 * * *', async () => {
     try {
-        logger.info('[Manutenção] - Iniciando execução da rotina [Manutenção] -Histórico do valor investido e rendimentos por usuário agendada às 00:30:00');
+        logger.info('[Manutenção] - Iniciando execução da rotina [Manutenção] -Histórico do valor investido e rendimentos por usuário agendada às 15:30:00');
 
         // Configurar o endpoint principal
         const mainUrl = 'http://localhost:3000/api/rotinas/investimento-rendimento-historico';

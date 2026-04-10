@@ -160,7 +160,7 @@ async function cancelarDeposito(depositoId) {
     }
 
     try {
-        const response = await fetch(`/endpoints/cancelar-deposito/${depositoId}`, {
+        const response = await fetch(`/api/v1/cancelar-deposito/${depositoId}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'

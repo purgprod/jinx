@@ -4,7 +4,7 @@ const userModel = require('../../models/endpoints/model_autenticacao_purg');
 const logger    = require('../../logger');
 
 /**
- * POST /endpoints/login
+ * POST /api/v1/login
  * body: { email, password }
  */
 async function login(req, res) {
@@ -72,7 +72,7 @@ async function login(req, res) {
 }
 
 /**
- * POST /endpoints/register
+ * POST /api/v1/register
  * body: { email, password }
  */
 async function register(req, res) {
@@ -119,7 +119,7 @@ async function register(req, res) {
 }
 
 /**
- * POST /endpoints/logout
+ * POST /api/v1/logout
  */
 function logout(req, res) {
     req.session.destroy(err => {
@@ -141,7 +141,7 @@ function logout(req, res) {
 }
 
 /**
- * POST /endpoints/check-session
+ * POST /api/v1/check-session
  */
 function checkSession(req, res) {
     logger.info('Verificando sessão. Sessão:', req.session);

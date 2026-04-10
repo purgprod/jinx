@@ -36,19 +36,20 @@ const BuscarDepositosPendentesUsuarioController = require('../controllers/endpoi
 const UpdateAssinaturaClienteController = require('../controllers/endpoints/controller_update_assinatura_cliente');
 const TrocaSenhaController = require('../controllers/endpoints/controller_troca_senha');
 const RecuperacaoSenhaController = require('../controllers/mailing/controller_recuperacao_de_senha');
-const CadastroUsuarioController = require('../controllers/endpoints/controller_cadastro_usuario');
+const CadastroUsuarioController  = require('../controllers/endpoints/controller_cadastro_usuario');
+const AtualizarPerfilController  = require('../controllers/endpoints/controller_atualizar_perfil');
 
 //------------ AUTENTICAÇÃO --------------//
 
 // Rota para login - Não requer autenticação
-router.post('/endpoints/login', AuthController.login);
+router.post('/api/v1/login', AuthController.login);
 
 // Rota para registro - Não requer autenticação
-router.post('/endpoints/register', AuthController.register);
+router.post('/api/v1/register', AuthController.register);
 
 // Rota para cadastro de novo usuário - Não requer autenticação
 router.post(
-  '/endpoints/cadastro',
+  '/api/v1/cadastro',
   [
     body('nome_completo')
       .notEmpty().withMessage('O nome completo é obrigatório.')
@@ -76,7 +77,7 @@ router.post(
 
 // Rota para recuperação de senha - Não requer autenticação
 router.post(
-  '/endpoints/recuperar-senha',
+  '/api/v1/recuperar-senha',
   [
     body('email')
       .notEmpty().withMessage('O e-mail é obrigatório.')
@@ -102,60 +103,106 @@ router.post(
 );
 
 // Demais rotas requerem autenticação
-router.use('/endpoints/*', authMiddleware.checkAuthenticated);
+router.use('/api/v1/*', authMiddleware.checkAuthenticated);
 
 // Rota para logout
-router.post('/endpoints/logout', authMiddleware.checkAuthenticated, AuthController.logout);
+router.post('/api/v1/logout', authMiddleware.checkAuthenticated, AuthController.logout);
 
 // Rota para check session
-router.post('/endpoints/check-session', authMiddleware.checkAuthenticated, AuthController.checkSession);
+router.post('/api/v1/check-session', authMiddleware.checkAuthenticated, AuthController.checkSession);
 
 //------------CONSULTAS------------
 
 // Rota para o saldo do usuário
-//router.get('/endpoints/saldo/:id', authMiddleware.checkAuthenticated, SaldoController.getSaldo);
+//router.get('/api/v1/saldo/:id', authMiddleware.checkAuthenticated, SaldoController.getSaldo);
 
 // Rota para o valor investido do usuário
-//router.get('/endpoints/investido/:id', authMiddleware.checkAuthenticated, InvestidoController.getInvestido);
+//router.get('/api/v1/investido/:id', authMiddleware.checkAuthenticated, InvestidoController.getInvestido);
 
 // Rota para os emblemas do usuário
-//router.get('/endpoints/emblemas/:id', authMiddleware.checkAuthenticated, EmblemasController.getEmblemas);
+//router.get('/api/v1/emblemas/:id', authMiddleware.checkAuthenticated, EmblemasController.getEmblemas);
 
 // Rota para a carteira do usuário
-router.get('/endpoints/carteira/:id', authMiddleware.checkAuthenticated, CarteiraController.getCarteira);
+router.get('/api/v1/carteira/:id', authMiddleware.checkAuthenticated, CarteiraController.getCarteira);
 
 // Rota para os dados cadastrais do usuário
-router.get('/endpoints/dados-cadastro/:id', authMiddleware.checkAuthenticated, DadosCadastroController.getDadosCadastro);
+router.get('/api/v1/dados-cadastro/:id', authMiddleware.checkAuthenticated, DadosCadastroController.getDadosCadastro);
 
 // Rota para os dados cadastrais da empresa
-router.get('/endpoints/dados-empresa/:id', authMiddleware.checkAuthenticated, DadosEmpresaController.getDadosEmpresa);
+router.get('/api/v1/dados-empresa/:id', authMiddleware.checkAuthenticated, DadosEmpresaController.getDadosEmpresa);
 
 // Rota para os pins do usuário
-router.get('/endpoints/pins-usuario/:id', authMiddleware.checkAuthenticated, PinsUsuarioController.getPinsUsuario);
+router.get('/api/v1/pins-usuario/:id', authMiddleware.checkAuthenticated, PinsUsuarioController.getPinsUsuario);
 
 // Rota para os rendimentos do usuário
-router.get('/endpoints/rendimentos-usuario/:id', authMiddleware.checkAuthenticated, RendimentosUsuarioController.getRendimentosUsuario);
+router.get('/api/v1/rendimentos-usuario/:id', authMiddleware.checkAuthenticated, RendimentosUsuarioController.getRendimentosUsuario);
 
 // Rota para o histórico de saques do usuário
-router.get('/endpoints/saque-historico/:id', authMiddleware.checkAuthenticated, SaqueHistoricoUsuarioController.getSaqueHistoricoUsuario);
+router.get('/api/v1/saque-historico/:id', authMiddleware.checkAuthenticated, SaqueHistoricoUsuarioController.getSaqueHistoricoUsuario);
 
 // Rota para o histórico de depositos do usuário
-router.get('/endpoints/deposito-historico/:id', authMiddleware.checkAuthenticated, DepositoHistoricoUsuarioController.getDepositoHistoricoUsuario);
+router.get('/api/v1/deposito-historico/:id', authMiddleware.checkAuthenticated, DepositoHistoricoUsuarioController.getDepositoHistoricoUsuario);
 
 // Rota para carregar os saques pendentes do usuário
-router.get('/endpoints/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);
+router.get('/api/v1/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);
 
 // Rota para carregar os depósitos pendentes do usuário
-router.get('/endpoints/buscar-depositos-pendentes/:id', authMiddleware.checkAuthenticated, BuscarDepositosPendentesUsuarioController.getDepositosPendentes);
+router.get('/api/v1/buscar-depositos-pendentes/:id', authMiddleware.checkAuthenticated, BuscarDepositosPendentesUsuarioController.getDepositosPendentes);
 
 //------------AÇÕES------------
 
 // Rota para atualizar a assinatura de um cliente
-router.put('/endpoints/atualizar-assinatura/:id', authMiddleware.checkAuthenticated, UpdateAssinaturaClienteController.updateAssinaturaCliente);
+router.put('/api/v1/atualizar-assinatura/:id', authMiddleware.checkAuthenticated, UpdateAssinaturaClienteController.updateAssinaturaCliente);
+
+// Rota para atualizar dados de perfil do usuário
+router.put(
+  '/api/v1/edita-perfil/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('nome_completo')
+      .optional()
+      .isString().withMessage('O nome completo deve ser um texto válido.')
+      .isLength({ min: 3 }).withMessage('O nome completo deve ter no mínimo 3 caracteres.')
+      .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome completo deve conter apenas letras.'),
+    body('celular')
+      .optional()
+      .matches(/^\d{10,11}$/).withMessage('O celular deve conter 10 ou 11 dígitos numéricos.'),
+    body('cep')
+      .optional()
+      .matches(/^\d{8}$/).withMessage('O CEP deve conter exatamente 8 dígitos numéricos.'),
+    body('logradouro')
+      .optional()
+      .isString().withMessage('O logradouro deve ser um texto válido.')
+      .notEmpty().withMessage('O logradouro não pode ser vazio.'),
+    body('numero_da_rua')
+      .optional()
+      .isString().withMessage('O número deve ser um texto válido.')
+      .notEmpty().withMessage('O número não pode ser vazio.'),
+    body('complemento')
+      .optional()
+      .isString().withMessage('O complemento deve ser um texto válido.'),
+    body('pix_cpf')
+      .optional()
+      .matches(/^\d{11}$/).withMessage('O CPF Pix deve conter exatamente 11 dígitos numéricos.'),
+    body('pix_celular')
+      .optional()
+      .matches(/^\d{10,11}$/).withMessage('O celular Pix deve conter 10 ou 11 dígitos numéricos.'),
+    body('pix_email')
+      .optional()
+      .isEmail().withMessage('Informe um e-mail Pix válido.')
+      .normalizeEmail(),
+    body('pix_chave')
+      .optional()
+      .isString().withMessage('A chave Pix deve ser um texto válido.')
+      .notEmpty().withMessage('A chave Pix não pode ser vazia.'),
+  ],
+  AtualizarPerfilController.atualizarPerfil
+);
 
 // Rota para troca de senha do usuário
 router.put(
-  '/endpoints/troca-senha/:id',
+  '/api/v1/troca-senha/:id',
   authMiddleware.checkAuthenticated,
   [
     param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
@@ -173,7 +220,7 @@ router.put(
 
 //  POST /endpoints/saque/:id   { amount: 100.50 }
 router.post(
-  '/endpoints/saque/:id',
+  '/api/v1/saque/:id',
   authMiddleware.checkAuthenticated,
   financeiroLimiter,
   [
@@ -187,7 +234,7 @@ router.post(
 
 // Rota para cancelar uma solicitação de saque específica
 router.post(
-  '/endpoints/cancelar-saque/:id',
+  '/api/v1/cancelar-saque/:id',
   authMiddleware.checkAuthenticated,
   [
     param('id').isInt().withMessage('O ID do saque deve ser um inteiro válido.'),
@@ -202,7 +249,7 @@ router.post(
 
 //  POST /endpoints/deposito/:id   { amount: 100.50 }
 router.post(
-  '/endpoints/deposito/:id',
+  '/api/v1/deposito/:id',
   authMiddleware.checkAuthenticated,
   financeiroLimiter,
   [
@@ -216,7 +263,7 @@ router.post(
 
 // Rota para cancelar uma solicitação de deposito específica
 router.post(
-  '/endpoints/cancelar-deposito/:id',
+  '/api/v1/cancelar-deposito/:id',
   authMiddleware.checkAuthenticated,
   [
     param('id').isInt().withMessage('O ID do depósito deve ser um inteiro válido.'),

@@ -1,3 +1,40 @@
+#develop-66:
+- Padronização de rotas para /api/v1/, novo endpoint de edição de perfil e correção de rendimento histórico:
+
+- routes/route_endpoints.js:
+	- Todas as rotas /endpoints/* renomeadas para /api/v1/* (padronização REST profissional);
+	- Adicionada rota PUT /api/v1/edita-perfil/:id para edição de dados de perfil do usuário (requer autenticação);
+	- Validações: nome_completo (apenas letras, mín. 3 chars), celular (10-11 dígitos), CEP (8 dígitos), e-mail Pix válido; todos os campos opcionais (atualização parcial);
+
+- controllers/endpoints/controller_atualizar_perfil.js (novo):
+	- Aceita atualização parcial dos campos: nome_completo, celular, cep, logradouro, numero_da_rua, complemento, pix_cpf, pix_celular, pix_email, pix_chave;
+	- Proteção contra IDOR: valida que req.session.user.id === params.id;
+
+- models/endpoints/model_atualizar_perfil.js (novo):
+	- UPDATE dinâmico: monta SET clause apenas com os campos presentes no body, ignorando os ausentes;
+	- Whitelist de campos permitidos para evitar mass assignment;
+
+- controllers/endpoints/controller_autenticacao_purg.js:
+	- Comentários JSDoc atualizados de /endpoints/* para /api/v1/*;
+
+- public/js/depositos/depositos.js:
+	- Chamada fetch de cancelamento atualizada de /endpoints/cancelar-deposito/ para /api/v1/cancelar-deposito/;
+
+- public/js/saques/saques.js:
+	- Chamada fetch de cancelamento atualizada de /endpoints/cancelar-saque/ para /api/v1/cancelar-saque/;
+
+- models/rotinas/model_historico_tokens_por_usuario.js:
+	- Corrigida fonte do rendimento_dia: era SUM(rendimento_token) de usuario_tokens (valor potencial), agora busca rendimento_diario da tabela rendimentos (valor efetivamente pago e já líquido da assinatura);
+
+- controllers/rotinas/cron.js:
+	- Rotina investimento-rendimento-historico reagendada de 00:30 para 15:30, garantindo execução após pagamento de rendimento (15:15) e desconto de assinatura (15:20);
+
+- Banco de dados:
+	- Triggers renomeados para padrão trg_[tabela]_[timing_evento]_[descrição]; trigger legado AtualizaStatusAtivoTokens removido (duplicata de trg_resultados_financeiros_after_update_status);
+	- Procedure InsertTokensHistorico renomeada para sp_inserir_tokens_historico;
+	- rotinas.hora_agendada do ID 2 atualizado de 00:30:00 para 15:30:00;
+	- 344 registros de usuarios_dados_financeiros_diarios recalculados com o rendimento_dia correto (valor pago ao cliente);
+
 #develop-65:
 - Novo endpoint de cadastro de usuário e melhorias de segurança em senhas:
 

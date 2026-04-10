@@ -162,7 +162,7 @@ async function cancelarSaque(saqueId) {
     }
 
     try {
-        const response = await fetch(`/endpoints/cancelar-saque/${saqueId}`, {
+        const response = await fetch(`/api/v1/cancelar-saque/${saqueId}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'

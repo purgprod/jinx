@@ -9,13 +9,15 @@ const InvestimentoRendimentoUsuarioModel = {
      */
     async getValoresByUsuarioId(idUsuario) {
         const query = `
-            SELECT 
-                SUM(quantidade_tokens) * 0.01 AS carteira_dia,
-                SUM(rendimento_token) AS rendimento_dia
-            FROM 
-                usuario_tokens
-            WHERE 
-                usuario_id = ?;
+            SELECT
+                (SELECT SUM(quantidade_tokens) * 0.01
+                 FROM usuario_tokens
+                 WHERE usuario_id = ?) AS carteira_dia,
+                (SELECT rendimento_diario
+                 FROM rendimentos
+                 WHERE usuario_id = ?
+                 ORDER BY data_criacao DESC
+                 LIMIT 1) AS rendimento_dia;
         `;
 
         return new Promise((resolve, reject) => {
