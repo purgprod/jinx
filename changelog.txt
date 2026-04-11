@@ -1,3 +1,71 @@
+#develop-68:
+- Integração Pix automática com Efí Bank para depósitos e saques (PLD — validação de CPF):
+
+- services/efi_pix.js (novo):
+	- Wrapper do SDK oficial sdk-node-apis-efi com as operações: criarCobrancaPix, enviarPix, devolverPix e validarWebhook;
+	- criarCobrancaPix: gera cobrança Pix imediata com QR Code e copia e cola, vinculando o CPF do devedor esperado;
+	- enviarPix: envia Pix para a chave cadastrada do usuário (Pix OUT — usado no saque);
+	- devolverPix: solicita estorno automático ao Efí quando CPF do pagador diverge do cadastrado;
+	- validarWebhook: valida o token de segurança enviado pelo Efí no header x-efi-webhook-token;
+
+- controllers/depositos/controller_webhook_pix_efi.js (novo):
+	- Recebe notificações do Efí Bank via POST /api/pix/webhook;
+	- pix[]: Pix recebido (depósito) — valida CPF do pagador, credita saldo e marca Executado; CPF divergente → rejeita + devolução automática;
+	- pagamentos[]: Pix enviado (saque) — REALIZADO → marca Executado; NAO_REALIZADO → marca Falhou + reverte débito na carteira;
+
+- controllers/endpoints/controller_deposito.js:
+	- Geração automática de QR Code e copia e cola via Efí Bank ao solicitar depósito;
+	- Retorna txid, pix_copia_cola e qr_code na resposta; cobrança existente reutilizada em caso de depósito pendente;
+	- Migrado de services/nubank_pix para services/efi_pix;
+
+- controllers/endpoints/controller_saque.js:
+	- ETAPA 9 adicionada: envio automático do Pix ao usuário via Efí Bank após todas as deduções (saldo + tokens);
+	- Se envio falhar, saque permanece "Analisando" para retry manual via painel Jinx;
+	- Resposta informa end_to_end_id e status_pix quando Pix enviado com sucesso;
+
+- controllers/saques/controller_saque_executar.js (reescrito):
+	- Convertido de executor principal para mecanismo de retry manual pelo admin no painel Jinx;
+	- Não realiza deduções de saldo (já feitas pelo fluxo do usuário); apenas reenvia o Pix via Efí para saques "Analisando";
+
+- models/depositos/model_deposito_buscar_por_txid.js (novo):
+	- Busca depósito + CPF do usuário pelo txid para uso no webhook;
+
+- models/depositos/model_deposito_atualizar_qr.js (novo):
+	- Grava txid, qr_code e pix_copia_cola no registro do depósito após geração da cobrança;
+
+- models/depositos/model_deposito_rejeitar.js (novo):
+	- Marca depósito como Rejeitado com motivo quando CPF do pagador diverge;
+
+- models/saques/model_saque_buscar_para_envio.js (novo):
+	- Retorna saque "Analisando" com valor e chave Pix para envio via Efí;
+
+- models/saques/model_saque_atualizar_e2e.js (novo):
+	- Grava endToEndId e muda status para "Processando" após envio do Pix;
+
+- models/saques/model_saque_buscar_por_e2e.js (novo):
+	- Localiza saque pelo endToEndId para processamento no webhook;
+
+- models/saques/model_saque_confirmar.js (novo):
+	- Marca saque como Executado após confirmação REALIZADO do webhook;
+
+- models/saques/model_saque_falhar.js (novo):
+	- Marca saque como Falhou após NAO_REALIZADO do webhook;
+
+- models/endpoints/model_deposito_registro_solicitacao.js:
+	- INSERT atualizado para incluir os novos campos txid, qr_code e pix_copia_cola (NULL inicialmente);
+
+- routes/route_depositos.js:
+	- Adicionada rota POST /api/pix/webhook para receber notificações do Efí Bank;
+	- Controller atualizado de controller_webhook_pix_nubank para controller_webhook_pix_efi;
+
+- Banco de dados:
+	- depositos: adicionadas colunas txid VARCHAR(35) UNIQUE, qr_code TEXT, pix_copia_cola TEXT;
+	- saques: adicionada coluna e2e_id VARCHAR(100) UNIQUE (endToEndId do Pix enviado pelo Efí);
+	- Migration registrada em migrations/nubank_pix_depositos.sql; aplicada em dev e produção;
+
+- package.json:
+	- Adicionada dependência sdk-node-apis-efi; instalada em dev e produção;
+
 #develop-66:
 - Padronização de rotas para /api/v1/, novo endpoint de edição de perfil e correção de rendimento histórico:
 
