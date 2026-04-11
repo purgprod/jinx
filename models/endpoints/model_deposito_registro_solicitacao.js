@@ -6,17 +6,20 @@ const SolicitacaoDepositoModel = {
         const query = `
             INSERT INTO depositos (
                 usuario_id,
-                valor_deposito
-            ) VALUES (?, ?);
+                valor_deposito,
+                txid,
+                qr_code,
+                pix_copia_cola
+            ) VALUES (?, ?, NULL, NULL, NULL);
         `;
 
         return new Promise((resolve, reject) => {
             connection.query(query, [usuario_id, valor_deposito], (error, results) => {
                 if (error) {
-                    logger.error(`Erro ao inserir solicitacao de deposito.`, error);
+                    logger.error('Erro ao inserir solicitacao de deposito.', error);
                     reject(new Error('Erro ao inserir solicitacao de deposito'));
                 } else {
-                    logger.info(`Solicitacao de deposito realizada com sucesso`);
+                    logger.info('Solicitacao de deposito registrada com sucesso');
                     resolve(results);
                 }
             });

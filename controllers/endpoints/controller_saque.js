@@ -11,6 +11,10 @@ const MoverPinsModel                  = require('../../models/endpoints/model_sa
 const SolicitacaoSaqueModel           = require('../../models/endpoints/model_saque_registro_solicitacao');
 const AtualizarCarteiraSaqueModel     = require('../../models/endpoints/model_atualizar_saldo_carteira');
 const DadosCadastraisModel            = require('../../models/endpoints/model_dados_cadastrais');
+const AtualizarSaqueE2eModel          = require('../../models/saques/model_saque_atualizar_e2e');
+
+// Serviço Efí Bank — envio automático do Pix ao usuário após deduções
+const { enviarPix } = require('../../services/efi_pix');
 
 const SCALE   = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
@@ -174,9 +178,11 @@ const SaqueController = {
             }
 
             // ETAPA 3 – Registro da Intenção de Saque
+            let saqueId;
             try {
                 const solicitacao = await SolicitacaoSaqueModel.insertSolicitacao(id, amountStr, chavePixValue);
-                logger.info(`Solicitação registrada. ID: ${solicitacao.insertId}`);
+                saqueId = solicitacao.insertId;
+                logger.info(`Solicitação registrada. ID: ${saqueId}`);
             } catch (errRegister) {
                 logger.error('Erro ao persistir solicitação de saque', { userId: id, err: errRegister });
                 return res.status(500).json({ error: 'Erro interno ao registrar solicitação.' });
@@ -260,21 +266,45 @@ const SaqueController = {
                 return res.status(500).json({ error: 'Erro ao atualizar saldo da carteira.' });
             }
 
+            // ETAPA 9 – Envio automático do Pix via Efí Bank
+            // Semântica: disparado imediatamente após todas as deduções.
+            // Se falhar, o saque permanece "Analisando" e o admin pode reprocessar
+            // manualmente via POST /api/saques/executar/:id (retry).
+            let endToEndId = null;
+            try {
+                const pixEnviado = await enviarPix({
+                    chaveDestino: chavePixValue,
+                    valor:        Number(amountStr).toFixed(2),
+                    descricao:    `Saque Purg #${saqueId}`
+                });
+                endToEndId = pixEnviado.endToEndId;
+                await AtualizarSaqueE2eModel.atualizarE2e(saqueId, endToEndId);
+                logger.info('Pix de saque enviado automaticamente', { userId: id, saqueId, endToEndId });
+            } catch (errPix) {
+                // Deduções já realizadas — saque fica "Analisando" para reprocessamento pelo admin
+                logger.error('Falha no envio automático do Pix — saque requer reprocessamento manual', {
+                    userId: id, saqueId, erro: errPix.message
+                });
+            }
+
             // Resposta de Sucesso
             const response = {
-                message: 'Saque realizado com sucesso',
+                message: endToEndId
+                    ? 'Saque processado e Pix enviado com sucesso.'
+                    : 'Saque processado. O envio do Pix será concluído em breve.',
                 details: {
-                    valor_solicitado: amountStr,
-                    saldo_anterior: saldoTrunc,
-                    novo_saldo: novo_valor_formatted,
-                    tokens_vendidos: quantidade_tokens_para_vender,
-                    valor_investido_antes: investidoTrunc,
+                    valor_solicitado:     amountStr,
+                    saldo_anterior:       saldoTrunc,
+                    novo_saldo:           novo_valor_formatted,
+                    tokens_vendidos:      quantidade_tokens_para_vender,
+                    valor_investido_antes:  investidoTrunc,
                     valor_investido_depois: bigIntToDecimalString(investidoAfterBig),
-                    chave_pix: chavePixValue
+                    chave_pix:            chavePixValue,
+                    ...(endToEndId && { end_to_end_id: endToEndId, status_pix: 'Processando' })
                 }
             };
 
-            logger.info('Saque finalizado com sucesso', { userId: id, requestId: id });
+            logger.info('Saque finalizado com sucesso', { userId: id, saqueId });
             return res.status(200).json(response);
 
         } catch (err) {

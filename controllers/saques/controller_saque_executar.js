@@ -1,94 +1,71 @@
-const { validationResult } = require('express-validator');
+// controllers/saques/controller_saque_executar.js
+// Retry manual de saque via painel Jinx.
+//
+// Usado apenas quando o envio automático do Pix falhou na solicitação
+// do usuário (ETAPA 9 do controller_saque.js). O saque permanece em
+// status "Analisando" e o admin pode reprocessá-lo aqui.
+//
+// Importante: NÃO debita a carteira novamente — isso já foi feito
+// pelo fluxo do usuário. Este controller apenas reenvia o Pix.
+
 const logger = require('../../logger');
-
-// Models
-const BuscarCarteiraModel = require('../../models/endpoints/model_buscar_saldo_carteira');
-const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_saldo_carteira');
-// Novo Model importado
-const SolicitacaoExecutarSaqueModel = require('../../models/saques/model_saque_registro_executado');
-
-const SCALE = 8;
-const TEN_POW = 10n ** BigInt(SCALE);
-
-function decimalToBigInt(value) {
-    if (value === null || value === undefined) return 0n;
-    let s = typeof value === 'number' ? value.toString() : String(value);
-    s = s.trim();
-    if (s === '') return 0n;
-    const [intPart, fracPart = ''] = s.split('.');
-    const big = BigInt(intPart) * TEN_POW + BigInt(fracPart.slice(0, SCALE).padEnd(SCALE, '0'));
-    return big;
-}
-
-function bigIntToDecimalString(bi) {
-    const abs = bi < 0n ? -bi : bi;
-    const intPart = abs / TEN_POW;
-    const fracNum = abs % TEN_POW;
-    const fracPart = fracNum.toString().padStart(SCALE, '0').replace(/0+$/, '');
-    return (bi < 0n ? '-' : '') + (fracPart ? `${intPart}.${fracPart}` : `${intPart}`);
-}
+const BuscarSaqueParaEnvioModel = require('../../models/saques/model_saque_buscar_para_envio');
+const AtualizarSaqueE2eModel    = require('../../models/saques/model_saque_atualizar_e2e');
+const { enviarPix }             = require('../../services/efi_pix');
 
 const ExecutarSaqueController = {
     async execute(req, res) {
-        const { id } = req.params; 
-        const { amount } = req.body;
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+        const { id } = req.params; // usuario_id
 
         try {
-            // 1. Recuperação e Validação de Saldo
-            const carteiraRows = await BuscarCarteiraModel.getSaldosCarteiras(id);
-            
-            if (!carteiraRows?.length) {
-                logger.warn('Tentativa de saque em carteira inexistente', { userId: id });
-                return res.status(404).json({ error: 'Carteira não localizada.' });
-            }
+            // 1. Busca o saque "Analisando" pendente de envio do Pix
+            const saque = await BuscarSaqueParaEnvioModel.getSaqueParaEnvio(id);
 
-            const carteira = carteiraRows[0];
-            const saldoAtualBig = decimalToBigInt(String(carteira.saldo ?? '0'));
-            const saqueBig = decimalToBigInt(String(amount));
-
-            if (saldoAtualBig < saqueBig) {
-                return res.status(409).json({ 
-                    error: 'Saldo insuficiente para realizar a operação.',
-                    disponivel: bigIntToDecimalString(saldoAtualBig)
+            if (!saque) {
+                logger.warn('Nenhum saque "Analisando" encontrado para reprocessamento', { userId: id });
+                return res.status(404).json({
+                    error: 'Nenhum saque pendente de reprocessamento encontrado para este usuário.'
                 });
             }
 
-            // 2. Persistência do Débito (Write Layer - Wallet)
-            const novoSaldoBig = saldoAtualBig - saqueBig;
-            const novoSaldoStr = bigIntToDecimalString(novoSaldoBig);
-
-            await AtualizarCarteiraModel.updateCarteira(novoSaldoStr, id);
-
-            // 3. Atualização do Status da Solicitação (Side Effect / State Transition)
-            // Semântica: Executamos após o débito para garantir que o registro reflita a realidade financeira.
-            const registroResult = await SolicitacaoExecutarSaqueModel.executarSolicitacao(id);
-
-            if (registroResult.affectedRows === 0) {
-                // Warning: O dinheiro foi debitado, mas o registro da solicitação não foi alterado.
-                // Em um ambiente ideal, isso estaria dentro de uma transação para Rollback.
-                logger.error('Divergência de estado: Saldo debitado, mas solicitação não encontrada para atualização', { userId: id });
+            // 2. Reenvia o Pix via Efí Bank
+            let pixEnviado;
+            try {
+                pixEnviado = await enviarPix({
+                    chaveDestino: saque.chave_pix,
+                    valor:        Number(saque.valor_saque).toFixed(2),
+                    descricao:    `Saque Purg #${saque.id} (retry)`
+                });
+            } catch (errPix) {
+                logger.error('Falha no reenvio do Pix via Efí Bank', { userId: id, saqueId: saque.id, erro: errPix.message });
+                return res.status(502).json({ error: 'Falha ao reenviar o Pix. Tente novamente.' });
             }
 
-            logger.info('Fluxo de saque finalizado', { userId: id, montante: amount, status: 'Executado' });
+            // 3. Registra o endToEndId e muda status para "Processando"
+            await AtualizarSaqueE2eModel.atualizarE2e(saque.id, pixEnviado.endToEndId);
+
+            logger.info('Saque reprocessado com sucesso via Efí Bank', {
+                userId:     id,
+                saqueId:    saque.id,
+                endToEndId: pixEnviado.endToEndId
+            });
 
             return res.status(200).json({
                 success: true,
+                message: 'Pix reenviado. O saque será confirmado automaticamente pelo Efí Bank.',
                 data: {
-                    usuario_id: id,
-                    valor_debitado: amount,
-                    saldo_remanescente: novoSaldoStr,
-                    status_solicitacao: 'Executado'
+                    usuario_id:    id,
+                    saque_id:      saque.id,
+                    valor_enviado: saque.valor_saque,
+                    chave_pix:     saque.chave_pix,
+                    end_to_end_id: pixEnviado.endToEndId,
+                    status:        'Processando'
                 }
             });
 
         } catch (err) {
-            logger.error('Falha crítica na execução de saque', { userId: id, error: err.message });
-            return res.status(500).json({ error: 'Erro interno ao processar a transação financeira.' });
+            logger.error('Erro inesperado no reprocessamento de saque', { userId: id, error: err.message });
+            return res.status(500).json({ error: 'Erro interno ao reprocessar o saque.' });
         }
     }
 };
