@@ -2,7 +2,7 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const HistoricoPagamentoAssinaturaModel = {
-    async historicoPagamentoAssinatura(usuario_id, valorAssinatura) {
+    async historicoPagamentoAssinatura(usuario_id, valorAssinatura, conn) {
         try {
             logger.info(`Iniciando o registro histórico do pagamento da assinatura para o usuário ${usuario_id}`);
 
@@ -14,14 +14,14 @@ const HistoricoPagamentoAssinaturaModel = {
                 logger.error(`Usuário inválido: ${usuario_id}`);
                 throw new Error('usuario_id deve ser um número válido');
             }
-            
-	    if (typeof valorAssinatura !== 'number' || isNaN(valorAssinatura)) {
+
+            if (typeof valorAssinatura !== 'number' || isNaN(valorAssinatura)) {
                 logger.error(`Histórico de pagamento da assinatura inválida: ${valorAssinatura}`);
                 throw new Error('Histórico de pagamento da assinatura deve ser um número válido');
             }
 
             const sqlQuery = `
-                INSERT INTO assinatura 
+                INSERT INTO assinatura
                 (usuario_id, pagamento_assinatura)
                 VALUES (?, ?)
             `;
@@ -29,7 +29,8 @@ const HistoricoPagamentoAssinaturaModel = {
             logger.info(`Executando consulta SQL: ${sqlQuery}`);
             logger.info(`Parâmetros da transação: ${usuario_id}, ${valorAssinatura}`);
 
-            const [results] = await pool.promise().execute(sqlQuery, [usuario_id, valorAssinatura]);
+            const executor = conn || pool.promise();
+            const [results] = await executor.execute(sqlQuery, [usuario_id, valorAssinatura]);
 
             logger.info(`Registro de histórico do pagamento da assinatura concluído com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);

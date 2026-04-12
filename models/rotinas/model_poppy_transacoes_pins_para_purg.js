@@ -2,12 +2,12 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const TransacoesPinsModel = {
-    async transacoesPins(usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente) {
+    async transacoesPins(usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente, conn) {
         try {
             logger.info(`Iniciando o registro da transação de pins para o usuário ${usuario_id}`);
 
             const sqlQuery = `
-                INSERT INTO transacoes 
+                INSERT INTO transacoes
                 (usuario_id, id_token, quantidade_token, valor_transacao, tipo_transacao)
                 VALUES (?, ?, ?, ?, 'V')
             `;
@@ -15,7 +15,8 @@ const TransacoesPinsModel = {
             logger.info(`Executando consulta SQL: ${sqlQuery}`);
             logger.info(`Parâmetros da transação: ${usuario_id}, ${token_id}, ${quantidade_tokens_cliente}, ${tokens_transacao_cliente}`);
 
-            const [results] = await pool.promise().execute(sqlQuery, [usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente]);
+            const executor = conn || pool.promise();
+            const [results] = await executor.execute(sqlQuery, [usuario_id, token_id, quantidade_tokens_cliente, tokens_transacao_cliente]);
 
             logger.info(`Registro de transação concluído com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);

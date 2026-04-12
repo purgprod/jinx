@@ -102,9 +102,15 @@ const DepositoController = {
                 });
             } catch (errPix) {
                 logger.error('Falha ao gerar cobrança Pix no Efí Bank', { userId: id, depositoId, erro: errPix.message });
+                // Remove o registro criado no passo 4 para não bloquear futuros depósitos do usuário
+                try {
+                    await SolicitacaoDepositoModel.deleteSolicitacao(depositoId);
+                    logger.info('Registro de depósito removido após falha no Pix', { depositoId });
+                } catch (errCleanup) {
+                    logger.error('Falha ao remover registro de depósito orphan', { depositoId, erro: errCleanup.message });
+                }
                 return res.status(502).json({
-                    error:          'Solicitação registrada, mas houve falha ao gerar o Pix. Tente novamente em instantes.',
-                    solicitacao_id: depositoId
+                    error: 'Não foi possível gerar o Pix. Tente novamente em instantes.'
                 });
             }
 

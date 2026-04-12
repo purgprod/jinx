@@ -1,6 +1,7 @@
 // controllers/rotinas/controller_poppy_compra_diaria_pins.js
 const Mutex = require('async-mutex').Mutex;
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
 const ConverterEmblemasModel = require('../../models/rotinas/model_poppy_converter_emblemas_em_saldo'); // Importa o model de conversão
 const carteiras = require('./carteiras');
@@ -287,33 +288,32 @@ const CompraDiariaPinsController = {
                                             }
 
                                             const quantidadeTotal = quantidadeAtual + quantidadeParaComprar;
-                                            await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                                usuarioComDistribuicao.usuario_id,
-                                                token.token_id,
-                                                quantidadeTotal
-                                            );
 
-                                            await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                                usuarioComDistribuicao.usuario_id,
-                                                token.token_id,
-                                                quantidadeParaComprar
-                                            );
-
+                                            // Pré-leituras fora da transação (mutex já garante exclusão)
                                             const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
                                             const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
                                             const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
-
                                             const quantidadeIPO = quantidadeTokensIPO - quantidadeParaComprar;
-                                            await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                                token.token_id,
-                                                quantidadeIPO
-                                            );
 
                                             const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
                                             const saldo_atual = parseFloat(saldo_usuario.saldo);
                                             saldo = saldo_atual - (quantidadeParaComprar * tokenPrice);
 
-                                            await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo, usuarioComDistribuicao.usuario_id);
+                                            // Escritas atômicas: tokens usuário + transação + tokens IPO + saldo
+                                            await withTransaction(async (conn) => {
+                                                await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
+                                                    usuarioComDistribuicao.usuario_id, token.token_id, quantidadeTotal, conn
+                                                );
+                                                await AtualizarQuantidadeTokensModel.gravarTransacao(
+                                                    usuarioComDistribuicao.usuario_id, token.token_id, quantidadeParaComprar, conn
+                                                );
+                                                await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
+                                                    token.token_id, quantidadeIPO, conn
+                                                );
+                                                await AtualizarSaldoUsuariosModel.atualizarSaldo(
+                                                    saldo, usuarioComDistribuicao.usuario_id, conn
+                                                );
+                                            });
 
                                             logger.info(`Compra executada: Token ID: ${token.token_id}, Quantidade: ${quantidadeParaComprar}`);
 
@@ -369,30 +369,30 @@ const CompraDiariaPinsController = {
                                     const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
 
                                     const quantidadeTotal = quantidadeAtual + quantidadeCompravel;
-                                    await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                        usuarioComDistribuicao.usuario_id,
-                                        primeiroToken.token_id,
-                                        quantidadeTotal
-                                    );
 
-                                    await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                        usuarioComDistribuicao.usuario_id,
-                                        primeiroToken.token_id,
-                                        quantidadeCompravel
-                                    );
-
+                                    // Pré-leituras fora da transação (mutex já garante exclusão)
                                     const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
                                     const tokenAtualIPO = tokensIPO.find(t => t.token_id === primeiroToken.token_id);
                                     const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
-
                                     const quantidadeIPO = quantidadeTokensIPO - quantidadeCompravel;
-                                    await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                        primeiroToken.token_id,
-                                        quantidadeIPO
-                                    );
 
                                     saldo -= (quantidadeCompravel * tokenPrice);
-                                    await AtualizarSaldoUsuariosModel.atualizarSaldo(saldo, usuarioComDistribuicao.usuario_id);
+
+                                    // Escritas atômicas: tokens usuário + transação + tokens IPO + saldo
+                                    await withTransaction(async (conn) => {
+                                        await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
+                                            usuarioComDistribuicao.usuario_id, primeiroToken.token_id, quantidadeTotal, conn
+                                        );
+                                        await AtualizarQuantidadeTokensModel.gravarTransacao(
+                                            usuarioComDistribuicao.usuario_id, primeiroToken.token_id, quantidadeCompravel, conn
+                                        );
+                                        await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
+                                            primeiroToken.token_id, quantidadeIPO, conn
+                                        );
+                                        await AtualizarSaldoUsuariosModel.atualizarSaldo(
+                                            saldo, usuarioComDistribuicao.usuario_id, conn
+                                        );
+                                    });
 
                                     logger.info(`Compra executada com saldo restante: Token ID: ${primeiroToken.token_id}, Quantidade: ${quantidadeCompravel}`);
                                 } finally {

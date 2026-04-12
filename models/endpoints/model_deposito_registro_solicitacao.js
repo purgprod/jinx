@@ -24,6 +24,22 @@ const SolicitacaoDepositoModel = {
                 }
             });
         });
+    },
+
+    async deleteSolicitacao(depositoId) {
+        const query = `DELETE FROM depositos WHERE id = ? AND status_deposito = 'Analisando';`;
+
+        return new Promise((resolve, reject) => {
+            connection.query(query, [depositoId], (error, results) => {
+                if (error) {
+                    logger.error(`Erro ao remover solicitação de depósito ID ${depositoId}.`, error);
+                    reject(new Error('Erro ao remover solicitação de depósito'));
+                } else {
+                    logger.info(`Solicitação de depósito ID ${depositoId} removida com sucesso`);
+                    resolve(results);
+                }
+            });
+        });
     }
 };
 

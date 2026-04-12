@@ -11,7 +11,7 @@ const FalharSaqueModel = {
      * @param {string} endToEndId - Identificador fim-a-fim da transação que falhou
      * @param {string} motivo     - Motivo da falha informado pelo Nubank
      */
-    async falharPorE2e(endToEndId, motivo) {
+    async falharPorE2e(endToEndId, motivo, conn) {
         const query = `
             UPDATE saques
             SET
@@ -20,6 +20,11 @@ const FalharSaqueModel = {
             WHERE e2e_id = ?
               AND status_saque = 'Processando';
         `;
+
+        if (conn) {
+            const [results] = await conn.execute(query, [motivo, endToEndId]);
+            return results;
+        }
 
         return new Promise((resolve, reject) => {
             connection.query(query, [motivo, endToEndId], (error, results) => {

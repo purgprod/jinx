@@ -1,4 +1,5 @@
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins_vencidos');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const ZerarPinsModel = require('../../models/rotinas/model_poppy_zerar_pins_para_clientes');
@@ -123,147 +124,9 @@ const RecompraPinsVencidosController = {
                 });
             }
 
-            // Etapa 4: Registrar transações
-            logger.info('Iniciando registro das transações');
-
-            const transacoesRealizadas = []; // Armazenará as transações individuais
-
-            for (const tokenId in tokensTotais) {
-                const { totalQuantidade, totalRendimento } = tokensTotais[tokenId];
-                const totalTransacao = totalQuantidade / 100; // Valor total da transação
-
-                // Verifica se existem usuários para processar
-                if (usuariosPorToken[tokenId].length === 0) {
-                    logger.warn(`Nenhum usuário encontrado para o token ${tokenId}`);
-                    continue;
-                }
-
-                for (const usuario of usuariosPorToken[tokenId]) {
-                    // Ignora o usuário com id 1
-                    if (usuario.usuario_id === 1) {
-                        logger.info(`Pulando usuário 1`);
-                        continue;
-                    }
-
-                    try {
-                        logger.info(`Iniciando registro da transação para o usuário ${usuario.usuario_id}`);
-                        
-                        // Define a quantidade_token como a quantidade do usuário
-                        const quantidadeToken = typeof usuario.quantidade_tokens === 'number' ? 
-                            usuario.quantidade_tokens : parseFloat(usuario.quantidade_tokens);
-                        
-                        // Verifica se a quantidade_token é um número válido
-                        if (isNaN(quantidadeToken)) {
-                            logger.warn(`Quantidade inválida para o usuário ${usuario.usuario_id}`);
-                            continue;
-                        }
-
-                        // Calcula o valor da transação com base na quantidade do usuário
-                        const valorTransacaoIndividual = quantidadeToken / 100;
-
-                        // Verifica se o valor da transação é um número válido
-                        if (isNaN(valorTransacaoIndividual)) {
-                            logger.warn(`Valor de transação inválido para o usuário ${usuario.usuario_id}`);
-                            continue;
-                        }
-
-                        const resultado = await TransacoesPinsModel.transacoesPins(
-                            usuario.usuario_id, // usuario_id
-                            tokenId, // id_token
-                            quantidadeToken, // quantidade_token individual
-                            valorTransacaoIndividual // valor_transacao individual
-                        );
-
-                        // Armazena a transação realizada
-                        transacoesRealizadas.push({
-                            usuario_id: usuario.usuario_id,
-                            valorTransacaoIndividual: valorTransacaoIndividual
-                        });
-
-                        logger.info(`Transação registrada com sucesso para o usuário ${usuario.usuario_id}`);
-                        logger.info(`Resultado da transação: ${JSON.stringify(resultado)}`);
-                    } catch (error) {
-                        logger.error(`Erro ao registrar transação para o usuário ${usuario.usuario_id}:`, error);
-                        logger.error(`Mensagem do erro: ${error.message}`);
-                        return res.status(500).json({
-                            error: 'Erro ao registrar transação',
-                            message: `Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`,
-                            tokensTotais: tokensTotais,
-                        });
-                    }
-                }
-            }
-
-            // Etapa 5: Movimentação dos tokens para Purg
-            for (const tokenId in tokensTotais) {
-                const { totalQuantidade, totalRendimento } = tokensTotais[tokenId];
-                
-                try {
-                    const resultado = await MoverPinsModel.moverPins(tokenId, totalQuantidade, totalRendimento);
-                    logger.info(`Movimentação concluída com sucesso para o Token ${tokenId}`);
-                    logger.info(`Resultado da movimentação: ${JSON.stringify(resultado)}`);
-                } catch (error) {
-                    logger.error(`Erro ao movimentar tokens para o Token ${tokenId}:`, error);
-                    logger.error(`Mensagem do erro: ${error.message}`);
-                    return res.status(500).json({
-                        error: 'Erro ao movimentar tokens',
-                        message: `Erro ao processar o Token ${tokenId}: ${error.message}`,
-                        tokensTotais: tokensTotais,
-                    });
-                }
-            }
-
-            // Etapa 6: Zerar os tokens para os usuários
-            const usuariosAFazerZerar = [];
-            for (const tokenId in usuariosPorToken) {
-                usuariosAFazerZerar.push(...usuariosPorToken[tokenId]);
-            }
-
-            if (usuariosAFazerZerar.length === 0) {
-                logger.warn('Nenhum usuário para zerar tokens');
-                return res.status(200).json({
-                    message: 'Rotinas executadas com sucesso',
-                    pinsAtivos: pinsAtivos,
-                    usuariosPorToken: {},
-                    tokensTotais: tokensTotais,
-                });
-            }
-
-            for (const usuario of usuariosAFazerZerar) {
-                try {
-                    let token = usuario.token_id;
-                    if (typeof token === 'string') {
-                        token = parseInt(token, 10);
-                    }
-                    
-                    if (typeof token !== 'number' || isNaN(token)) {
-                        logger.warn(`Usuário com token inválido: ${JSON.stringify(usuario)}`);
-                        continue;
-                    }
-
-                    const resultado = await ZerarPinsModel.zerarPins(token);
-                    logger.info(`Tokens zerados com sucesso para o usuário ${usuario.usuario_id}`);
-                    logger.info(`Resultado da atualização: ${JSON.stringify(resultado)}`);
-                } catch (error) {
-                    logger.error(`Erro ao zerar tokens para o usuário ${usuario.usuario_id}:`, error);
-                    logger.error(`Mensagem do erro: ${error.message}`);
-                    return res.status(500).json({
-                        error: 'Erro ao zerar tokens',
-                        message: `Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`,
-                        pinsAtivos: pinsAtivos,
-                        usuariosPorToken: {},
-                        tokensTotais: tokensTotais,
-                    });
-                }
-            }
-
-            // Etapa 7: Atualizar o saldo da carteira
-            logger.info('Iniciando atualização do saldo da carteira');
-
-            // Buscar os saldos atuais das carteiras
+            // Etapa 4: Buscar saldos atuais antes de iniciar as escritas
+            logger.info('Buscando saldos atuais das carteiras');
             const saldos = await BuscarSaldosCarteirasModel.getSaldosCarteiras();
-
-            // Verificar se há dados válidos
             if (!saldos.length) {
                 logger.warn('Nenhum saldo encontrado nas carteiras');
                 return res.status(200).json({
@@ -274,42 +137,78 @@ const RecompraPinsVencidosController = {
                 });
             }
 
-            // Atualizar o saldo para cada usuário com base nas transações realizadas
-            for (const transacao of transacoesRealizadas) {
-                const usuario_id = transacao.usuario_id;
-                const valorTransacaoIndividual = transacao.valorTransacaoIndividual;
+            // Etapas 4–6 (atômicas por usuário): gravar transações + zerar tokens + atualizar saldo.
+            // Para cada usuário, todos os passos são revertidos juntos se qualquer um falhar.
+            logger.info('Processando usuários: gravar transações, zerar tokens e atualizar saldo');
 
-                try {
-                    // Encontrar o saldo atual do usuário
-                    const saldoAtual = saldos.find(saldo => saldo.usuario_id === usuario_id);
-                    
-                    if (!saldoAtual) {
-                        logger.warn(`Nenhum saldo encontrado para o usuário ${usuario_id}`);
+            // Monta mapa usuario_id → { tokens: [{tokenId, quantidade, valor}], totalValor }
+            const dadosPorUsuario = {};
+            for (const tokenId in usuariosPorToken) {
+                for (const usuario of usuariosPorToken[tokenId]) {
+                    if (usuario.usuario_id === 1) continue;
+
+                    const quantidade = typeof usuario.quantidade_tokens === 'number'
+                        ? usuario.quantidade_tokens
+                        : parseFloat(usuario.quantidade_tokens);
+
+                    if (isNaN(quantidade)) {
+                        logger.warn(`Quantidade inválida para o usuário ${usuario.usuario_id} token ${tokenId}`);
                         continue;
                     }
 
-                    // Calcular o novo saldo
-                    const novoSaldo = parseFloat(saldoAtual.saldo) + parseFloat(valorTransacaoIndividual);
+                    const valor = quantidade / 100;
+                    const uid = usuario.usuario_id;
 
-                    // Atualizar o saldo da carteira
-                    const resultado = await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
-                        usuario_id,
-                        novoSaldo
-                    );
+                    if (!dadosPorUsuario[uid]) {
+                        dadosPorUsuario[uid] = { tokens: [], totalValor: 0 };
+                    }
+                    dadosPorUsuario[uid].tokens.push({ tokenId, quantidade, valor });
+                    dadosPorUsuario[uid].totalValor += valor;
+                }
+            }
 
-                    logger.info(`Saldo da carteira atualizado com sucesso para o usuário ${usuario_id}`);
-                    logger.info(`Novo saldo: ${novoSaldo.toFixed(8)}`);
-                    logger.info(`Resultado da atualização: ${JSON.stringify(resultado)}`);
-                } catch (error) {
-                    logger.error(`Erro ao atualizar o saldo da carteira para o usuário ${usuario_id}:`, error);
-                    logger.error(`Mensagem do erro: ${error.message}`);
-                    return res.status(500).json({
-                        error: 'Erro ao atualizar o saldo da carteira',
-                        message: `Erro ao processar o usuário ${usuario_id}: ${error.message}`,
-                        pinsAtivos: pinsAtivos,
-                        usuariosPorToken: {},
-                        tokensTotais: tokensTotais,
+            for (const usuarioId in dadosPorUsuario) {
+                const { tokens, totalValor } = dadosPorUsuario[usuarioId];
+                const saldoAtual = saldos.find(s => s.usuario_id === parseInt(usuarioId));
+
+                if (!saldoAtual) {
+                    logger.warn(`Saldo não encontrado para o usuário ${usuarioId} — pulando`);
+                    continue;
+                }
+
+                const novoSaldo = parseFloat(saldoAtual.saldo) + totalValor;
+
+                try {
+                    await withTransaction(async (conn) => {
+                        for (const { tokenId, quantidade, valor } of tokens) {
+                            await TransacoesPinsModel.transacoesPins(
+                                parseInt(usuarioId), tokenId, quantidade, valor, conn
+                            );
+                            await ZerarPinsModel.zerarPins(
+                                parseInt(tokenId, 10), parseInt(usuarioId, 10), conn
+                            );
+                        }
+                        await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
+                            parseInt(usuarioId), novoSaldo, conn
+                        );
                     });
+                    logger.info(`Usuário ${usuarioId} processado. Novo saldo: ${novoSaldo.toFixed(8)}`);
+                } catch (error) {
+                    logger.error(`Erro ao processar usuário ${usuarioId} — rollback executado:`, error);
+                    // Continua para os outros usuários
+                }
+            }
+
+            // Etapa 5: Mover tokens para o Purgatório (por token, após processar todos os usuários)
+            logger.info('Movendo tokens para o Purgatório');
+            for (const tokenId in tokensTotais) {
+                const { totalQuantidade, totalRendimento } = tokensTotais[tokenId];
+                try {
+                    await MoverPinsModel.moverPins(tokenId, totalQuantidade, totalRendimento);
+                    logger.info(`Tokens movidos para Purgatório: token ${tokenId}`);
+                } catch (error) {
+                    logger.error(`Erro ao mover pins para token ${tokenId}:`, error);
+                    // Log e continua — não reverte usuários já processados
                 }
             }
 

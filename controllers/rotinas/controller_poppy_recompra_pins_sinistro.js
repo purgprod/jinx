@@ -1,5 +1,6 @@
 // controllers/rotinas/controller_poppy_recompra_pins_sinistro.js
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarPinsSinistroModel = require('../../models/rotinas/model_poppy_buscar_pins_sinistro');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const AtualizarPinsModel = require('../../models/rotinas/model_poppy_atualizar_pins_para_clientes');
@@ -155,87 +156,38 @@ const RecompraPinsSinistroController = {
                         logger.info(`Quantidade de tokens a ser comprada para usuário ${usuario_id}: ${quantidade_tokens_cliente}`);
                         logger.info(`Nova quantidade de tokens IPO para token ${token_id}: ${quantidade_tokens_ipo}`);
 
-                        // Etapa 1.1.3.5: Atualizar a quantidade de tokens do usuário
-                        try {
-                            await AtualizarPinsModel.atualizarPins(token_id, usuario_id, quantidade_tokens_cliente);
-                            logger.info(`Quantidade de tokens atualizada para usuário ${usuario_id} e token ${token_id}`);
-                        } catch (error) {
-                            logger.error(`Erro ao atualizar quantidade de tokens para o usuário ${usuario_id} e token ${token_id}:`, error);
-                            return res.status(500).json({
-                                error: `Erro ao atualizar quantidade de tokens para o usuário ${usuario_id} e token ${token_id}`,
-                                message: 'Ocorreu um erro ao tentar atualizar a quantidade de tokens',
-                            });
-                        }
-
-                        // Etapa 1.1.3.6: Atualizar a quantidade de tokens do IPO
-                        try {
-                            await AtualizarPinsModel.atualizarPins(token_id, 1, quantidade_tokens_ipo);
-                            logger.info(`Quantidade de tokens IPO atualizada para token ${token_id}`);
-                        } catch (error) {
-                            logger.error(`Erro ao atualizar quantidade de tokens do IPO para token ${token_id}:`, error);
-                            return res.status(500).json({
-                                error: `Erro ao atualizar quantidade de tokens do IPO para token ${token_id}`,
-                                message: 'Ocorreu um erro ao tentar atualizar a quantidade de tokens do IPO',
-                            });
-                        }
-
-                        // Etapa 1.1.3.7: Gravar as transações de venda
+                        // Etapas 1.1.3.5 a 1.1.3.8 — atômicas: tokens + transação + saldos.
+                        // Se qualquer passo falhar, ROLLBACK reverte tudo para este usuário/token.
                         const tokens_transacao_cliente = calculo_token_cliente * 0.01;
                         try {
-                            await TransacoesPinsModel.transacoesPins(usuario_id, token_id, calculo_token_cliente, tokens_transacao_cliente);
-                            logger.info(`Transação registrada para usuário ${usuario_id} e token ${token_id}`);
-                        } catch (error) {
-                            logger.error(`Erro ao registrar transação para o usuário ${usuario_id} e token ${token_id}:`, error);
-                            return res.status(500).json({
-                                error: `Erro ao registrar transação para o usuário ${usuario_id} e token ${token_id}`,
-                                message: 'Ocorreu um erro ao tentar registrar a transação',
+                            await withTransaction(async (conn) => {
+                                // Atualizar tokens do usuário
+                                await AtualizarPinsModel.atualizarPins(token_id, usuario_id, quantidade_tokens_cliente, conn);
+
+                                // Atualizar tokens do IPO
+                                await AtualizarPinsModel.atualizarPins(token_id, 1, quantidade_tokens_ipo, conn);
+
+                                // Gravar transação de venda
+                                await TransacoesPinsModel.transacoesPins(usuario_id, token_id, calculo_token_cliente, tokens_transacao_cliente, conn);
+
+                                // Buscar saldos atuais e atualizar (dentro da transação para consistência)
+                                const saldoDadosCliente = await BuscarSaldosCarteirasModel.getSaldosCarteiras(usuario_id);
+                                const saldo_atual_cliente = saldoDadosCliente.length > 0 ? parseFloat(saldoDadosCliente[0].saldo) : 0;
+                                const saldo_novo_cliente = saldo_atual_cliente + tokens_transacao_cliente;
+
+                                const saldoDadosIpo = await BuscarSaldosCarteirasModel.getSaldosCarteiras(1);
+                                const saldo_atual_ipo = saldoDadosIpo.length > 0 ? parseFloat(saldoDadosIpo[0].saldo) : 0;
+                                const saldo_novo_ipo = saldo_atual_ipo - tokens_transacao_cliente;
+
+                                await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(usuario_id, saldo_novo_cliente, conn);
+                                await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(1, saldo_novo_ipo, conn);
+
+                                logger.info(`Usuário ${usuario_id} token ${token_id}: novo saldo cliente=${saldo_novo_cliente}, IPO=${saldo_novo_ipo}`);
                             });
-                        }
-
-                        // Etapa 1.1.3.8: Atualizar o saldo dos usuários e IPO
-                        try {
-                            // Obter saldo do usuário
-                            const saldoDadosCliente = await BuscarSaldosCarteirasModel.getSaldosCarteiras(usuario_id);
-                            const saldo_atual_cliente = saldoDadosCliente.length > 0 ? parseFloat(saldoDadosCliente[0].saldo) : 0;
-                            logger.info(`Saldo atual do usuário ${usuario_id} é ${saldo_atual_cliente}`);
-
-                            // Calcular novo saldo do cliente (operação de soma)
-                            const saldo_novo_cliente = saldo_atual_cliente + tokens_transacao_cliente;
-                            logger.info(`Novo saldo do usuário ${usuario_id} após transação é ${saldo_novo_cliente}`);
-
-                            // Obter saldo do IPO
-                            const saldoDadosIpo = await BuscarSaldosCarteirasModel.getSaldosCarteiras(1);
-                            const saldo_atual_ipo = saldoDadosIpo.length > 0 ? parseFloat(saldoDadosIpo[0].saldo) : 0;
-                            logger.info(`Saldo atual do IPO é ${saldo_atual_ipo}`);
-
-                            // Calcular novo saldo do IPO (operação de subtração)
-                            const saldo_novo_ipo = saldo_atual_ipo - tokens_transacao_cliente;
-                            logger.info(`Novo saldo do IPO após transação é ${saldo_novo_ipo}`);
-
-                            // Atualizar saldos no banco de dados
-                            try {
-                                // Atualizar saldo do usuário
-                                await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(usuario_id, saldo_novo_cliente);
-                                logger.info(`Saldo do usuário ${usuario_id} atualizado para ${saldo_novo_cliente}`);
-
-                                // Atualizar saldo do IPO
-                                await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(1, saldo_novo_ipo);
-                                logger.info(`Saldo do IPO atualizado para ${saldo_novo_ipo}`);
-
-                            } catch (error) {
-                                logger.error(`Erro ao atualizar saldos:`, error);
-                                return res.status(500).json({
-                                    error: `Erro ao atualizar saldos`,
-                                    message: 'Ocorreu um erro ao tentar atualizar os saldos',
-                                });
-                            }
-
+                            logger.info(`Usuário ${usuario_id} processado para token ${token_id}`);
                         } catch (error) {
-                            logger.error(`Erro ao buscar saldo:`, error);
-                            return res.status(500).json({
-                                error: `Erro ao buscar saldo`,
-                                message: 'Ocorreu um erro ao tentar buscar o saldo',
-                            });
+                            logger.error(`Erro ao processar usuário ${usuario_id} token ${token_id} — rollback executado:`, error);
+                            // Continua para o próximo usuário sem interromper o loop
                         }
 
                     }

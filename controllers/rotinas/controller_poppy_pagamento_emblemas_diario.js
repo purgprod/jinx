@@ -1,4 +1,5 @@
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarSaldosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_saldos_carteiras');
 const BuscarEmblemasCarteirasModel = require('../../models/rotinas/model_poppy_buscar_emblemas_carteiras');
 const HistoricoPagamentoEmblemasModel = require('../../models/rotinas/model_poppy_historico_pagamento_emblemas');
@@ -87,26 +88,15 @@ const PagamentoEmblemasController = {
                         logger.info(`Usuario ID: ${usuario_id}, Porcentagem Emblemas: ${porcentagemEmblemas}, Valor Emblemas: ${valorEmblemas}`);
 
                         try {
-                            const historicoResult = await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas);
-                            
-                            if (historicoResult.affectedRows > 0) {
-                                logger.info(`Histórico de pagamento de emblemas registrado com sucesso para o usuário ${usuario_id}`);
-
-                                try {
-                                    const atualizarEmblemas = parseFloat(quantidadeEmblemas) + parseFloat(valorEmblemas);
-                                    const atualizarResult = await AtualizarEmblemasUsuariosModel.atualizarEmblemas(atualizarEmblemas, usuario_id);
-
-                                    if (atualizarResult.affectedRows > 0) {
-                                        logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${atualizarEmblemas} com sucesso.`);
-                                    } else {
-                                        logger.warn(`Nenhuma linha afetada ao atualizar emblemas do usuário ${usuario_id}.`);
-                                    }
-                                } catch (atualizarError) {
-                                    logger.error(`Erro ao atualizar emblemas do usuário ${usuario_id}:`, atualizarError);
-                                }
-                            }
-                        } catch (historicoError) {
-                            logger.error(`Erro ao registrar histórico de pagamento de emblemas para o usuário ${usuario_id}:`, historicoError);
+                            // Histórico + atualização de emblemas: atômicos — ambos ou nenhum
+                            const novoValorEmblemas = parseFloat(quantidadeEmblemas) + parseFloat(valorEmblemas);
+                            await withTransaction(async (conn) => {
+                                await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas, conn);
+                                await AtualizarEmblemasUsuariosModel.atualizarEmblemas(novoValorEmblemas, usuario_id, conn);
+                            });
+                            logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${novoValorEmblemas} com sucesso.`);
+                        } catch (erroEmblemas) {
+                            logger.error(`Erro ao registrar/atualizar emblemas do usuário ${usuario_id}:`, erroEmblemas);
                         }
 
                         detalhesEmblemas.push({
@@ -121,26 +111,14 @@ const PagamentoEmblemasController = {
                         logger.info(`Usuario ID: ${usuario_id}, Porcentagem Emblemas: ${porcentagemEmblemas}, Valor Emblemas: ${valorEmblemas}`);
 
                         try {
-                            const historicoResult = await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas);
-                            
-                            if (historicoResult.affectedRows > 0) {
-                                logger.info(`Histórico de pagamento de emblemas registrado com sucesso para o usuário ${usuario_id}`);
-
-                                try {
-                                    const atualizarEmblemas = valorEmblemas;
-                                    const atualizarResult = await AtualizarEmblemasUsuariosModel.atualizarEmblemas(atualizarEmblemas, usuario_id);
-
-                                    if (atualizarResult.affectedRows > 0) {
-                                        logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${atualizarEmblemas} com sucesso.`);
-                                    } else {
-                                        logger.warn(`Nenhuma linha afetada ao atualizar emblemas do usuário ${usuario_id}.`);
-                                    }
-                                } catch (atualizarError) {
-                                    logger.error(`Erro ao atualizar emblemas do usuário ${usuario_id}:`, atualizarError);
-                                }
-                            }
-                        } catch (historicoError) {
-                            logger.error(`Erro ao registrar histórico de pagamento de emblemas para o usuário ${usuario_id}:`, historicoError);
+                            // Histórico + atualização de emblemas: atômicos — ambos ou nenhum
+                            await withTransaction(async (conn) => {
+                                await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas, conn);
+                                await AtualizarEmblemasUsuariosModel.atualizarEmblemas(valorEmblemas, usuario_id, conn);
+                            });
+                            logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${valorEmblemas} com sucesso.`);
+                        } catch (erroEmblemas) {
+                            logger.error(`Erro ao registrar/atualizar emblemas do usuário ${usuario_id}:`, erroEmblemas);
                         }
 
                         detalhesEmblemas.push({

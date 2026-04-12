@@ -64,7 +64,7 @@ const MoverPinsModel = {
      * @param {number}        novaQuantidade Nova quantidade de tokens.
      * @returns {Promise<object>} Resultado da execução do UPDATE.
      */
-    async removerPinsUsuario(tokenId, usuarioId, novaQuantidade) {
+    async removerPinsUsuario(tokenId, usuarioId, novaQuantidade, conn) {
         try {
             const token_Id   = parseInt(tokenId, 10);
             const usuario_Id = parseInt(usuarioId, 10);
@@ -98,7 +98,8 @@ const MoverPinsModel = {
             logger.info(`Executando atualização SQL: ${sqlQuery.trim()}`);
             logger.info(`Parâmetros: quantidade_tokens=${novaQuantidade}, token_id=${token_Id}, usuario_id=${usuario_Id}`);
 
-            const [results] = await pool.promise().execute(sqlQuery, [
+            const executor = conn || pool.promise();
+            const [results] = await executor.execute(sqlQuery, [
                 novaQuantidade,
                 token_Id,
                 usuario_Id

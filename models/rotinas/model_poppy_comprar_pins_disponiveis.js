@@ -3,53 +3,29 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const AtualizarQuantidadeTokensModel = {
-    async atualizarQuantidadeTokens(usuario_id, token_id, quantidade_tokens) {
+    async atualizarQuantidadeTokens(usuario_id, token_id, quantidade_tokens, conn) {
         const sql = 'INSERT INTO usuario_tokens (usuario_id, token_id, quantidade_tokens) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantidade_tokens = ?';
-        
-        return new Promise((resolve, reject) => {
-            pool.promise().execute(sql, [usuario_id, token_id, quantidade_tokens, quantidade_tokens])
-                .then((results) => {
-                    logger.info(`Token ${token_id} do usuário ${usuario_id} atualizado com sucesso`);
-                    resolve(results);
-                })
-                .catch((error) => {
-                    logger.error(`Erro ao atualizar/atualizar a quantidade de tokens:`, error);
-                    reject(new Error('Erro ao atualizar/atualizar a quantidade de tokens'));
-                });
-        });
+        const executor = conn || pool.promise();
+        const [results] = await executor.execute(sql, [usuario_id, token_id, quantidade_tokens, quantidade_tokens]);
+        logger.info(`Token ${token_id} do usuário ${usuario_id} atualizado com sucesso`);
+        return results;
     },
 
-    async gravarTransacao(usuario_id, token_id, quantidade_tokens) {
+    async gravarTransacao(usuario_id, token_id, quantidade_tokens, conn) {
         const sqlInsert = 'INSERT INTO transacoes (usuario_id, id_token, quantidade_token, valor_transacao, tipo_transacao) VALUES (?, ?, ?, ?, ?)';
         const valorTransacao = quantidade_tokens * 0.01;
-        
-        return new Promise((resolve, reject) => {
-            pool.promise().execute(sqlInsert, [usuario_id, token_id, quantidade_tokens, valorTransacao, 'C'])
-                .then((results) => {
-                    logger.info(`Transação gravada com sucesso`);
-                    resolve(results);
-                })
-                .catch((error) => {
-                    logger.error(`Erro ao gravar transação:`, error);
-                    reject(new Error('Erro ao gravar transação'));
-                });
-        });
+        const executor = conn || pool.promise();
+        const [results] = await executor.execute(sqlInsert, [usuario_id, token_id, quantidade_tokens, valorTransacao, 'C']);
+        logger.info(`Transação gravada com sucesso`);
+        return results;
     },
-    
-    async atualizarTokensIPO(token_id, quantidade_tokens) {
+
+    async atualizarTokensIPO(token_id, quantidade_tokens, conn) {
         const sqlUpdate = 'UPDATE usuario_tokens SET quantidade_tokens = ? WHERE usuario_id = ? AND token_id = ?';
-        
-        return new Promise((resolve, reject) => {
-            pool.promise().execute(sqlUpdate, [quantidade_tokens, 1, token_id])
-                .then((results) => {
-                    logger.info(`Atualizando os Pins do IPO, pin ${token_id}, quantidade ${quantidade_tokens}`);
-                    resolve(results);
-                })
-                .catch((error) => {
-                    logger.error(`Erro ao executar update:`, error);
-                    reject(new Error('Erro ao executar update'));
-                });
-        });
+        const executor = conn || pool.promise();
+        const [results] = await executor.execute(sqlUpdate, [quantidade_tokens, 1, token_id]);
+        logger.info(`Atualizando os Pins do IPO, pin ${token_id}, quantidade ${quantidade_tokens}`);
+        return results;
     }
 };
 

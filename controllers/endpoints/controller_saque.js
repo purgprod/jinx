@@ -16,6 +16,8 @@ const AtualizarSaqueE2eModel          = require('../../models/saques/model_saque
 // Serviço Efí Bank — envio automático do Pix ao usuário após deduções
 const { enviarPix } = require('../../services/efi_pix');
 
+const { withTransaction } = require('../../database/transaction');
+
 const SCALE   = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
 
@@ -214,56 +216,54 @@ const SaqueController = {
 
             const planoVenda = balancearVendas(tokensUsuario, quantidade_tokens_para_vender);
 
-            // ETAPA 6 – Registro de Transações (Ledger)
+            // Pré-leitura: busca tokens do purgatório antes de abrir a transação
+            let tokensPurgatorio = [];
             try {
-                for (const venda of planoVenda) {
-                    const valorTransacao = venda.qtd_vender * PRECO_TOKEN_FIXO;
-                    await TransacoesPinsModel.transacoesPins(
-                        id,
-                        venda.token_id,
-                        venda.qtd_vender,
-                        valorTransacao.toFixed(2)
-                    );
-                }
-            } catch (errSave) {
-                logger.error('Erro ao registrar ledger de tokens', { userId: id, err: errSave });
-                return res.status(500).json({ error: 'Erro ao registrar transações de venda.' });
+                tokensPurgatorio = await BuscarTokensCarteirasPurgModel.getTokensCarteiras(1);
+            } catch (errPurg) {
+                logger.error('Erro ao buscar tokens do purgatório', { userId: id, err: errPurg });
+                return res.status(500).json({ error: 'Erro ao processar ativos do sistema.' });
             }
 
-            // ETAPA 7 – Movimentação de Ativos (Usuário -> Purgatório)
-            try {
-                const tokensPurgatorio = await BuscarTokensCarteirasPurgModel.getTokensCarteiras(1);
-                
-                for (const venda of planoVenda) {
-                    // Update Usuário
-                    const tokenInfoUsuario = tokensUsuario.find(t => t.token_id === venda.token_id);
-                    const novaQtdUser = Math.max(0, Number(tokenInfoUsuario?.quantidade_tokens ?? 0) - venda.qtd_vender);
-                    await MoverPinsModel.removerPinsUsuario(venda.token_id, id, novaQtdUser);
-
-                    // Update Sistema (Purgatório id:1)
-                    const tokenInfoPurg = tokensPurgatorio.find(t => t.token_id === venda.token_id);
-                    const novaQtdPurg = Number(tokenInfoPurg?.quantidade_tokens ?? 0) + venda.qtd_vender;
-                    await MoverPinsModel.removerPinsUsuario(venda.token_id, 1, novaQtdPurg);
-                }
-            } catch (errUpdate) {
-                logger.error('Erro na movimentação de ativos', { userId: id, err: errUpdate });
-                return res.status(500).json({ error: 'Erro na atualização de custódia dos tokens.' });
-            }
-
-            // ETAPA 8 – Finalização do Saldo da Carteira
+            // ETAPAS 6 + 7 + 8 — atômicas via transação MySQL.
+            // Se qualquer passo falhar, ROLLBACK desfaz ledger, movimentação e débito juntos.
             let novo_valor_formatted;
             try {
-                const saldoOriginalBig = decimalToBigInt(saldoOriginal);
-                const saldoTruncBig = decimalToBigInt(saldoTrunc);
-                const amountBig = decimalToBigInt(amountStr);
+                await withTransaction(async (conn) => {
+                    // ETAPA 6 – Registro de Transações (Ledger)
+                    for (const venda of planoVenda) {
+                        const valorTransacao = venda.qtd_vender * PRECO_TOKEN_FIXO;
+                        await TransacoesPinsModel.transacoesPins(
+                            id,
+                            venda.token_id,
+                            venda.qtd_vender,
+                            valorTransacao.toFixed(2),
+                            conn
+                        );
+                    }
 
-                const novo_valor_big = saldoOriginalBig - (saldoTruncBig - amountBig);
-                novo_valor_formatted = bigIntToDecimalString(novo_valor_big);
+                    // ETAPA 7 – Movimentação de Ativos (Usuário -> Purgatório)
+                    for (const venda of planoVenda) {
+                        const tokenInfoUsuario = tokensUsuario.find(t => t.token_id === venda.token_id);
+                        const novaQtdUser = Math.max(0, Number(tokenInfoUsuario?.quantidade_tokens ?? 0) - venda.qtd_vender);
+                        await MoverPinsModel.removerPinsUsuario(venda.token_id, id, novaQtdUser, conn);
 
-                await AtualizarCarteiraSaqueModel.updateCarteira(novo_valor_formatted, id);
-            } catch (errUpdateSaldo) {
-                logger.error('Erro fatal ao atualizar saldo final', { userId: id, err: errUpdateSaldo });
-                return res.status(500).json({ error: 'Erro ao atualizar saldo da carteira.' });
+                        const tokenInfoPurg = tokensPurgatorio.find(t => t.token_id === venda.token_id);
+                        const novaQtdPurg = Number(tokenInfoPurg?.quantidade_tokens ?? 0) + venda.qtd_vender;
+                        await MoverPinsModel.removerPinsUsuario(venda.token_id, 1, novaQtdPurg, conn);
+                    }
+
+                    // ETAPA 8 – Finalização do Saldo da Carteira
+                    const saldoOriginalBig = decimalToBigInt(saldoOriginal);
+                    const saldoTruncBig    = decimalToBigInt(saldoTrunc);
+                    const amountBigTx      = decimalToBigInt(amountStr);
+                    const novo_valor_big   = saldoOriginalBig - (saldoTruncBig - amountBigTx);
+                    novo_valor_formatted   = bigIntToDecimalString(novo_valor_big);
+                    await AtualizarCarteiraSaqueModel.updateCarteira(novo_valor_formatted, id, conn);
+                });
+            } catch (errTx) {
+                logger.error('Erro na transação de débito/tokens — rollback executado', { userId: id, err: errTx });
+                return res.status(500).json({ error: 'Erro ao processar débito do saque. Nenhuma alteração foi salva.' });
             }
 
             // ETAPA 9 – Envio automático do Pix via Efí Bank

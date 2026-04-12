@@ -3,7 +3,7 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const AtualizarPinsModel = {
-    async atualizarPins(id_token, usuario_id, quantidade_tokens_cliente) {
+    async atualizarPins(id_token, usuario_id, quantidade_tokens_cliente, conn) {
         try {
             logger.info(`Iniciando o atualização de pins para o token ${id_token} e usuário ${usuario_id}`);
 
@@ -23,7 +23,7 @@ const AtualizarPinsModel = {
             logger.info(`token_id processado: ${token_Id} e usuario_id processado: ${user_Id}`);
 
             const sqlQuery = `
-                UPDATE usuario_tokens 
+                UPDATE usuario_tokens
                 SET quantidade_tokens = ?, flag_sinistro = 1
                 WHERE token_id = ?
                 AND usuario_id = ?
@@ -32,7 +32,8 @@ const AtualizarPinsModel = {
             logger.info(`Executando atualização SQL: ${sqlQuery}`);
             logger.info(`Parâmetros da atualização: Token ID=${token_Id}, Usuário ID=${user_Id}`);
 
-            const [results] = await pool.promise().execute(sqlQuery, [quantidade_tokens_cliente, token_Id, user_Id]);
+            const executor = conn || pool.promise();
+            const [results] = await executor.execute(sqlQuery, [quantidade_tokens_cliente, token_Id, user_Id]);
 
             logger.info(`Atualização concluída com sucesso: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`);
             logger.info(`Número de registros afetados: ${results.affectedRows}`);

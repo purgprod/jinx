@@ -1,3 +1,92 @@
+#develop-69:
+- Integridade transacional: garantia de atomicidade em todas as operações financeiras multi-etapa:
+
+- database/transaction.js (novo):
+	- Helper withTransaction(callback): adquire conexão do pool, executa callback dentro de BEGIN/COMMIT, faz ROLLBACK automático em caso de erro e libera a conexão no finally;
+
+- models/endpoints/model_atualizar_saldo_carteira.js:
+	- Adicionado parâmetro opcional conn; quando fornecido usa conn.execute() dentro da transação, caso contrário mantém comportamento original;
+
+- models/endpoints/model_saque_transacoes_pins_para_purg.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/endpoints/model_saque_mover_pins.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/endpoints/model_deposito_registro_solicitacao.js:
+	- Adicionado método deleteSolicitacao(depositoId) para remoção do registro órfão quando geração do Pix falha;
+
+- models/depositos/model_deposito_registro_executado.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/saques/model_saque_falhar.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/saques/model_saque_confirmar.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_atualizar_carteiras.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_historico_rendimentos.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_historico_pagamento_assinatura.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_historico_pagamento_emblemas.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_atualizar_emblemas_usuarios.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_transacoes_pins_para_purg.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_zerar_pins_para_clientes.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_mover_pins_para_purg.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_atualizar_pins_para_clientes.js:
+	- Adicionado parâmetro opcional conn;
+
+- models/rotinas/model_poppy_comprar_pins_disponiveis.js:
+	- Adicionado parâmetro opcional conn nos três métodos (atualizarQuantidadeTokens, gravarTransacao, atualizarTokensIPO); refatorado de .then/.catch para async/await;
+
+- models/rotinas/model_poppy_atualizar_saldo_usuarios.js:
+	- Adicionado parâmetro opcional conn;
+
+- controllers/endpoints/controller_saque.js:
+	- ETAPAS 6+7+8 (gravar transações, mover tokens e debitar carteira) agrupadas em withTransaction; leitura de tokensPurgatorio mantida fora da transação (somente leitura);
+
+- controllers/endpoints/controller_deposito.js:
+	- Em caso de falha na geração do Pix, chama deleteSolicitacao para remover o registro órfão antes de retornar 502; mensagem de erro ajustada para não indicar que o registro foi mantido;
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- Depósito: updateCarteira + executarSolicitacao envolvidos em withTransaction; se affectedRows === 0 a transação é abortada (proteção contra duplo crédito);
+	- Saque NAO_REALIZADO: leitura do saldo mantida fora da transação; falharPorE2e + updateCarteira envolvidos em withTransaction;
+
+- controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js:
+	- Por usuário: atualizarCarteiraUsuario + rendimentosPins envolvidos em withTransaction; erro em um usuário faz continue sem abortar o lote;
+
+- controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js:
+	- ETAPAS 5+6 (debitar carteira + histórico de assinatura) envolvidas em withTransaction por usuário;
+
+- controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js:
+	- Ambos os ramos (com e sem emblemas existentes) usam withTransaction(historicoPagamentoEmblemas + atualizarEmblemas) por usuário;
+
+- controllers/rotinas/controller_poppy_recompra_pins_vencidos.js:
+	- Reestruturado: monta mapa dadosPorUsuario e processa cada usuário em withTransaction(transacoesPins por token + zerarPins por token + atualizarCarteiraUsuario); moverPins por token executado separadamente após o lote de usuários;
+	- Corrigido bug pré-existente: ZerarPinsModel.zerarPins era chamado sem usuario_id (segundo argumento obrigatório do model), causando erro garantido em runtime;
+
+- controllers/rotinas/controller_poppy_recompra_pins_sinistro.js:
+	- ETAPAS 1.1.3.5–1.1.3.8 (atualizar pins do cliente, atualizar pins do IPO, gravar transação e atualizar ambas as carteiras) envolvidas em withTransaction; erro por usuário faz continue sem abortar o lote;
+
+- controllers/rotinas/controller_poppy_compra_diaria_pins.js:
+	- Ambos os loops de compra usam withTransaction(atualizarQuantidadeTokens + gravarTransacao + atualizarTokensIPO + atualizarSaldo); leituras (tokensIPO, saldo_usuario) mantidas fora da transação;
+
 #develop-68:
 - Integração Pix automática com Efí Bank para depósitos e saques (PLD — validação de CPF):
 

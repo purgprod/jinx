@@ -10,7 +10,7 @@ const ConfirmarSaqueModel = {
      *
      * @param {string} endToEndId - Identificador fim-a-fim da transação confirmada
      */
-    async confirmarPorE2e(endToEndId) {
+    async confirmarPorE2e(endToEndId, conn) {
         const query = `
             UPDATE saques
             SET
@@ -19,6 +19,11 @@ const ConfirmarSaqueModel = {
             WHERE e2e_id = ?
               AND status_saque = 'Processando';
         `;
+
+        if (conn) {
+            const [results] = await conn.execute(query, [endToEndId]);
+            return results;
+        }
 
         return new Promise((resolve, reject) => {
             connection.query(query, [endToEndId], (error, results) => {

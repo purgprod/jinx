@@ -1,5 +1,6 @@
 // controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarRendimentosModel = require('../../models/rotinas/model_poppy_buscar_rendimentos');
 const BuscarAssinaturaModel = require('../../models/rotinas/model_poppy_buscar_assinantes');
 const AtualizarCarteiraUsuarioModel = require('../../models/rotinas/model_poppy_atualizar_carteiras');
@@ -57,14 +58,14 @@ const PagamentoAssinaturaController = {
                     const saldoAtual = Number(parseFloat(saldoDados?.saldo || 0).toFixed(8));
                     statusEtapas.etapa4 = 'concluida';
 
-                    // ETAPA 5: Débito na Carteira
+                    // ETAPAS 5 + 6: Débito na Carteira + Histórico de Pagamento (atômicos)
                     const valorAssinatura = Number((rendimento.rendimento_diario * porcentagemDecimal).toFixed(8));
                     const novoSaldo = Number((saldoAtual - valorAssinatura).toFixed(8));
-                    await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(usuarioId, novoSaldo);
+                    await withTransaction(async (conn) => {
+                        await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(usuarioId, novoSaldo, conn);
+                        await HistoricoPagamentoAssinaturaModel.historicoPagamentoAssinatura(usuarioId, valorAssinatura, conn);
+                    });
                     statusEtapas.etapa5 = 'concluida';
-
-                    // ETAPA 6: Histórico de Pagamento
-                    await HistoricoPagamentoAssinaturaModel.historicoPagamentoAssinatura(usuarioId, valorAssinatura);
                     statusEtapas.etapa6 = 'concluida';
 
                     // --- ETAPA 7: ATUALIZAÇÃO DO RENDIMENTO LÍQUIDO ---

@@ -18,6 +18,7 @@
 
 const logger = require('../../logger');
 const { devolverPix, validarWebhook } = require('../../services/efi_pix');
+const { withTransaction } = require('../../database/transaction');
 
 // --- Models depósito ---
 const BuscarDepositoPorTxidModel       = require('../../models/depositos/model_deposito_buscar_por_txid');
@@ -106,7 +107,7 @@ async function processarPixRecebido(pix) {
         return;
     }
 
-    // CPF correto → credita saldo
+    // CPF correto → credita saldo e marca depósito como Executado (atômico)
     const carteiraRows = await BuscarCarteiraModel.getSaldosCarteiras(deposito.usuario_id);
     if (!carteiraRows?.length) throw new Error(`Carteira não encontrada para usuario_id=${deposito.usuario_id}`);
 
@@ -114,12 +115,14 @@ async function processarPixRecebido(pix) {
         decimalToBigInt(String(carteiraRows[0].saldo ?? '0')) + decimalToBigInt(String(valor))
     );
 
-    await AtualizarCarteiraModel.updateCarteira(novoSaldo, deposito.usuario_id);
-
-    const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.usuario_id);
-    if (resultado.affectedRows === 0) {
-        logger.error(`[WebhookPix] DIVERGÊNCIA: saldo creditado mas depósito não atualizado. txid=${txid}`);
-    }
+    await withTransaction(async (conn) => {
+        await AtualizarCarteiraModel.updateCarteira(novoSaldo, deposito.usuario_id, conn);
+        const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.usuario_id, conn);
+        if (resultado.affectedRows === 0) {
+            // Nenhuma linha afetada → depósito já foi processado; aborta para não creditar de novo
+            throw new Error(`Depósito txid=${txid} não estava em 'Analisando' — possível reprocessamento duplicado`);
+        }
+    });
 
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);
 }
@@ -154,27 +157,23 @@ async function processarPagamentoEnviado(pagamento) {
         return;
     }
 
-    // NAO_REALIZADO → falha + reverte saldo
+    // NAO_REALIZADO → falha + reverte saldo (atômico: ambos ou nenhum)
     const motivo = motivoEfi || 'Pix não realizado pelo Efí Bank.';
-    await FalharSaqueModel.falharPorE2e(endToEndId, motivo);
     logger.warn(`[WebhookPix] Saque falhou. Revertendo saldo. endToEndId=${endToEndId}, userId=${saque.usuario_id}`);
 
-    try {
-        const carteiraRows = await BuscarCarteiraModel.getSaldosCarteiras(saque.usuario_id);
-        if (!carteiraRows?.length) throw new Error(`Carteira não encontrada para usuario_id=${saque.usuario_id}`);
+    const carteiraRows = await BuscarCarteiraModel.getSaldosCarteiras(saque.usuario_id);
+    if (!carteiraRows?.length) throw new Error(`Carteira não encontrada para usuario_id=${saque.usuario_id}`);
 
-        const saldoRevertido = bigIntToDecimalString(
-            decimalToBigInt(String(carteiraRows[0].saldo ?? '0')) + decimalToBigInt(String(saque.valor_saque))
-        );
+    const saldoRevertido = bigIntToDecimalString(
+        decimalToBigInt(String(carteiraRows[0].saldo ?? '0')) + decimalToBigInt(String(saque.valor_saque))
+    );
 
-        await AtualizarCarteiraModel.updateCarteira(saldoRevertido, saque.usuario_id);
-        logger.info(`[WebhookPix] Saldo revertido. userId=${saque.usuario_id}, valor=${saque.valor_saque}`);
+    await withTransaction(async (conn) => {
+        await FalharSaqueModel.falharPorE2e(endToEndId, motivo, conn);
+        await AtualizarCarteiraModel.updateCarteira(saldoRevertido, saque.usuario_id, conn);
+    });
 
-    } catch (errReversao) {
-        logger.error('[WebhookPix] FALHA AO REVERTER SALDO — requer ação manual!', {
-            endToEndId, userId: saque.usuario_id, valor: saque.valor_saque, erro: errReversao.message
-        });
-    }
+    logger.info(`[WebhookPix] Saldo revertido. userId=${saque.usuario_id}, valor=${saque.valor_saque}`);
 }
 
 // ---------------------------------------------------------------------------

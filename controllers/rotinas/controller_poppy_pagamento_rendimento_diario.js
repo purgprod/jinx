@@ -1,4 +1,5 @@
 const logger = require('../../logger');
+const { withTransaction } = require('../../database/transaction');
 const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const BuscarSaldosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_saldos_carteiras');
@@ -125,7 +126,7 @@ const PagamentoRendimentoDiarioController = {
                 });
             }
 
-            // Etapa 5: Atualizar o saldo da carteira e registrar o histórico
+            // Etapa 5: Atualizar o saldo da carteira e registrar o histórico (atômico por usuário)
             logger.info('Atualizando saldos e registrando histórico');
             const atualizacoes = [];
 
@@ -133,7 +134,6 @@ const PagamentoRendimentoDiarioController = {
                 const rendimentoTotal = totalRendimentosPorUsuario[usuarioId];
 
                 try {
-                    // Encontrar o saldo atual do usuário
                     const saldoAtual = saldos.find(saldo => saldo.usuario_id === parseInt(usuarioId));
 
                     if (!saldoAtual) {
@@ -141,19 +141,18 @@ const PagamentoRendimentoDiarioController = {
                         continue;
                     }
 
-                    // Calcular o novo saldo
                     const novoSaldo = parseFloat(saldoAtual.saldo) + rendimentoTotal;
-                    // Atualizar o saldo da carteira
-                    const resultadoAtualizacao = await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
-                        parseInt(usuarioId),
-                        novoSaldo
-                    );
 
-                    // Registrar o histórico de rendimentos
-                    const resultadoRegistro = await RendimentosPinsModel.rendimentosPins(
-                        parseInt(usuarioId),
-                        rendimentoTotal
-                    );
+                    // Crédito de saldo + registro de histórico: atômicos — ambos ou nenhum
+                    let resultadoRegistro;
+                    await withTransaction(async (conn) => {
+                        await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
+                            parseInt(usuarioId), novoSaldo, conn
+                        );
+                        resultadoRegistro = await RendimentosPinsModel.rendimentosPins(
+                            parseInt(usuarioId), rendimentoTotal, conn
+                        );
+                    });
 
                     atualizacoes.push({
                         usuario_id: usuarioId,
