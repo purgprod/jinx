@@ -243,14 +243,19 @@ const SaqueController = {
                     }
 
                     // ETAPA 7 – Movimentação de Ativos (Usuário -> Purgatório)
+                    // Pins de Emblema (EMB) são emitidos, não transferidos:
+                    // ao serem vendidos, apenas zeram na carteira do usuário — nunca voltam para a Purg.
                     for (const venda of planoVenda) {
                         const tokenInfoUsuario = tokensUsuario.find(t => t.token_id === venda.token_id);
                         const novaQtdUser = Math.max(0, Number(tokenInfoUsuario?.quantidade_tokens ?? 0) - venda.qtd_vender);
                         await MoverPinsModel.removerPinsUsuario(venda.token_id, id, novaQtdUser, conn);
 
-                        const tokenInfoPurg = tokensPurgatorio.find(t => t.token_id === venda.token_id);
-                        const novaQtdPurg = Number(tokenInfoPurg?.quantidade_tokens ?? 0) + venda.qtd_vender;
-                        await MoverPinsModel.removerPinsUsuario(venda.token_id, 1, novaQtdPurg, conn);
+                        const isEMB = tokenInfoUsuario?.risco === 'EMB';
+                        if (!isEMB) {
+                            const tokenInfoPurg = tokensPurgatorio.find(t => t.token_id === venda.token_id);
+                            const novaQtdPurg = Number(tokenInfoPurg?.quantidade_tokens ?? 0) + venda.qtd_vender;
+                            await MoverPinsModel.removerPinsUsuario(venda.token_id, 1, novaQtdPurg, conn);
+                        }
                     }
 
                     // ETAPA 8 – Finalização do Saldo da Carteira

@@ -3,6 +3,26 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const MoverPinsModel = {
+    // Incrementa o estoque da Purg em qtdDelta unidades para o token especificado.
+    // Usado quando clientes vendem pins de volta ao sistema.
+    async devolverPins(tokenId, qtdDelta, conn) {
+        const token_Id = parseInt(tokenId, 10);
+        if (isNaN(token_Id)) throw new Error('token_id inválido');
+        if (typeof qtdDelta !== 'number' || isNaN(qtdDelta) || qtdDelta <= 0) throw new Error('qtdDelta inválido');
+
+        const sqlQuery = `
+            UPDATE usuario_tokens
+            SET quantidade_tokens = quantidade_tokens + ?
+            WHERE token_id = ?
+              AND usuario_id = 1
+        `;
+
+        const executor = conn || pool.promise();
+        const [results] = await executor.execute(sqlQuery, [qtdDelta, token_Id]);
+        logger.info(`[Purg] +${qtdDelta} tokens devolvidos para token_id=${token_Id}. affectedRows=${results.affectedRows}`);
+        return results;
+    },
+
     async moverPins(tokenId, totalQuantidade, totalRendimento, conn) {
         try {
             logger.info(`Iniciando a movimentação de pins para o token ${tokenId}`);

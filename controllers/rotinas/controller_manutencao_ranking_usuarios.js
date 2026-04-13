@@ -64,13 +64,13 @@ const ManutencaoRankingUsuariosController = {
 
             for (const usuarioId in usuariosProcessados) {
                 const valorTotal = usuariosProcessados[usuarioId].valor_total;
-                let nomeRanking = 'Pioneiro Financeiro'; // padrão mais baixo
+                let nomeRanking = 'Cobre I'; // padrão mais baixo
 
                 const usuario = usuariosMap[usuarioId];
                 if (usuario) {
                     logger.info(`Assinatura do usuário ${usuarioId}: ${usuario.assinatura}`);
                     if (usuario.assinatura === 'Poppy Basic') {
-                        nomeRanking = 'Pioneiro Financeiro';
+                        nomeRanking = 'Cobre I';
                     } else {
                         for (const ranking of rankingsOrdenados) {
                             if (valorTotal >= ranking.valorMinimo) {

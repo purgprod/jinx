@@ -16,8 +16,9 @@ const InvestimentoRendimentoUsuarioInsertModel = {
                 data_criacao,
                 usuario_id,
                 carteira_dia,
-                rendimento_dia
-            ) VALUES (?, ?, ?, ?);
+                rendimento_dia,
+                emblemas_dia
+            ) VALUES (?, ?, ?, ?, ?);
         `;
 
         return new Promise((resolve, reject) => {
@@ -25,7 +26,8 @@ const InvestimentoRendimentoUsuarioInsertModel = {
                 params.data,
                 params.usuario_id,
                 params.carteira_dia,
-                params.rendimento_dia
+                params.rendimento_dia,
+                params.emblemas_dia ?? 0
             ], (error, results) => {
                 if (error) {
                     logger.error(`Erro ao inserir histórico para o usuário ${params.usuario_id}:`, error);

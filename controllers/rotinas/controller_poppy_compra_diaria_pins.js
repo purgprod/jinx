@@ -3,11 +3,11 @@ const Mutex = require('async-mutex').Mutex;
 const logger = require('../../logger');
 const { withTransaction } = require('../../database/transaction');
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
-const ConverterEmblemasModel = require('../../models/rotinas/model_poppy_converter_emblemas_em_saldo'); // Importa o model de conversão
 const carteiras = require('./carteiras');
 const UsersTokensModel = require('../../models/usuarios/model_tokens_usuarios');
 const ratings = require('./ratings');
 const BuscarPinsDisponiveisModel = require('../../models/rotinas/model_poppy_buscar_pins_disponiveis');
+const BuscarTokensEmbAtivosModel = require('../../models/rotinas/model_poppy_buscar_tokens_emb_ativos');
 const AtualizarQuantidadeTokensModel = require('../../models/rotinas/model_poppy_comprar_pins_disponiveis');
 const UsersSaldosModel = require('../../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_saldo_usuarios');
@@ -44,7 +44,7 @@ const CompraDiariaPinsController = {
             // Separação inicial de usuários
             const usuariosPro = [];
             const usuariosBasic = [];
-            const outros = []; 
+            const outros = [];
 
             usuariosCarteiras.forEach(usuario => {
                 logger.info(`Processando usuário ${usuario.usuario_id}`);
@@ -89,9 +89,8 @@ const CompraDiariaPinsController = {
                         investido: usuario.investido,
                         suitability: usuario.suitability,
                         suitability_complementar: usuario.suitability_complementar,
-                        saldo: usuario.saldo,         // Valor vindo da tabela "carteiras"
-                        ranking: usuario.ranking,
-                        emblemas: usuario.emblemas      // Valor vindo da tabela "carteiras"
+                        saldo: usuario.saldo,
+                        ranking: usuario.ranking
                     };
 
                     logger.info('-------------------------');
@@ -100,41 +99,44 @@ const CompraDiariaPinsController = {
 
                     // Etapa 3: Definir porcentagens da carteira
                     const definirPorcentagens = () => {
-                        const carteira = carteiras.find(c => 
-                            c.suitability === usuarioOrganizado.suitability && 
+                        const carteira = carteiras.find(c =>
+                            c.suitability === usuarioOrganizado.suitability &&
                             c.suitability_complementar === usuarioOrganizado.suitability_complementar
                         );
-                        
+
                         if (carteira) {
                             logger.info('-------------------------');
                             logger.info(`Usuário ${usuarioOrganizado.usuario_id} - Carteira encontrada:`);
                             logger.info(`Suitability: ${usuarioOrganizado.suitability}`);
                             logger.info(`Suitability Complementar: ${usuarioOrganizado.suitability_complementar}`);
+                            logger.info(`Split Empresas/Emblemas: ${carteira.porcentagem_empresas}% / ${carteira.porcentagem_emblemas}%`);
                             logger.info(`Porcentagens pré-definidas: ${carteira.porcentagem_pin_conservador}% Conservador, ${carteira.porcentagem_pin_moderado}% Moderado, ${carteira.porcentagem_pin_agressivo}% Agressivo`);
-                            
+
                             return {
                                 ...usuarioOrganizado,
+                                porcentagem_empresas: carteira.porcentagem_empresas,
+                                porcentagem_emblemas: carteira.porcentagem_emblemas,
                                 porcentagem_pin_conservador: carteira.porcentagem_pin_conservador,
                                 porcentagem_pin_moderado: carteira.porcentagem_pin_moderado,
                                 porcentagem_pin_agressivo: carteira.porcentagem_pin_agressivo
                             };
                         }
-                        
+
+                        // Padrão conservador se não encontrar perfil
                         const defaultCarteira = {
+                            porcentagem_empresas: 50,
+                            porcentagem_emblemas: 50,
                             porcentagem_pin_conservador: 50,
                             porcentagem_pin_moderado: 30,
                             porcentagem_pin_agressivo: 20
                         };
 
                         logger.warn(`Nenhuma carteira encontrada para o usuário ${usuarioOrganizado.usuario_id}`);
-                        logger.warn(`Usuário ${usuarioOrganizado.usuario_id} - Utilizando carteira padrão:`);
-                        logger.warn(`Porcentagens: ${defaultCarteira.porcentagem_pin_conservador}% Conservador, ${defaultCarteira.porcentagem_pin_moderado}% Moderado, ${defaultCarteira.porcentagem_pin_agressivo}% Agressivo`);
-                        
+                        logger.warn(`Utilizando carteira padrão: ${defaultCarteira.porcentagem_empresas}% Empresas, ${defaultCarteira.porcentagem_emblemas}% Emblemas`);
+
                         return {
                             ...usuarioOrganizado,
-                            porcentagem_pin_conservador: defaultCarteira.porcentagem_pin_conservador,
-                            porcentagem_pin_moderado: defaultCarteira.porcentagem_pin_moderado,
-                            porcentagem_pin_agressivo: defaultCarteira.porcentagem_pin_agressivo
+                            ...defaultCarteira
                         };
                     };
 
@@ -142,23 +144,12 @@ const CompraDiariaPinsController = {
 
                     // Etapa 4: Buscar tokens e risco para o usuário
                     const tokens = await UsersTokensModel.tokensUsuario(usuarioComPorcentagens.usuario_id);
-                    
+
                     const usuarioComTokens = {
                         ...usuarioComPorcentagens,
                         quantidade_tokens: tokens.length > 0 ? tokens[0].quantidade_tokens : 0,
                         risco: tokens.length > 0 ? tokens[0].risco : null
                     };
-
-                    // Etapa 4.1: Converter emblemas em saldo se for encontrado algum token para o usuário
-                    if (tokens.length > 0) {
-                        const saldoAtualizado = Number(usuarioOrganizado.saldo) + Number(usuarioOrganizado.emblemas);
-                        await ConverterEmblemasModel.converterEmblemas(usuarioOrganizado.usuario_id, saldoAtualizado);
-                        // Atualizar os dados em memória para refletir o novo saldo
-                        usuarioOrganizado.saldo = saldoAtualizado;
-                        usuarioComPorcentagens.saldo = saldoAtualizado;
-                        usuarioComTokens.saldo = saldoAtualizado;
-                        logger.info(`Etapa 4.1: Emblemas convertidos para o usuário ${usuarioOrganizado.usuario_id}. Novo saldo: ${saldoAtualizado}`);
-                    }
 
                     // Etapa 5: Calcular distribuição percentual dos tokens por risco e perfil
                     const calcularDistribuicao = () => {
@@ -224,13 +215,15 @@ const CompraDiariaPinsController = {
                     logger.info(
                         `Ranking do usuário ${usuarioComDistribuicao.usuario_id}: ${rankingUsuario.nomeRanking} | AcessoInvestimentos: ${rankingUsuario.acessoInvestimentos.join(', ')}`
                     );
-                    
+
                     const riscos = rankingUsuario.acessoInvestimentos;
                     const tokensDisponiveis = await BuscarPinsDisponiveisModel.getPins(riscos);
 
+                    // Tokens EMB: buscados diretamente da tabela tokens — a Purg não possui estoque deles
+                    const tokensEmbAtivos = await BuscarTokensEmbAtivosModel.getTokensEmb();
+
                     // Etapa 7: Equilibrar a carteira com base nas porcentagens desejadas
                     const equilibrarCarteira = async () => {
-                        // Utilize o saldo atualizado do objeto (usuarioComDistribuicao.saldo)
                         let saldo = usuarioComDistribuicao.saldo || 0;
 
                         if (saldo <= 0) {
@@ -246,6 +239,15 @@ const CompraDiariaPinsController = {
                             };
                         }
 
+                        // --- Split do saldo entre Empresas e Emblemas ---
+                        const saldoParaEmpresas = saldo * (usuarioComDistribuicao.porcentagem_empresas / 100);
+                        const saldoParaEmblemas = saldo * (usuarioComDistribuicao.porcentagem_emblemas / 100);
+
+                        logger.info(`Usuário ${usuarioComDistribuicao.usuario_id} - Split de saldo:`);
+                        logger.info(`  Empresas (${usuarioComDistribuicao.porcentagem_empresas}%): R$ ${saldoParaEmpresas.toFixed(8)}`);
+                        logger.info(`  Emblemas (${usuarioComDistribuicao.porcentagem_emblemas}%): R$ ${saldoParaEmblemas.toFixed(8)}`);
+
+                        // Porcentagens dos perfis de empresa aplicadas sobre a parcela de empresas
                         const targetPerfil = {
                             Conservador: usuarioComDistribuicao.porcentagem_pin_conservador,
                             Moderado: usuarioComDistribuicao.porcentagem_pin_moderado,
@@ -253,111 +255,132 @@ const CompraDiariaPinsController = {
                         };
 
                         const comprarTokensPorPerfil = async (perfil, valorCompra) => {
-                            const tokensDoPerfil = tokensDisponiveis.filter(token => {
-                                const riscoToken = token.risco;
-                                const perfilToken = ratings.find(r => r.rating === riscoToken)?.perfil || 'Não Classificado';
-                                return perfilToken === perfil;
-                            });
+                            // Pins de Emblema têm quantidade ilimitada: não consomem estoque do IPO
+                            // e são buscados diretamente da tabela tokens (a Purg nunca os possui)
+                            const isEMB = perfil === 'Emblema';
 
-                            const tokenPrice = 0.01; // Valor unitário do token
-                            let totalTokensPossiveis = Math.floor(valorCompra / tokenPrice);
+                            const listaBase = isEMB
+                                ? tokensEmbAtivos
+                                : tokensDisponiveis.filter(token => {
+                                    const perfilToken = ratings.find(r => r.rating === token.risco)?.perfil || 'Não Classificado';
+                                    return perfilToken === perfil;
+                                });
 
-                            for (const token of tokensDoPerfil) {
-                                if (totalTokensPossiveis > 0) {
+                            if (listaBase.length === 0) return;
+
+                            const tokenPrice = 0.01;
+                            let orcamento = Math.floor(valorCompra / tokenPrice); // em unidades de token
+                            if (orcamento <= 0) return;
+
+                            logger.info(`[${perfil}] Iniciando compra distribuída: ${orcamento} tokens entre ${listaBase.length} pin(s)`);
+
+                            // Mapa de estoque local por token_id (Infinity para EMB — sem limite)
+                            const estoque = new Map(listaBase.map(t => [t.token_id, isEMB ? Infinity : t.quantidade_tokens]));
+
+                            // Distribui em rodadas: cada rodada divide o orçamento restante
+                            // igualmente entre os tokens que ainda têm estoque. Tokens que
+                            // não conseguem absorver a cota inteira devolvem o excesso para
+                            // a próxima rodada, garantindo distribuição uniforme.
+                            while (orcamento > 0) {
+                                const tokensAtivos = listaBase.filter(t => estoque.get(t.token_id) > 0);
+                                if (tokensAtivos.length === 0) break;
+
+                                const qtdBase = Math.floor(orcamento / tokensAtivos.length);
+                                const extra   = orcamento % tokensAtivos.length;
+                                let compradoNoLoop = 0;
+
+                                for (let i = 0; i < tokensAtivos.length; i++) {
+                                    if (orcamento <= 0) break;
+                                    const token = tokensAtivos[i];
+
+                                    // Cota deste token: base + 1 extra para os primeiros (distribui o resto)
+                                    const alocado = qtdBase + (i < extra ? 1 : 0);
+                                    const disponivelToken = estoque.get(token.token_id);
+                                    const qtd = Math.min(alocado, disponivelToken, orcamento);
+                                    if (qtd <= 0) continue;
+
+                                    const releaseMutex = await mutex.acquire();
                                     try {
-                                        const releaseMutex = await mutex.acquire();
-                                        try {
-                                            await sleep(1000);
+                                        await sleep(1000);
 
-                                            const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
-                                            const tokenAtual = tokensUsuario.find(t => t.token_id === token.token_id);
-                                            const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
+                                        const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
+                                        const tokenAtual = tokensUsuario.find(t => t.token_id === token.token_id);
+                                        const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
+                                        const quantidadeTotal = quantidadeAtual + qtd;
 
-                                            if (token.quantidade_tokens === 0) {
-                                                logger.warn('-------------------------');
-                                                logger.warn(`Token ${token.token_id} não está disponível para compra.`);
-                                                continue;
-                                            }
+                                        const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
+                                        saldo = parseFloat(saldo_usuario.saldo) - (qtd * tokenPrice);
 
-                                            // Ajustar a quantidade total de tokens para não exceder o saldo e a quantidade disponível
-                                            const maxTokensParaComprar = Math.floor(saldo / tokenPrice);
-                                            const quantidadeParaComprar = Math.min(totalTokensPossiveis, maxTokensParaComprar, token.quantidade_tokens);
-
-                                            if (quantidadeParaComprar <= 0) {
-                                                continue;
-                                            }
-
-                                            const quantidadeTotal = quantidadeAtual + quantidadeParaComprar;
-
-                                            // Pré-leituras fora da transação (mutex já garante exclusão)
-                                            const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
-                                            const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
-                                            const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
-                                            const quantidadeIPO = quantidadeTokensIPO - quantidadeParaComprar;
-
-                                            const saldo_usuario = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
-                                            const saldo_atual = parseFloat(saldo_usuario.saldo);
-                                            saldo = saldo_atual - (quantidadeParaComprar * tokenPrice);
-
-                                            // Escritas atômicas: tokens usuário + transação + tokens IPO + saldo
-                                            await withTransaction(async (conn) => {
-                                                await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                                    usuarioComDistribuicao.usuario_id, token.token_id, quantidadeTotal, conn
-                                                );
-                                                await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                                    usuarioComDistribuicao.usuario_id, token.token_id, quantidadeParaComprar, conn
-                                                );
+                                        await withTransaction(async (conn) => {
+                                            await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
+                                                usuarioComDistribuicao.usuario_id, token.token_id, quantidadeTotal, conn
+                                            );
+                                            await AtualizarQuantidadeTokensModel.gravarTransacao(
+                                                usuarioComDistribuicao.usuario_id, token.token_id, qtd, conn
+                                            );
+                                            // EMB: estoque do IPO não é decrementado (quantidade ilimitada)
+                                            if (!isEMB) {
+                                                const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
+                                                const tokenAtualIPO = tokensIPO.find(t => t.token_id === token.token_id);
+                                                const qtdIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
                                                 await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                                    token.token_id, quantidadeIPO, conn
+                                                    token.token_id, qtdIPO - qtd, conn
                                                 );
-                                                await AtualizarSaldoUsuariosModel.atualizarSaldo(
-                                                    saldo, usuarioComDistribuicao.usuario_id, conn
-                                                );
-                                            });
+                                            }
+                                            await AtualizarSaldoUsuariosModel.atualizarSaldo(
+                                                saldo, usuarioComDistribuicao.usuario_id, conn
+                                            );
+                                        });
 
-                                            logger.info(`Compra executada: Token ID: ${token.token_id}, Quantidade: ${quantidadeParaComprar}`);
-
-                                            // Atualizar a quantidade possível de tokens a serem comprados
-                                            totalTokensPossiveis -= quantidadeParaComprar;
-                                        } finally {
-                                            releaseMutex();
-                                        }
+                                        logger.info(`Compra executada: Token ID ${token.token_id} (${perfil}${isEMB ? ', ilimitado' : ''}), qtd: ${qtd}`);
+                                        estoque.set(token.token_id, disponivelToken - qtd);
+                                        orcamento -= qtd;
+                                        compradoNoLoop += qtd;
                                     } catch (error) {
                                         logger.error(`Erro ao comprar o token ${token.token_id}: ${error.message}`);
+                                    } finally {
+                                        releaseMutex();
                                     }
                                 }
+
+                                // Nenhum token absorveu nada nesta rodada — evita loop infinito
+                                if (compradoNoLoop === 0) break;
                             }
                         };
 
-                        // Primeiro, tentar comprar tokens de acordo com as porcentagens alvo
-                        const valorParaConservador = saldo * (targetPerfil.Conservador / 100);
-                        const valorParaModerado = saldo * (targetPerfil.Moderado / 100);
-                        const valorParaAgressivo = saldo * (targetPerfil.Agressivo / 100);
+                        // --- Comprar Pins de Empresas (Conservador / Moderado / Agressivo) ---
+                        const valorParaConservador = saldoParaEmpresas * (targetPerfil.Conservador / 100);
+                        const valorParaModerado    = saldoParaEmpresas * (targetPerfil.Moderado / 100);
+                        const valorParaAgressivo   = saldoParaEmpresas * (targetPerfil.Agressivo / 100);
 
                         await comprarTokensPorPerfil('Conservador', valorParaConservador);
                         await comprarTokensPorPerfil('Moderado', valorParaModerado);
                         await comprarTokensPorPerfil('Agressivo', valorParaAgressivo);
 
+                        // --- Comprar Pins de Emblema (tipo EMB) ---
+                        await comprarTokensPorPerfil('Emblema', saldoParaEmblemas);
+
                         // Verificar saldo restante e gastar se for maior ou igual a 0.01
+                        // Distribui o residual em round-robin pelos tokens disponíveis (sem EMB)
                         let saldoRestante = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
                         saldo = parseFloat(saldoRestante.saldo);
 
+                        let indiceResidual = 0; // controla qual token receberá o próximo token residual
                         while (saldo >= 0.01) {
-                            // Atualizar a lista de tokens disponíveis antes de tentar usar o saldo restante
                             const tokensDisponiveisAtualizados = await BuscarPinsDisponiveisModel.getPins(riscos);
-                            
-                            // Usar todo o saldo restante para comprar o primeiro token disponível
-                            const primeiroToken = tokensDisponiveisAtualizados[0];
-                            if (!primeiroToken) {
-                                break;
-                            }
 
-                            const tokenPrice = 0.01; // Valor unitário do token
+                            // Pular tokens EMB no while-loop: EMB não usa estoque da Purg
+                            const tokensEmpresaResidual = tokensDisponiveisAtualizados.filter(t => t.risco !== 'EMB');
+                            if (tokensEmpresaResidual.length === 0) break;
+
+                            // Round-robin: avança pelo índice para não concentrar sempre no mesmo token
+                            indiceResidual = indiceResidual % tokensEmpresaResidual.length;
+                            const tokenResidual = tokensEmpresaResidual[indiceResidual];
+                            indiceResidual++;
+
+                            const tokenPrice = 0.01;
                             const quantidadeParaComprar = Math.floor(saldo / tokenPrice);
-
-                            // Verificar se a quantidade disponível é suficiente
-                            const quantidadeDisponivel = primeiroToken.quantidade_tokens;
-                            const quantidadeCompravel = Math.min(quantidadeParaComprar, quantidadeDisponivel);
+                            const quantidadeCompravel = Math.min(quantidadeParaComprar, tokenResidual.quantidade_tokens);
 
                             if (quantidadeCompravel > 0) {
                                 const releaseMutex = await mutex.acquire();
@@ -365,42 +388,41 @@ const CompraDiariaPinsController = {
                                     await sleep(1000);
 
                                     const tokensUsuario = await UsersTokensModel.tokensUsuario(usuarioComDistribuicao.usuario_id);
-                                    const tokenAtual = tokensUsuario.find(t => t.token_id === primeiroToken.token_id);
+                                    const tokenAtual = tokensUsuario.find(t => t.token_id === tokenResidual.token_id);
                                     const quantidadeAtual = tokenAtual ? tokenAtual.quantidade_tokens : 0;
-
                                     const quantidadeTotal = quantidadeAtual + quantidadeCompravel;
 
-                                    // Pré-leituras fora da transação (mutex já garante exclusão)
                                     const tokensIPO = await BuscarPinsDisponiveisModel.getPins(riscos);
-                                    const tokenAtualIPO = tokensIPO.find(t => t.token_id === primeiroToken.token_id);
+                                    const tokenAtualIPO = tokensIPO.find(t => t.token_id === tokenResidual.token_id);
                                     const quantidadeTokensIPO = tokenAtualIPO ? tokenAtualIPO.quantidade_tokens : 0;
                                     const quantidadeIPO = quantidadeTokensIPO - quantidadeCompravel;
 
                                     saldo -= (quantidadeCompravel * tokenPrice);
 
-                                    // Escritas atômicas: tokens usuário + transação + tokens IPO + saldo
                                     await withTransaction(async (conn) => {
                                         await AtualizarQuantidadeTokensModel.atualizarQuantidadeTokens(
-                                            usuarioComDistribuicao.usuario_id, primeiroToken.token_id, quantidadeTotal, conn
+                                            usuarioComDistribuicao.usuario_id, tokenResidual.token_id, quantidadeTotal, conn
                                         );
                                         await AtualizarQuantidadeTokensModel.gravarTransacao(
-                                            usuarioComDistribuicao.usuario_id, primeiroToken.token_id, quantidadeCompravel, conn
+                                            usuarioComDistribuicao.usuario_id, tokenResidual.token_id, quantidadeCompravel, conn
                                         );
                                         await AtualizarQuantidadeTokensModel.atualizarTokensIPO(
-                                            primeiroToken.token_id, quantidadeIPO, conn
+                                            tokenResidual.token_id, quantidadeIPO, conn
                                         );
                                         await AtualizarSaldoUsuariosModel.atualizarSaldo(
                                             saldo, usuarioComDistribuicao.usuario_id, conn
                                         );
                                     });
 
-                                    logger.info(`Compra executada com saldo restante: Token ID: ${primeiroToken.token_id}, Quantidade: ${quantidadeCompravel}`);
+                                    logger.info(`Compra residual: Token ID ${tokenResidual.token_id}, qtd: ${quantidadeCompravel}`);
                                 } finally {
                                     releaseMutex();
                                 }
+                            } else {
+                                // Token sem estoque suficiente — avança para o próximo sem decrementar índice
+                                if (tokensEmpresaResidual.every(t => t.quantidade_tokens === 0)) break;
                             }
 
-                            // Atualizar saldo restante
                             saldoRestante = await UsersSaldosModel.getSaldos(usuarioComDistribuicao.usuario_id);
                             saldo = parseFloat(saldoRestante.saldo);
                         }
@@ -440,7 +462,7 @@ const CompraDiariaPinsController = {
                 for (const usuario of usuariosPro) {
                     try {
                         const usuarioProcessado = await processarUsuario(usuario);
-                        await sleep(5000); // Pausa de 5 segundos
+                        await sleep(5000);
                         resultados.usuariosPro.push(usuarioProcessado);
                     } catch (error) {
                         logger.error(`Erro ao processar o usuário ${usuario.usuario_id}: ${error.message}`);
@@ -491,4 +513,3 @@ const CompraDiariaPinsController = {
 };
 
 module.exports = CompraDiariaPinsController;
-

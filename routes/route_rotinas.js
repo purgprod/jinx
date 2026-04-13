@@ -55,6 +55,7 @@ const PoppyPagamentoRendimentoDiarioController = require('../controllers/rotinas
 const PoppyPagamentoAssinaturaDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_assinatura_diario.js');
 const PoppyCompraDiariaPinsController = require('../controllers/rotinas/controller_poppy_compra_diaria_pins.js');
 const PoppyPagamentoEmblemasDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js');
+const VenderTodosPinsController = require('../controllers/rotinas/controller_vender_todos_pins.js');
 
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DE MANUTENÇÃO DO ECOSSISTEMA
@@ -117,6 +118,9 @@ router.put('/api/rotinas/poppy-compra-diaria-pins', rotinasAuth, lockMiddleware,
 
 // Rota para pagamento do emblema diário em X% do saldo
 router.put('/api/rotinas/poppy-pagamento-emblema-diario', rotinasAuth, lockMiddleware, PoppyPagamentoEmblemasDiarioController.executarPagamentoEmblemas);
+
+// Rota de sanitização: vende todos os Pins de todos os clientes e devolve o valor em saldo
+router.put('/api/rotinas/vender-todos-pins', rotinasAuth, lockMiddleware, VenderTodosPinsController.executarVendaTodosPins);
 
 module.exports = router;
 

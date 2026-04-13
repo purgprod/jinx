@@ -10,18 +10,23 @@ const InvestimentoRendimentoUsuarioModel = {
     async getValoresByUsuarioId(idUsuario) {
         const query = `
             SELECT
-                (SELECT SUM(quantidade_tokens) * 0.01
-                 FROM usuario_tokens
-                 WHERE usuario_id = ?) AS carteira_dia,
+                (SELECT SUM(ut.quantidade_tokens) * 0.01
+                 FROM usuario_tokens ut
+                 WHERE ut.usuario_id = ?) AS carteira_dia,
                 (SELECT rendimento_diario
                  FROM rendimentos
                  WHERE usuario_id = ?
                  ORDER BY data_criacao DESC
-                 LIMIT 1) AS rendimento_dia;
+                 LIMIT 1) AS rendimento_dia,
+                (SELECT SUM(ut.quantidade_tokens) * 0.01
+                 FROM usuario_tokens ut
+                 INNER JOIN tokens t ON ut.token_id = t.id_token
+                 WHERE ut.usuario_id = ?
+                   AND t.risco = 'EMB') AS emblemas_dia;
         `;
 
         return new Promise((resolve, reject) => {
-            connection.query(query, [idUsuario], (error, results) => {
+            connection.query(query, [idUsuario, idUsuario, idUsuario], (error, results) => {
                 if (error) {
                     logger.error(`Erro ao buscar os valores de investimento e rendimento para o usuário ${idUsuario}:`, error);
                     reject(new Error('Erro ao buscar valores do usuário'));

@@ -20,7 +20,8 @@ const ratings = [
     { rating: 'CR2', perfil: 'Agressivo' },
     { rating: 'C1', perfil: 'Agressivo' },
     { rating: 'C2', perfil: 'Agressivo' },
-    { rating: 'C3', perfil: 'Agressivo' }
+    { rating: 'C3', perfil: 'Agressivo' },
+    { rating: 'EMB', perfil: 'Conservador' }
 ];
 
 module.exports = ratings;

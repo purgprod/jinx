@@ -55,7 +55,8 @@ const InvestimentoRendimentoHistoricoController = {
                             data: formattedDate,
                             usuario_id: user.usuario_id,
                             carteira_dia: userValues.carteira_dia,
-                            rendimento_dia: userValues.rendimento_dia
+                            rendimento_dia: userValues.rendimento_dia,
+                            emblemas_dia: userValues.emblemas_dia ?? 0
                         };
 
                         // Insere o histórico

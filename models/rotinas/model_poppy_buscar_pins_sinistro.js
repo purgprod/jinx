@@ -4,13 +4,14 @@ const logger = require('../../logger');
 
 const BuscarPinsSinistroModel = {
     async getPinsSinistro() {
-        const sqlQuery = `SELECT t.id_token
-	FROM tokens t
-	INNER JOIN resultados_financeiros rf
-	ON t.id_resultado = rf.id_resultado
-	WHERE t.flag_sinistro = 1
-	AND rf.status_ativo = 1
-	;`
+        const sqlQuery = `
+            SELECT t.id_token
+            FROM tokens t
+            INNER JOIN resultados_financeiros rf ON t.id_resultado = rf.id_resultado
+            WHERE t.flag_sinistro = 1
+              AND rf.status_ativo = 1
+              AND t.risco != 'EMB'
+        `
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {

@@ -1,178 +1,132 @@
-const logger = require('../../logger');
-const { withTransaction } = require('../../database/transaction');
-const BuscarSaldosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_saldos_carteiras');
-const BuscarEmblemasCarteirasModel = require('../../models/rotinas/model_poppy_buscar_emblemas_carteiras');
-const HistoricoPagamentoEmblemasModel = require('../../models/rotinas/model_poppy_historico_pagamento_emblemas');
-const AtualizarEmblemasUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_emblemas_usuarios');
-const AtualizarFlagEmblemasUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_flag_emblemas_usuarios');
-const BuscarUsuariosModel = require('../../models/rotinas/model_manutencao_buscar_usuarios');
-const axios = require('axios');
+// controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js
+//
+// Rotina que atualiza o rendimento_token diário de todos os usuários
+// que possuem Pins de Emblema (risco = 'EMB').
+//
+// Executa ANTES da rotina de pagamento de rendimentos (id: 7) para que
+// os valores já estejam corretos quando o pagamento for processado.
+//
+// Cálculo:
+//   rendimento_diario_por_token = (taxa_anual / 100 / 365) * valor_token_unitario (R$ 0,01)
+//   rendimento_usuario           = quantidade_tokens * rendimento_diario_por_token
+//
+// A taxa anual (% a.a.) é configurada pelo admin no painel Jinx via
+// GET  /api/emblemas/buscar-porcentagem
+// PUT  /api/emblemas/atualizar-porcentagem
 
-const PagamentoEmblemasController = {
+const logger = require('../../logger');
+const axios = require('axios');
+const BuscarHoldersTokensEmbModel = require('../../models/rotinas/model_poppy_buscar_holders_tokens_emb');
+const AtualizarRendimentoEmbModel = require('../../models/rotinas/model_poppy_atualizar_rendimento_emb');
+const HistoricoPagamentoEmblemasModel = require('../../models/rotinas/model_poppy_historico_pagamento_emblemas');
+
+const VALOR_TOKEN_UNITARIO = 0.01; // R$ por token — mesmo valor usado em toda a plataforma
+const IR_ALIQUOTA = 0.15;          // 15% de IR sobre rendimentos (equivalente a CDB)
+
+const AtualizarRendimentoEmblemasController = {
     async executarPagamentoEmblemas(req, res) {
         try {
-            // Etapa 1: Coletando a porcentagem a ser paga em Emblemas sobre o saldo
-            logger.info('Iniciando etapa 1: Coletando a porcentagem a ser paga em Emblemas');
+            // Etapa 1: Buscar a taxa anual configurada pelo admin
+            logger.info('[EMB] Etapa 1: Buscando taxa anual dos Pins de Emblema');
 
             const response = await axios.get('http://localhost:3000/api/emblemas/buscar-porcentagem');
-            const porcentagemEmblemas = parseFloat(response.data[0].porcentagem_emblemas);            
-            logger.info(`Porcentagem de valor pago em Emblemas obtida com sucesso: ${porcentagemEmblemas}%`);
+            const taxaAnual = parseFloat(response.data[0].porcentagem_emblemas);
 
-            // Etapa 2: Coletar os saldos
-            const saldos = await BuscarSaldosCarteirasModel.getSaldosCarteiras();
-
-            if (!saldos || !saldos.length) {
-                logger.warn('Nenhum saldo encontrado');
+            if (isNaN(taxaAnual) || taxaAnual <= 0) {
+                logger.warn(`[EMB] Taxa anual inválida ou zero (${taxaAnual}). Rotina encerrada sem atualizações.`);
                 return res.status(200).json({
                     message: 'Rotinas executadas com sucesso',
-                    data: [],
-                    data_consulta: new Date().toISOString().split('T')[0],
                     status: 'concluido',
+                    detalhe: 'Taxa anual zerada ou não configurada — nenhum rendimento atualizado',
+                    taxa_anual: taxaAnual,
+                    atualizacoes: []
                 });
             }
 
-            const saldosFiltrados = saldos.filter(saldo => saldo.usuario_id !== 1);
+            logger.info(`[EMB] Taxa anual configurada: ${taxaAnual}% a.a.`);
 
-            if (!saldosFiltrados.length) {
-                logger.warn('Nenhum saldo encontrado após desconsiderar usuario_id 1');
+            // Etapa 2: Calcular o rendimento diário por token líquido de IR (15%)
+            // Fórmula: (taxa_anual / 100 / 365) * valor_token_unitario * (1 - IR_ALIQUOTA)
+            const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN_UNITARIO * (1 - IR_ALIQUOTA);
+            logger.info(`[EMB] Rendimento diário por token líq. IR ${IR_ALIQUOTA * 100}%: R$ ${rendimentoDiarioPorToken.toFixed(10)}`);
+
+            // Etapa 3: Buscar todos os usuários que possuem tokens EMB
+            logger.info('[EMB] Etapa 3: Buscando holders de tokens EMB');
+            const holders = await BuscarHoldersTokensEmbModel.getHolders();
+
+            if (!holders || holders.length === 0) {
+                logger.warn('[EMB] Nenhum holder de token EMB encontrado. Nada a atualizar.');
                 return res.status(200).json({
                     message: 'Rotinas executadas com sucesso',
-                    data: [],
-                    data_consulta: new Date().toISOString().split('T')[0],
                     status: 'concluido',
+                    detalhe: 'Nenhum usuário possui Pins de Emblema',
+                    taxa_anual: taxaAnual,
+                    rendimento_diario_por_token: rendimentoDiarioPorToken,
+                    atualizacoes: []
                 });
             }
 
-            // Etapa 3: Buscar a quantidade de emblemas para cada usuario_id nos saldos filtrados
-            const usuarios = await BuscarUsuariosModel.getUsuarios();
-            const usuarioMap = new Map(usuarios.map(usuario => [usuario.usuario_id, usuario]));
+            logger.info(`[EMB] ${holders.length} posição(ões) EMB encontrada(s)`);
 
-            const detalhesEmblemas = [];
-            let saldoInferiorAoMinimo = false;
+            // Etapa 4: Atualizar rendimento_token para cada posição
+            logger.info('[EMB] Etapa 4: Atualizando rendimento_token nas posições EMB');
+            const atualizacoes = [];
+            const erros = [];
 
-            for (const saldo of saldosFiltrados) {
-                const usuario_id = saldo.usuario_id;
-                const usuario = usuarioMap.get(usuario_id);
-
-                let flagEmblemas = 1;
-                if (usuario && usuario.assinatura === 'Poppy Basic') {
-                    flagEmblemas = 0;
-                    logger.info(`Usuário ${usuario_id} possui assinatura 'Poppy Basic'. Emblemas não serão pagos.`);
-                    continue; // Pular para o próximo usuário
-                } else if (saldo.saldo <= 0.01) {
-                    flagEmblemas = 0;
-                }
-
-                // Atualizar flag_emblemas baseado no saldo e assinatura
-                try {
-                    await AtualizarFlagEmblemasUsuariosModel.atualizarFlagEmblemas(flagEmblemas, usuario_id);
-                    logger.info(`Flag emblemas do usuário ${usuario_id} atualizado para ${flagEmblemas}`);
-                } catch (error) {
-                    logger.error(`Erro ao atualizar flag emblemas para o usuário ${usuario_id}:`, error);
-                }
-
-                if (saldo.saldo <= 0.01) {
-                    logger.warn(`Saldo do Usuario ID: ${usuario_id} é inferior ao mínimo de 0.01 para pagamento de emblemas.`);
-                    saldoInferiorAoMinimo = true;
-                    continue;
-                }
+            for (const holder of holders) {
+                const { usuario_id, token_id, quantidade_tokens } = holder;
+                const rendimentoUsuario = quantidade_tokens * rendimentoDiarioPorToken;
 
                 try {
-                    const emblemasResult = await BuscarEmblemasCarteirasModel.getEmblemasCarteiras(usuario_id);
-                    
-                    if (emblemasResult && emblemasResult.length > 0) {
-                        const quantidadeEmblemas = emblemasResult[0].emblemas;
-                        logger.info(`Usuario ID: ${usuario_id}, Saldo: ${saldo.saldo}, Emblemas Atuais: ${quantidadeEmblemas}`);
+                    await AtualizarRendimentoEmbModel.atualizarRendimento(
+                        usuario_id,
+                        token_id,
+                        rendimentoUsuario
+                    );
 
-                        let valorEmblemas = (saldo.saldo * porcentagemEmblemas) / 100;
-                        logger.info(`Usuario ID: ${usuario_id}, Porcentagem Emblemas: ${porcentagemEmblemas}, Valor Emblemas: ${valorEmblemas}`);
+                    // Grava o rendimento EMB do usuário na tabela emblemas
+                    // para manter o histórico de pagamentos visível no painel Jinx
+                    await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(
+                        usuario_id,
+                        rendimentoUsuario
+                    );
 
-                        try {
-                            // Histórico + atualização de emblemas: atômicos — ambos ou nenhum
-                            const novoValorEmblemas = parseFloat(quantidadeEmblemas) + parseFloat(valorEmblemas);
-                            await withTransaction(async (conn) => {
-                                await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas, conn);
-                                await AtualizarEmblemasUsuariosModel.atualizarEmblemas(novoValorEmblemas, usuario_id, conn);
-                            });
-                            logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${novoValorEmblemas} com sucesso.`);
-                        } catch (erroEmblemas) {
-                            logger.error(`Erro ao registrar/atualizar emblemas do usuário ${usuario_id}:`, erroEmblemas);
-                        }
-
-                        detalhesEmblemas.push({
-                            usuario_id: usuario_id,
-                            emblemas: quantidadeEmblemas,
-                            valorEmblemas: valorEmblemas
-                        });
-                    } else {
-                        logger.warn(`Nenhum emblema encontrado para o usuario_id ${usuario_id}`);
-
-                        let valorEmblemas = (saldo.saldo * porcentagemEmblemas) / 100;
-                        logger.info(`Usuario ID: ${usuario_id}, Porcentagem Emblemas: ${porcentagemEmblemas}, Valor Emblemas: ${valorEmblemas}`);
-
-                        try {
-                            // Histórico + atualização de emblemas: atômicos — ambos ou nenhum
-                            await withTransaction(async (conn) => {
-                                await HistoricoPagamentoEmblemasModel.historicoPagamentoEmblemas(usuario_id, valorEmblemas, conn);
-                                await AtualizarEmblemasUsuariosModel.atualizarEmblemas(valorEmblemas, usuario_id, conn);
-                            });
-                            logger.info(`Emblemas do usuário ${usuario_id} atualizados para ${valorEmblemas} com sucesso.`);
-                        } catch (erroEmblemas) {
-                            logger.error(`Erro ao registrar/atualizar emblemas do usuário ${usuario_id}:`, erroEmblemas);
-                        }
-
-                        detalhesEmblemas.push({
-                            usuario_id: usuario_id,
-                            emblemas: 0,
-                            valorEmblemas: valorEmblemas
-                        });
-                    }
-                } catch (error) {
-                    logger.error(`Erro ao buscar emblemas para o usuario_id ${usuario_id}:`, error);
-                    detalhesEmblemas.push({
-                        usuario_id: usuario_id,
-                        emblemas: null,
-                        error: error.message
+                    atualizacoes.push({
+                        usuario_id,
+                        token_id,
+                        quantidade_tokens,
+                        rendimento_diario: rendimentoUsuario
                     });
+
+                    logger.info(`[EMB] Usuário ${usuario_id} | Token ${token_id} | Qtd: ${quantidade_tokens} | Rendimento: R$ ${rendimentoUsuario.toFixed(8)}`);
+                } catch (error) {
+                    logger.error(`[EMB] Erro ao atualizar rendimento para usuário ${usuario_id} token ${token_id}: ${error.message}`);
+                    erros.push({ usuario_id, token_id, error: error.message });
                 }
             }
 
-            if (saldoInferiorAoMinimo) {
-                return res.status(200).json({
-                    message: 'Rotinas executadas com sucesso',
-                    porcentagem_emblemas: porcentagemEmblemas,
-                    saldos: saldosFiltrados,
-                    detalhes_emblemas: detalhesEmblemas,
-                    data_consulta: new Date().toISOString().split('T')[0],
-                    status: 'concluido',
-                });
-            }
+            logger.info(`[EMB] Rotina concluída. ${atualizacoes.length} atualização(ões), ${erros.length} erro(s).`);
 
             return res.status(200).json({
                 message: 'Rotinas executadas com sucesso',
-                porcentagem_emblemas: porcentagemEmblemas,
-                saldos: saldosFiltrados,
-                detalhes_emblemas: detalhesEmblemas,
-                data_consulta: new Date().toISOString().split('T')[0],
                 status: 'concluido',
+                taxa_anual: taxaAnual,
+                rendimento_diario_por_token: rendimentoDiarioPorToken,
+                total_posicoes: holders.length,
+                atualizacoes,
+                erros
             });
 
         } catch (error) {
-            logger.error('Erro no processamento de pagamento de emblemas:', error);
-            
-            const errorMessage = error.response 
-                ? 'Não foi possível obter a porcentagem de pagamento de emblemas' 
-                : 'Ocorreu um erro ao coletar os saldos';
+            logger.error('[EMB] Erro inesperado na rotina de atualização de rendimento EMB:', error);
 
             return res.status(500).json({
                 error: 'Erro interno',
-                message: errorMessage,
-                data: [],
-                status: 'falha',
+                message: 'Ocorreu um erro ao atualizar os rendimentos dos Pins de Emblema',
+                status: 'falha'
             });
         }
     }
 };
 
-module.exports = PagamentoEmblemasController;
-
+module.exports = AtualizarRendimentoEmblemasController;

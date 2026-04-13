@@ -4,11 +4,13 @@ const logger = require('../../logger');
 
 const BuscarPinsModel = {
     async getPins() {
-        const sqlQuery = `SELECT *
-	FROM tokens
-	WHERE status_ativo = 1
-	AND dias_vencimento = 0
-	;`
+        const sqlQuery = `
+            SELECT *
+            FROM tokens
+            WHERE status_ativo = 1
+              AND dias_vencimento = 0
+              AND risco != 'EMB'
+        `
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {

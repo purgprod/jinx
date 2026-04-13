@@ -1,28 +1,12 @@
-//dados/jinx/models/rotinas/model_poppy_converter_emblemas_em_saldo.js
+// DEAD CODE — não utilizado em nenhum controller.
+//
+// Histórico: tentava fazer SET emblemas = 0, saldo = ? em carteiras, mas a coluna
+// 'emblemas' nunca existiu (ou foi removida) dessa tabela. O rendimento de Pins de
+// Emblema é pago diretamente em carteiras.saldo pela rotina poppy-pagamento-rendimento-diario
+// após o poppy-pagamento-emblema-diario calcular o rendimento_token em usuario_tokens.
+//
+// Mantido apenas para rastreabilidade do histórico de decisões de design.
 
-const mysql = require('mysql2');
-const pool = require('../../database/database_purg');
-const logger = require('../../logger');
-
-const ConverterEmblemasModel = {
-    async converterEmblemas(usuario_id, saldoAtualizado ) {
-        const sql = `UPDATE carteiras
-			SET emblemas = 0, saldo = ?
-			WHERE usuario_id = ?`;
-        
-        return new Promise((resolve, reject) => {
-            pool.promise().execute(sql, [saldoAtualizado, usuario_id])
-                .then((results) => {
-                    logger.info(`Usuário ${usuario_id} teve os Emblemas convertidos para o saldo`);
-                    resolve(results);
-                })
-                .catch((error) => {
-                    logger.error(`Erro ao converter os Emblemas do usuário ${usuario_id}`, error);
-                    reject(new Error(`Erro ao converter os Emblemas do usuário ${usuario_id}`));
-                });
-        });
-    }
-};
-
+const ConverterEmblemasModel = {};
 module.exports = ConverterEmblemasModel;
 
