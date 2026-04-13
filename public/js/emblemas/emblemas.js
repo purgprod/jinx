@@ -8,12 +8,30 @@ function loadEmblemasResults() {
             <form id="financialDetailsForm">
                 <table class="data-table">
                     <tr>
-                        <td><label for="porcentagem">Porcentagem paga em Emblemas sobre o saldo (%):</label></td>
+                        <td><label for="porcentagem">Taxa anual dos Pins de Emblema (% a.a.):</label></td>
                         <td>
-                            <input type="text" 
-                                   id="porcentagem" 
-                                   name="porcentagem" 
-                                   value="Carregando..." 
+                            <input type="text"
+                                   id="porcentagem"
+                                   name="porcentagem"
+                                   value="Carregando..."
+                                   readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Rendimento diário por token (R$ 0,01) líq. IR 15%:</label></td>
+                        <td>
+                            <input type="text"
+                                   id="previewRendimentoDiario"
+                                   value="—"
+                                   readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Rendimento diário por R$ 1,00 investido líq. IR 15%:</label></td>
+                        <td>
+                            <input type="text"
+                                   id="previewRendimentoPorReal"
+                                   value="—"
                                    readonly>
                         </td>
                     </tr>
@@ -63,6 +81,7 @@ function loadEmblemasResults() {
                     if (valueElement) {
                         valueElement.value = `${porcentagem.toFixed(2)}%`;
                     }
+                    atualizarPreviewRendimento(porcentagem);
                 } else {
                     console.error('Resposta da API não está no formato esperado');
                     const valueElement = document.getElementById('porcentagem');
@@ -121,6 +140,10 @@ function setupEventListeners() {
             valueElement.removeAttribute('readonly');
             editButton.style.display = 'none';
             saveButton.style.display = 'block';
+            valueElement.addEventListener('input', () => {
+                const val = parseFloat(valueElement.value.replace('%', ''));
+                if (!isNaN(val)) atualizarPreviewRendimento(val);
+            });
         });
 
         saveButton.addEventListener('click', (event) => {
@@ -154,6 +177,20 @@ function setupEventListeners() {
 
         saveButton.style.display = 'none';
     }
+}
+
+// Calcula e exibe o rendimento diário líquido (após 15% de IR) por token e por R$1 investido
+function atualizarPreviewRendimento(taxaAnual) {
+    const IR = 0.15;
+    const VALOR_TOKEN = 0.01;
+    const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN * (1 - IR);
+    const rendimentoDiarioPorReal  = rendimentoDiarioPorToken * 100; // 100 tokens = R$ 1,00
+
+    const elToken = document.getElementById('previewRendimentoDiario');
+    const elReal  = document.getElementById('previewRendimentoPorReal');
+
+    if (elToken) elToken.value = `R$ ${rendimentoDiarioPorToken.toFixed(10)}`;
+    if (elReal)  elReal.value  = `R$ ${rendimentoDiarioPorReal.toFixed(8)}`;
 }
 
 function loadTotalEmblemas() {

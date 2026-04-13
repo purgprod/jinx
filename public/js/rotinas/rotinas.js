@@ -55,7 +55,8 @@ async function loadRotinasResults() {
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    second: '2-digit'
                 };
                 const formattedDate = new Intl.DateTimeFormat('pt-BR', dateOptions).format(new Date(rotina.ultima_execucao));
 
@@ -125,7 +126,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
             // Executa a rotina específica
             switch(rotinaDescricao) {
                 case '[Manutenção] - Histórico do free float dos Pins':
-                    execucao = await ManutencaoRotinaTokensHistoricoFreeFloat(rotinaId);
+                    execucao = await ManutencaoRotinaPinsHistoricoFreeFloat(rotinaId);
                     break;
                 case '[Manutenção] - Histórico do valor investido e rendimentos por usuário':
                     execucao = await ManutencaoRotinaInvestimentoERendimento(rotinaId);
@@ -163,7 +164,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Poppy] - Compra diária de Pins':
                     execucao = await PoppyRotinaCompraDiariaPins(rotinaId);
                     break;
-                case '[Poppy] - Pagamento dos emblemas diário':
+                case '[Poppy] - Atualizar rendimento dos Pins de Emblema':
                     execucao = await PoppyRotinaPagamentoEmblemaDiario(rotinaId);
                     break;
                 default:
@@ -181,7 +182,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Poppy] - Pagamento dos rendimentos diário',
                         '[Poppy] - Pagamento das assinaturas diário',
                         '[Poppy] - Compra diária de Pins',
-                        '[Poppy] - Pagamento dos emblemas diário'
+                        '[Poppy] - Atualizar rendimento dos Pins de Emblema'
                     ];
 
                     if (!cronRotinas.includes(rotinaDescricao)) {
@@ -252,7 +253,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
 // ---------------------------------------------
 
 // Função para executar a rotina de histórico do free float e executar rotina específica
-async function ManutencaoRotinaTokensHistoricoFreeFloat(rotinaId) {
+async function ManutencaoRotinaPinsHistoricoFreeFloat(rotinaId) {
     try {
         const response = await fetch('/api/rotinas/tokens-historico-free-float', {
             method: 'POST',
@@ -552,14 +553,14 @@ async function PoppyRotinaPagamentoEmblemaDiario(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('[Poppy] - Rotina para pagamento das assinaturas diários executada com sucesso');
+            console.log('[Poppy] - Rotina para atualizar rendimento dos Pins de Emblema executada com sucesso');
             return true;
         } else {
-            console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', await response.text());
+            console.error('[Poppy] - Erro ao executar rotina para atualizar rendimento dos Pins de Emblema:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('[Poppy] - Erro ao executar rotina para pagamento das assinaturas diários:', error);
+        console.error('[Poppy] - Erro ao executar rotina para atualizar rendimento dos Pins de Emblema:', error);
         return false;
     }
 }
@@ -567,7 +568,7 @@ async function PoppyRotinaPagamentoEmblemaDiario(rotinaId) {
 // Torna as funções acessíveis no escopo global
 window.loadRotinasResults = loadRotinasResults;
 window.executarRotina = executarRotina;
-window.ManutencaoRotinaTokensHistoricoFreeFloat = ManutencaoRotinaTokensHistoricoFreeFloat;
+window.ManutencaoRotinaPinsHistoricoFreeFloat = ManutencaoRotinaPinsHistoricoFreeFloat;
 window.ManutencaoRotinaInvestimentoERendimento = ManutencaoRotinaInvestimentoERendimento;
 window.ManutencaoRotinaChecagemPinsSinistro = ManutencaoRotinaChecagemPinsSinistro;
 window.ManutencaoRotinaChecagemResultadosFinanceirosVencimento = ManutencaoRotinaChecagemResultadosFinanceirosVencimento;

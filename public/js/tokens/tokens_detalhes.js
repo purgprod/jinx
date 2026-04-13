@@ -4,23 +4,23 @@ function formatDate(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-async function fetchFreeFloatData(idToken) {
+async function fetchFreeFloatData(idPin) {
     try {
-        const response = await fetch(`/api/tokens/free-float/${idToken}`);
+        const response = await fetch(`/api/tokens/free-float/${idPin}`);
         if (!response.ok) throw new Error('Erro ao buscar dados de free float.');
         return await response.json();
     } catch (error) {
-        console.error('Erro ao buscar free float token:', error);
+        console.error('Erro ao buscar free float pin:', error);
         return [];
     }
 }
 
-function loadTokensDetails(idToken) {
-    const data = tokensDataMap[idToken];
+function loadPinsDetails(idPin) {
+    const data = pinsDataMap[idPin];
     if (data) {
-        fetchFreeFloatData(idToken).then(freeFloatData => {
+        fetchFreeFloatData(idPin).then(freeFloatData => {
             if (!freeFloatData.length) {
-                console.error('Dado de free float não encontrado para este token.');
+                console.error('Dado de free float não encontrado para este pin.');
                 return;
             }
             const centerPanel = document.querySelector('.center-panel');
@@ -28,7 +28,7 @@ function loadTokensDetails(idToken) {
                 centerPanel.innerHTML = `
                     <h2>Detalhes do Pin ${data.razao_social}</h2>
                     <form id="financialDetailsForm">
-                        ${generateTokensInputFields(data)}
+                        ${generatePinsInputFields(data)}
                         <div class="button-container">
                             <button type="button" id="editButton" class="button-azul">Editar</button>
                             <button type="submit" id="saveButton" class="button-azul">Salvar</button>
@@ -37,7 +37,7 @@ function loadTokensDetails(idToken) {
                                 : `<button type="button" id="inativarButton" class="button-vermelho">Inativar</button>`} -->
                         </div>
                     </form>
-                    <h3>Distribuição do Token</h3>
+                    <h3>Distribuição do Pin</h3>
                     <div id="chartsContainer">
                         <canvas id="freeFloatChart" width="400" height="400"></canvas>
                         <canvas id="percentageChart" width="400" height="400"></canvas>
@@ -48,16 +48,16 @@ function loadTokensDetails(idToken) {
                 `;
                 showFreeFloatPieChart(freeFloatData);
                 showPercentagePieChart(freeFloatData);
-                loadFreeFloatHistoricos(idToken);
-                setupEventListenersTokens(idToken);
+                loadFreeFloatHistoricos(idPin);
+                setupEventListenersPins(idPin);
             } else {
                 console.error('Elemento center-panel não encontrado.');
             }
         }).catch(error => {
-            console.error('Erro ao carregar detalhes do token:', error);
+            console.error('Erro ao carregar detalhes do pin:', error);
         });
     } else {
-        console.error('Dados não encontrados para o ID:', idToken);
+        console.error('Dados não encontrados para o ID:', idPin);
     }
 }
 
@@ -153,8 +153,8 @@ function showPercentagePieChart(freeFloatData) {
     });
 }
 
-function loadFreeFloatHistoricos(tokenId) {
-    return fetch(`/api/tokens/${tokenId}/free-float-historicos`)
+function loadFreeFloatHistoricos(pinId) {
+    return fetch(`/api/tokens/${pinId}/free-float-historicos`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erro ao buscar dados de free float históricos');
@@ -217,7 +217,7 @@ function renderizarGraficoFreeFloatHistorico(dados) {
                 },
                 title: {
                     display: true,
-                    text: 'Histórico de consumo do token',
+                    text: 'Histórico de consumo do pin',
                 }
             },
             scales: {
@@ -225,7 +225,7 @@ function renderizarGraficoFreeFloatHistorico(dados) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Quantidade de Tokens'
+                        text: 'Quantidade de Pins'
                     }
                 },
                 x: {
@@ -239,22 +239,22 @@ function renderizarGraficoFreeFloatHistorico(dados) {
     });
 }
 
-function generateTokensInputFields(data) {
+function generatePinsInputFields(data) {
     return `
         <label for="razao_social">Razão Social:</label>
         <input type="text" id="razao_social" name="razao_social" value="${data.razao_social}" readonly>
         <label for="risco">Risco:</label>
         <input type="text" id="risco" name="risco" value="${data.risco}" readonly>
-        <label for="quantidade_tokens">Quantidade Total de Tokens:</label>
+        <label for="quantidade_tokens">Quantidade Total de Pins:</label>
         <input type="number" id="quantidade_tokens" name="quantidade_tokens" value="${data.quantidade_tokens}" readonly>
-        <label for="valor_token">Valor do Token:</label>
+        <label for="valor_token">Valor do Pin:</label>
         <input type="text" id="valor_token" name="valor_token" value="R$ ${parseFloat(data.valor_token).toFixed(2)}" readonly>
-        <label for="rendimento_token">Rendimento por Token:</label>
+        <label for="rendimento_token">Rendimento por Pin:</label>
         <input type="text" id="rendimento_token" name="rendimento_token" value="R$ ${parseFloat(data.rendimento_token).toFixed(8)}" readonly>
     `;
 }
 
-function setupEventListenersTokens(idToken) {
+function setupEventListenersPins(idPin) {
     document.getElementById('editButton').addEventListener('click', () => {
         document.querySelectorAll('#financialDetailsForm input').forEach(el => el.removeAttribute('readonly'));
     });
@@ -265,6 +265,6 @@ function setupEventListenersTokens(idToken) {
     });
 }
 
-window.loadTokensDetails = loadTokensDetails;
+window.loadPinsDetails = loadPinsDetails;
 
 

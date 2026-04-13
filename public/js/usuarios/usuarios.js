@@ -8,7 +8,7 @@ function showUserCards() {
         centralPanel.innerHTML = `
 	    <h2>Usuários</h2>
 	    <div class="button-container">
-                <input type="email" id="emailParaAlterar" placeholder="E-mail do Usuário" required />
+                <input type="email" id="emailParaAlterar" class="input-busca" placeholder="E-mail do Usuário" required />
                 <button id="buscarButton" class="button-verde">Buscar Usuário</button>
                 <button id="criarNovoUsuarioButton" class="button-azul">Criar Novo Usuário</button>
                 <button id="inativosUsuarioButton" class="button-vermelho">${showInactiveUsers ? "Mostrar Usuários Inativos" : "Mostrar Usuários Inativos"}</button>
@@ -116,7 +116,7 @@ function createUser(userData) {
 // Filtrar os usuários pelo e-mail digitado e status
 function filterUsers() {
     const email = document.getElementById('emailParaAlterar').value.toLowerCase();
-    let filteredUsers = Object.values(userDataMap).filter(user => showInactiveUsers || user.status_ativo === 1);
+    let filteredUsers = Object.values(userDataMap).filter(user => user.usuario_id !== 1 && (showInactiveUsers || user.status_ativo === 1));
 
     if (email) {
         filteredUsers = filteredUsers.filter(user => user.email.toLowerCase().includes(email));
@@ -131,15 +131,22 @@ function filterUsers() {
 
 // Função para criar o HTML dos cartões de usuários filtrados
 function createCardsHTML(users) {
-    return users.map(user => `
+    return users.map(user => {
+        const dataCriacao = user.data_criacao
+            ? new Date(user.data_criacao).toLocaleDateString('pt-BR')
+            : '—';
+        return `
         <div class="card" data-id="${user.usuario_id}">
+            <span class="card-id">#${user.usuario_id}</span>
             <h3 class="card-title">${user.nome}</h3>
             <p><strong>E-mail:</strong> ${user.email}</p>
-            <p><strong>ID:</strong> ${user.usuario_id}</p>
+            <p><strong>CPF:</strong> ${user.cpf || '—'}</p>
+            <p><strong>Celular:</strong> ${user.celular || '—'}</p>
+            <p><strong>Criado em:</strong> ${dataCriacao}</p>
             <p><strong>Assinatura:</strong> ${user.assinatura}</p>
             ${user.status_ativo === 0 ? `<p class="inactive-label" style="color: red;"><strong>Inativo</strong></p>` : ''}
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Adiciona evento de clique nos cartões de usuário para abrir detalhes

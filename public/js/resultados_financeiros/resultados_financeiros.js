@@ -28,6 +28,7 @@ function loadFinancialResults() {
             const createCardsHTML = (filteredData) => {
                 return filteredData.map(result => `
                     <div class="card" data-id="${result.id_resultado}">
+                        <span class="card-id">#${result.id_resultado}</span>
                         <h3 class="card-title">${result.razao_social}</h3>
 			<p><strong>Risco:</strong> ${result.risco}</p>
                         <p><strong>Valor Financiamento:</strong> R$ ${parseFloat(result.valor_financiamento_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>

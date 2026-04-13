@@ -1,3 +1,57 @@
+#develop-70:
+- Autenticação biométrica (WebAuthn/Passkeys), sanitização token→pin e melhorias de UI no painel Jinx:
+
+- models/endpoints/model_biometria.js (novo):
+	- Métodos: buscarUsuarioPorEmail, buscarDadosSessaoPorId, salvarCredencial, buscarCredencialPorId, buscarCredenciaisPorUsuario, atualizarCounter, deletarCredencial;
+	- Todas as queries usando connection.promise().query() consistente com os demais models;
+
+- controllers/endpoints/controller_biometria.js (novo):
+	- RP_ID, RP_NAME e ORIGIN lidos de variáveis de ambiente com fallback para purg.com.br;
+	- cadastroIniciar: gera opções de registro WebAuthn (authenticatorAttachment: 'platform', userVerification: 'required'), exclui credenciais já registradas, persiste challenge na sessão;
+	- cadastroConcluir: verifica resposta do dispositivo via verifyRegistrationResponse, persiste credencial (credential_id e public_key em base64url) na tabela user_credentials, limpa challenge da sessão;
+	- loginIniciar: rota pública; busca usuário e credenciais pelo e-mail, gera desafio de autenticação, persiste challenge e usuario_id temporariamente na sessão;
+	- loginConcluir: rota pública; verifica assinatura via verifyAuthenticationResponse com Buffer.from base64url, atualiza counter anti-replay, cria req.session.user com o mesmo padrão do login normal;
+
+- routes/route_biometria.js (novo):
+	- POST /api/v1/biometria/cadastro/iniciar (requer checkAuthenticated);
+	- POST /api/v1/biometria/cadastro/concluir (requer checkAuthenticated);
+	- POST /api/v1/biometria/login/iniciar (pública, valida body email com express-validator);
+	- POST /api/v1/biometria/login/concluir (pública);
+
+- server.js:
+	- Adicionados import e registro de route_biometria;
+
+- .env:
+	- Adicionadas variáveis WEBAUTHN_RP_ID, WEBAUTHN_RP_NAME e WEBAUTHN_ORIGIN;
+
+- Banco de dados:
+	- Criada tabela user_credentials (id, usuario_id, credential_id VARCHAR(500) UNIQUE, public_key TEXT, counter INT, device_type VARCHAR(50), created_at) em dev e produção;
+	- FK: usuario_id → users(usuario_id) ON DELETE CASCADE;
+
+- package.json:
+	- Adicionada dependência @simplewebauthn/server@^8 (versão CommonJS compatível); instalada em dev e em produção (187.127.14.38);
+	- @simplewebauthn/browser@^13 instalado no servidor web React (187.127.14.59) nos projetos /root/www.var.purg e /root/Purg_Finale para uso futuro no frontend;
+
+- nginx (jinx.purg.com.br — produção):
+	- Adicionados blocos location para negar acesso a /.env e /.git com return 404 (hardening de segurança);
+
+- Sanitização token → pin (frontend):
+	- public/index.html: id="tokensButton" → id="pinsButton";
+	- public/style.css: seletor #tokensButton → #pinsButton; adicionados .input-busca e .card-id; cards fixos em flex: 0 0 300px com overflow-wrap e word-break; #logoutButton com separador visual (padding-top + border-top);
+	- public/script.js: variável tokensButton → pinsButton; chamada loadTokensResults() → loadPinsResults();
+	- public/js/tokens/tokens.js: todas as variáveis, funções e labels renomeadas (tokensDataMap→pinsDataMap, showInactiveTokens→showInactivePins, loadTokensResults→loadPinsResults, etc.); campos de DB e URLs de API preservados intactos;
+	- public/js/tokens/tokens_detalhes.js: parâmetros e funções renomeados (idToken→idPin, tokenId→pinId, loadTokensDetails→loadPinsDetails, etc.); variáveis em template literals de URL corrigidas para corresponder aos novos nomes;
+	- public/js/usuarios/usuarios_detalhes.js: tokensData→pinsData, loadUserTokens→loadUserPins, createTokenCardHTML→createPinCardHTML, totalTokens→totalPins, labels de gráfico atualizados;
+	- public/js/ecossistema/ecossistema.js: tokensData→pinsData, loadEcossistemaTokens→loadEcossistemaPins, tokensEcossistema→pinsEcossistema (incluindo variável de destructuring), tokenSoma→pinSoma, labels atualizados;
+	- public/js/rotinas/rotinas.js: ManutencaoRotinaTokensHistoricoFreeFloat → ManutencaoRotinaPinsHistoricoFreeFloat (definição de função, chamada e window assignment);
+
+- Melhorias de UI no painel Jinx:
+	- rotinas.js: adicionado second: '2-digit' nas opções de formatação de data da coluna Última Execução;
+	- style.css: .card com position: relative e overflow-wrap/word-break para evitar estouro de texto; .card-id posicionado absolutamente no canto superior direito (font-size: 13px, color: #AAAAAA); .input-busca com borda azul e focus ring;
+	- usuarios.js: campo de e-mail com classe input-busca; Purg IPO (usuario_id = 1) filtrado da listagem; cards exibem badge #ID, CPF, Celular e data de criação formatada; ID removido do corpo do card;
+	- resultados_financeiros.js: badge #id_resultado adicionado ao canto superior direito de cada card;
+	- tokens.js (pins): badge #id_token adicionado ao canto superior direito de cada card de pin;
+
 #develop-69:
 - Integridade transacional: garantia de atomicidade em todas as operações financeiras multi-etapa:
 

@@ -1,5 +1,5 @@
-let tokensData = [];
-let tokensEcossistemaData = [];
+let pinsData = [];
+let pinsEcossistemaData = [];
 let saquesHistoricosData = [];
 let depositosHistoricosData = [];
 
@@ -82,7 +82,7 @@ async function loadEcossistemaResults() {
             </div>
         </div>
         <canvas id="carteiraRendimentosChart" width="400" height="200"></canvas>
-	<h3>Transações de Compra e Venda de Tokens</h3>
+	<h3>Transações de Compra e Venda de Pins</h3>
 	<canvas id="transacoesChart" width="400" height="200"></canvas>
         <h3>Distribuição da Carteira Purg</h3>
         <div id="chartsContainer">    
@@ -98,18 +98,18 @@ async function loadEcossistemaResults() {
             <canvas id="risksRendimentoEcossistemaChart"></canvas>
         </div>
         <br>
-        <h3>Tokens da Purg</h3>
-        <div id="tokensContainer" class="cards-container"></div>
+        <h3>Pins da Purg</h3>
+        <div id="pinsContainer" class="cards-container"></div>
         <br>
-        <h3>Tokens do Ecossistema</h3>
-        <div id="tokensContainerEcossistema" class="cards-container"></div>
+        <h3>Pins do Ecossistema</h3>
+        <div id="pinsContainerEcossistema" class="cards-container"></div>
     `;
 
     // Carregar dados
     try {
         const [
-            tokens,
-            tokensEcossistema,
+            pins,
+            pinsEcossistema,
             ultimosDados,
             ultimosDadosEcossistema,
             dadosFinanceirosHistoricos,
@@ -117,8 +117,8 @@ async function loadEcossistemaResults() {
             dadosRendimentosEcossistema,
             dadosFinanceirosHistoricosEcossistema
         ] = await Promise.all([
-            loadUserTokens(usuario_id),
-            loadEcossistemaTokens(usuario_id),
+            loadUserPins(usuario_id),
+            loadEcossistemaPins(usuario_id),
             loadUltimosDadosFinanceiros(usuario_id),
             loadUltimosDadosFinanceirosEcossistema(usuario_id),
             loadDadosFinanceirosHistoricos(usuario_id),
@@ -152,18 +152,18 @@ async function loadEcossistemaResults() {
     }
 }
 
-function loadUserTokens(usuario_id) {
+function loadUserPins(usuario_id) {
     return fetch(`/api/purg/${usuario_id}/tokens`)
-        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar tokens'))
-        .then(tokens => {
-            console.log("Tokens do usuário:", tokens);
-            tokensData = tokens;
-            const tokensContainer = document.getElementById('tokensContainer');
-            if (tokensContainer) {
-                tokensContainer.innerHTML = tokens.map(createTokenCardHTML).join('');
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar pins'))
+        .then(pins => {
+            console.log("Pins do usuário:", pins);
+            pinsData = pins;
+            const pinsContainer = document.getElementById('pinsContainer');
+            if (pinsContainer) {
+                pinsContainer.innerHTML = pins.map(createPinCardHTML).join('');
             }
         })
-        .catch(error => console.error('Erro ao carregar tokens do usuário:', error));
+        .catch(error => console.error('Erro ao carregar pins do usuário:', error));
 }
 
 function renderizarGraficoDistribuicaoRisco() {
@@ -176,8 +176,8 @@ function renderizarGraficoDistribuicaoRisco() {
     const ctx = canvas.getContext('2d');
     const riscoMap = {};
 
-    tokensData.forEach(token => {
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + token.quantidade_tokens * 0.01;
+    pinsData.forEach(pin => {
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + pin.quantidade_tokens * 0.01;
     });
 
     const labels = Object.keys(riscoMap);
@@ -188,7 +188,7 @@ function renderizarGraficoDistribuicaoRisco() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição Financeira de Risco dos Tokens (R$)',
+                label: 'Distribuição Financeira de Risco dos Pins (R$)',
                 data: data,
                 backgroundColor: [                    
 		    'rgba(255, 99, 132, 0.2)',  // Rosa
@@ -222,7 +222,7 @@ function renderizarGraficoDistribuicaoRisco() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: 'Distribuição Financeira de Risco dos Tokens (R$)' },
+                title: { display: true, text: 'Distribuição Financeira de Risco dos Pins (R$)' },
                 datalabels: {
                     color: '#333333',
                     formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -241,22 +241,22 @@ function renderizarGraficoPorcentagemRisco() {
     }
 
     const ctx = canvas.getContext('2d');
-    const totalTokens = tokensData.reduce((sum, token) => sum + token.quantidade_tokens, 0);
+    const totalPins = pinsData.reduce((sum, pin) => sum + pin.quantidade_tokens, 0);
     const riscoMap = {};
 
-    tokensData.forEach(token => {
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + token.quantidade_tokens;
+    pinsData.forEach(pin => {
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + pin.quantidade_tokens;
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(qtd => parseFloat(((qtd / totalTokens) * 100).toFixed(2)));
+    const data = Object.values(riscoMap).map(qtd => parseFloat(((qtd / totalPins) * 100).toFixed(2)));
 
     new Chart(ctx, {
         type: 'pie',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
+                label: 'Distribuição em Porcentagem de Risco dos Pins (%)',
                 data: data,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',  // Rosa
@@ -290,7 +290,7 @@ function renderizarGraficoPorcentagemRisco() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: 'Distribuição em Porcentagem de Risco dos Tokens (%)' },
+                title: { display: true, text: 'Distribuição em Porcentagem de Risco dos Pins (%)' },
                 datalabels: {
                     color: '#333333',
                     formatter: (value) => `${value.toFixed(2)}%`
@@ -311,10 +311,10 @@ function renderizarGraficoRendimentoPorRisco() {
     const ctx = canvas.getContext('2d');
     const riscoMap = {};
 
-    tokensData.forEach(token => {
-        const quantidade = token.quantidade_tokens || 0;
-        const rendimento = token.rendimento_token || 0;
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + (quantidade * rendimento);
+    pinsData.forEach(pin => {
+        const quantidade = pin.quantidade_tokens || 0;
+        const rendimento = pin.rendimento_token || 0;
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + (quantidade * rendimento);
     });
 
     const labels = Object.keys(riscoMap);
@@ -388,36 +388,36 @@ function renderizarGraficoRendimentoPorRisco() {
 }
 
 
-function loadEcossistemaTokens(usuario_id) {
+function loadEcossistemaPins(usuario_id) {
     return fetch(`/api/ecossistema/${usuario_id}/tokens`)
-        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar tokens'))
-        .then(tokens => {
-            console.log("Tokens do ecossistema:", tokens);
+        .then(response => response.ok ? response.json() : Promise.reject('Erro ao buscar pins'))
+        .then(pins => {
+            console.log("Pins do ecossistema:", pins);
             
-            // Consolidar valores por token utilizando id_token como identificador
-            const tokenSoma = tokens.reduce((acc, token) => {
-                // Verifica se o token já está no acumulador
-                const existing = acc.find(t => t.token_id === token.token_id);
+            // Consolidar valores por pin utilizando id_token como identificador
+            const pinSoma = pins.reduce((acc, pin) => {
+                // Verifica se o pin já está no acumulador
+                const existing = acc.find(t => t.token_id === pin.token_id);
                 if (existing) {
-                    // Se o token já existe, soma a quantidade
-                    existing.quantidade_tokens += token.quantidade_tokens;
+                    // Se o pin já existe, soma a quantidade
+                    existing.quantidade_tokens += pin.quantidade_tokens;
                 } else {
-                    // Se não existe, adiciona o token ao array com a quantidade inicial
-                    acc.push({ id_token: token.token_id, quantidade_tokens: token.quantidade_tokens, ...token });
+                    // Se não existe, adiciona o pin ao array com a quantidade inicial
+                    acc.push({ id_token: pin.token_id, quantidade_tokens: pin.quantidade_tokens, ...pin });
                 }
                 return acc;
             }, []);
 
             // Atualiza a variável global com os dados consolidados
-            tokensEcossistemaData = tokenSoma;
+            pinsEcossistemaData = pinSoma;
 
-            const tokensContainerEcossistema = document.getElementById('tokensContainerEcossistema');
-            if (tokensContainerEcossistema) {
+            const pinsContainerEcossistema = document.getElementById('pinsContainerEcossistema');
+            if (pinsContainerEcossistema) {
                 // Mostra o resultado da soma em cards
-                tokensContainerEcossistema.innerHTML = tokenSoma.map(createTokenCardHTML).join('');
+                pinsContainerEcossistema.innerHTML = pinSoma.map(createPinCardHTML).join('');
             }
         })
-        .catch(error => console.error('Erro ao carregar tokens do ecossistema:', error));
+        .catch(error => console.error('Erro ao carregar pins do ecossistema:', error));
 }
 
 
@@ -431,8 +431,8 @@ function renderizarGraficoDistribuicaoRiscoEcossistema() {
     const ctx = canvas.getContext('2d');
     const riscoMap = {};
 
-    tokensEcossistemaData.forEach(token => {
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + token.quantidade_tokens * 0.01;
+    pinsEcossistemaData.forEach(pin => {
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + pin.quantidade_tokens * 0.01;
     });
 
     const labels = Object.keys(riscoMap);
@@ -443,7 +443,7 @@ function renderizarGraficoDistribuicaoRiscoEcossistema() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição Financeira de Risco dos Tokens (R$)',
+                label: 'Distribuição Financeira de Risco dos Pins (R$)',
                 data: data,
                 backgroundColor:[ 
 		    'rgba(255, 99, 132, 0.2)',  // Rosa
@@ -477,7 +477,7 @@ function renderizarGraficoDistribuicaoRiscoEcossistema() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: 'Distribuição Financeira de Risco dos Tokens (R$)' },
+                title: { display: true, text: 'Distribuição Financeira de Risco dos Pins (R$)' },
                 datalabels: {
                     color: '#333333',
                     formatter: (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -496,22 +496,22 @@ function renderizarGraficoPorcentagemRiscoEcossistema() {
     }
 
     const ctx = canvas.getContext('2d');
-    const totalTokens = tokensEcossistemaData.reduce((sum, token) => sum + token.quantidade_tokens, 0);
+    const totalPins = pinsEcossistemaData.reduce((sum, pin) => sum + pin.quantidade_tokens, 0);
     const riscoMap = {};
 
-    tokensEcossistemaData.forEach(token => {
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + token.quantidade_tokens;
+    pinsEcossistemaData.forEach(pin => {
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + pin.quantidade_tokens;
     });
 
     const labels = Object.keys(riscoMap);
-    const data = Object.values(riscoMap).map(qtd => parseFloat(((qtd / totalTokens) * 100).toFixed(2)));
+    const data = Object.values(riscoMap).map(qtd => parseFloat(((qtd / totalPins) * 100).toFixed(2)));
 
     new Chart(ctx, {
         type: 'pie',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição em Porcentagem de Risco dos Tokens (%)',
+                label: 'Distribuição em Porcentagem de Risco dos Pins (%)',
                 data: data,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',  // Rosa
@@ -545,7 +545,7 @@ function renderizarGraficoPorcentagemRiscoEcossistema() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: 'Distribuição em Porcentagem de Risco dos Tokens (%)' },
+                title: { display: true, text: 'Distribuição em Porcentagem de Risco dos Pins (%)' },
                 datalabels: {
                     color: '#333333',
                     formatter: (value) => `${value.toFixed(2)}%`
@@ -566,10 +566,10 @@ function renderizarGraficoRendimentoPorRiscoEcossistema() {
     const ctx = canvas.getContext('2d');
     const riscoMap = {};
 
-    tokensEcossistemaData.forEach(token => {
-        const quantidade = token.quantidade_tokens || 0;
-        const rendimento = token.rendimento_token || 0;
-        riscoMap[token.risco] = (riscoMap[token.risco] || 0) + (quantidade * rendimento);
+    pinsEcossistemaData.forEach(pin => {
+        const quantidade = pin.quantidade_tokens || 0;
+        const rendimento = pin.rendimento_token || 0;
+        riscoMap[pin.risco] = (riscoMap[pin.risco] || 0) + (quantidade * rendimento);
     });
 
     const labels = Object.keys(riscoMap);
@@ -1184,16 +1184,16 @@ function renderizarGraficoFluxoCaixaHistoricos() {
     });
 }
 
-function createTokenCardHTML(token) {
+function createPinCardHTML(pin) {
     return `
         <div class="card">
-            <h4>${token.razao_social}</h4>
-            <p><strong>Risco:</strong> ${token.risco}</p>
-            <p><strong>Quantidade de Tokens:</strong> ${token.quantidade_tokens}</p>
-            <p><strong>Valor do Token:</strong> R$ ${token.valor_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-            <p><strong>Rendimento do Token:</strong> R$ ${token.rendimento_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-            <p><strong>Vencimento:</strong> ${formatDate(token.vencimento)}</p>
-            <p><strong>Dias para Vencimento:</strong> ${token.dias_vencimento}</p>
+            <h4>${pin.razao_social}</h4>
+            <p><strong>Risco:</strong> ${pin.risco}</p>
+            <p><strong>Quantidade de Pins:</strong> ${pin.quantidade_tokens}</p>
+            <p><strong>Valor do Pin:</strong> R$ ${pin.valor_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><strong>Rendimento do Pin:</strong> R$ ${pin.rendimento_token.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><strong>Vencimento:</strong> ${formatDate(pin.vencimento)}</p>
+            <p><strong>Dias para Vencimento:</strong> ${pin.dias_vencimento}</p>
         </div>
     `;
 }

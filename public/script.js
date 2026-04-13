@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mainContainer = document.getElementById("main-container");
     const usuariosButton = document.getElementById("usuariosButton");
     const resultadosButton = document.getElementById("resultadosButton");
-    const tokensButton = document.getElementById("tokensButton");
+    const pinsButton = document.getElementById("pinsButton");
     const ecossistemaButton = document.getElementById("ecossistemaButton");
     const receitasButton = document.getElementById("receitasButton");
     const rotinasButton = document.getElementById("rotinasButton");
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabRouteMap = {
         '/usuarios':               usuariosButton,
         '/resultados-financeiros': resultadosButton,
-        '/pins':                   tokensButton,
+        '/pins':                   pinsButton,
         '/ecossistema':            ecossistemaButton,
         '/receitas':               receitasButton,
         '/assinaturas':            assinaturasButton,
@@ -84,11 +84,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    if (tokensButton) {
-        tokensButton.addEventListener("click", () => {
+    if (pinsButton) {
+        pinsButton.addEventListener("click", () => {
             console.log("Botão 'Pins' clicado");
             pushRoute('/pins');
-            loadTokensResults();
+            loadPinsResults();
         });
     }
 
