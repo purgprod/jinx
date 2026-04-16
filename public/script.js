@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const emblemasButton = document.getElementById("emblemasButton");
     const saquesButton = document.getElementById("saquesButton");
     const depositosButton = document.getElementById("depositosButton");
+    const rankingButton   = document.getElementById("rankingButton");
 
     console.log("Element references initialized");
 
@@ -43,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '/saques':                 saquesButton,
         '/depositos':              depositosButton,
         '/rotinas':                rotinasButton,
+        '/ranking':                rankingButton,
     };
 
     // Carrega o conteúdo da aba correspondente ao path (simula clique no botão)
@@ -145,6 +147,14 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Botão 'Depositos' clicado");
             pushRoute('/depositos');
             loadDepositosResults();
+        });
+    }
+
+    if (rankingButton) {
+        rankingButton.addEventListener("click", () => {
+            console.log("Botão 'Ranking' clicado");
+            pushRoute('/ranking');
+            loadRankingResults();
         });
     }
 

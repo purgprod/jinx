@@ -1,3 +1,37 @@
+#develop-73:
+- Ranking de pontos: tabela no banco atualizada por trigger, endpoint para o app e seção Ranking no painel Jinx:
+
+- migrations/ranking_pontos.sql (novo):
+	- Cria tabela ranking_pontos (posicao, usuario_id, nome, pontos);
+	- Trigger trg_ranking_pontos_atualizar (AFTER UPDATE ON carteiras): reconstrói o ranking integralmente sempre que carteiras.pontos é alterado; exclui usuario_id = 1 (Purg) e usuários com pontos = 0;
+	- Script de carga inicial para popular a tabela no momento da execução da migration;
+
+- models/ranking/model_ranking_pontos.js (novo):
+	- getRanking(): SELECT posicao, usuario_id, nome, pontos FROM ranking_pontos ORDER BY posicao ASC;
+
+- controllers/ranking/controller_ranking.js (novo):
+	- getRanking: responde GET /api/ranking (Jinx) e GET /api/v1/ranking (app) com o array de classificação;
+
+- routes/route_ranking.js (novo):
+	- GET /api/ranking protegido por authMiddleware (painel Jinx);
+
+- routes/route_endpoints.js:
+	- Adicionado import de RankingController;
+	- Adicionada rota GET /api/v1/ranking com authMiddleware para uso pelo app Purg;
+
+- server.js:
+	- Adicionados import e registro de route_ranking;
+
+- public/js/ranking/ranking.js (novo):
+	- loadRankingResults(): busca /api/ranking, renderiza tabela com medalhas 🥇🥈🥉 para o pódio e pontuação formatada;
+
+- public/index.html:
+	- Adicionado botão #rankingButton no painel esquerdo;
+	- Adicionado <script src="js/ranking/ranking.js">;
+
+- public/script.js:
+	- Adicionada referência ao #rankingButton, entrada /ranking no tabRouteMap e event listener que chama loadRankingResults();
+
 #develop-72:
 - Engine de Objetivos e Metas: sistema completo de objetivos financeiros com alocação/dedução automática de saldo, pontuação e integração transacional em depósitos, saques e rendimentos:
 

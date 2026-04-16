@@ -41,6 +41,7 @@ const CadastroUsuarioController  = require('../controllers/endpoints/controller_
 const AtualizarPerfilController  = require('../controllers/endpoints/controller_atualizar_perfil');
 const HistoricoPatrimonioController = require('../controllers/endpoints/controller_historico_patrimonio');
 const HistoricoRendimentosController = require('../controllers/endpoints/controller_historico_rendimentos');
+const RankingController              = require('../controllers/ranking/controller_ranking');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -151,6 +152,9 @@ router.get('/api/v1/historico-patrimonio/:id', authMiddleware.checkAuthenticated
 
 // Rota para o histórico de rendimentos do usuário (gráfico de crescimento)
 router.get('/api/v1/historico-rendimentos/:id', authMiddleware.checkAuthenticated, HistoricoRendimentosController.getHistoricoRendimentos);
+
+// Rota para o ranking de pontos (todos os usuários com pontuação > 0)
+router.get('/api/v1/ranking', authMiddleware.checkAuthenticated, RankingController.getRanking);
 
 // Rota para carregar os saques pendentes do usuário
 router.get('/api/v1/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);
