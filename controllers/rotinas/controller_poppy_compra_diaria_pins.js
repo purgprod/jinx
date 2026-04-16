@@ -11,8 +11,8 @@ const BuscarTokensEmbAtivosModel = require('../../models/rotinas/model_poppy_bus
 const AtualizarQuantidadeTokensModel = require('../../models/rotinas/model_poppy_comprar_pins_disponiveis');
 const UsersSaldosModel = require('../../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../../models/rotinas/model_poppy_atualizar_saldo_usuarios');
-const rankingAcessoInvestimentos = require('../../public/js/usuarios/acesso_investimentos_por_ranking');
-const rankings = rankingAcessoInvestimentos.default; // Acessa o array exportado pelo módulo
+const ligaAcessoInvestimentos = require('../../public/js/usuarios/acesso_investimentos_por_liga');
+const ligas = ligaAcessoInvestimentos.default; // Acessa o array exportado pelo módulo
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -26,8 +26,8 @@ const CompraDiariaPinsController = {
         logger.info('Iniciando a coleta e processamento sequencial de usuários');
 
         try {
-            // Etapa 1: Importar rankings e acessos correspondentes
-            logger.info('Importando rankings e acessos correspondentes');
+            // Etapa 1: Importar ligas e acessos correspondentes
+            logger.info('Importando ligas e acessos correspondentes');
 
             // Etapa 2: Buscar usuários e carteiras
             const usuariosCarteiras = await BuscarUsuariosCarteirasModel.getUsuariosCarteiras();
@@ -90,7 +90,7 @@ const CompraDiariaPinsController = {
                         suitability: usuario.suitability,
                         suitability_complementar: usuario.suitability_complementar,
                         saldo: usuario.saldo,
-                        ranking: usuario.ranking
+                        liga: usuario.liga
                     };
 
                     logger.info('-------------------------');
@@ -205,18 +205,18 @@ const CompraDiariaPinsController = {
 
                     const usuarioComDistribuicao = calcularDistribuicao();
 
-                    // Etapa 6: Buscar tokens disponíveis com base no ranking do usuário
-                    const rankingUsuario = rankings.find(r => r.nomeRanking === usuarioComDistribuicao.ranking);
-                    if (!rankingUsuario) {
-                        logger.warn(`Ranking não encontrado para o usuário ${usuarioComDistribuicao.usuario_id}`);
+                    // Etapa 6: Buscar tokens disponíveis com base na liga do usuário
+                    const ligaUsuario = ligas.find(r => r.nomeLiga === usuarioComDistribuicao.liga);
+                    if (!ligaUsuario) {
+                        logger.warn(`Liga não encontrada para o usuário ${usuarioComDistribuicao.usuario_id}`);
                         return usuarioComDistribuicao;
                     }
 
                     logger.info(
-                        `Ranking do usuário ${usuarioComDistribuicao.usuario_id}: ${rankingUsuario.nomeRanking} | AcessoInvestimentos: ${rankingUsuario.acessoInvestimentos.join(', ')}`
+                        `Liga do usuário ${usuarioComDistribuicao.usuario_id}: ${ligaUsuario.nomeLiga} | AcessoInvestimentos: ${ligaUsuario.acessoInvestimentos.join(', ')}`
                     );
 
-                    const riscos = rankingUsuario.acessoInvestimentos;
+                    const riscos = ligaUsuario.acessoInvestimentos;
                     const tokensDisponiveis = await BuscarPinsDisponiveisModel.getPins(riscos);
 
                     // Tokens EMB: buscados diretamente da tabela tokens — a Purg não possui estoque deles

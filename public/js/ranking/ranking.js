@@ -2,8 +2,8 @@
 
 /**
  * Carrega e exibe o ranking de usuários por pontos.
- * Lê a tabela ranking_pontos (atualizada por trigger no banco sempre que
- * carteiras.pontos é modificado).
+ * Lê a tabela ranking (atualizada por trigger no banco sempre que
+ * carteiras.pontos ou carteiras.liga é modificado).
  */
 async function loadRankingResults() {
     const centerPanel = document.querySelector('.center-panel');
@@ -21,6 +21,7 @@ async function loadRankingResults() {
             <tr>
                 <th>#</th>
                 <th>Nome</th>
+                <th>Liga</th>
                 <th>Pontos</th>
             </tr>
         </thead>
@@ -40,7 +41,7 @@ async function loadRankingResults() {
         tbody.innerHTML = '';
 
         if (!ranking || ranking.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum dado de ranking disponível.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum dado de ranking disponível.</td></tr>';
             return;
         }
 
@@ -57,6 +58,7 @@ async function loadRankingResults() {
             tr.innerHTML = `
                 <td style="font-weight:600; white-space:nowrap;">${posicaoLabel}</td>
                 <td>${entry.nome}</td>
+                <td>${entry.liga || '—'}</td>
                 <td style="text-align:right;">${Number(entry.pontos).toLocaleString('pt-BR')}</td>
             `;
             tbody.appendChild(tr);
@@ -64,6 +66,6 @@ async function loadRankingResults() {
 
     } catch (err) {
         console.error('Erro ao carregar ranking:', err);
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red;">Erro ao carregar ranking: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Erro ao carregar ranking: ${err.message}</td></tr>`;
     }
 }

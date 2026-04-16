@@ -1,14 +1,14 @@
 const logger = require('../../logger');
 const BuscarCarteirasModel = require('../../models/rotinas/model_manutencao_buscar_carteiras');
 const BuscarUsuariosModel = require('../../models/rotinas/model_manutencao_buscar_usuarios');
-const UpdateRankingUsuariosModel = require('../../models/rotinas/model_manutencao_update_ranking_usuarios');
-const rankings = require('./rankings');
+const UpdateLigaUsuariosModel = require('../../models/rotinas/model_manutencao_update_liga_usuarios');
+const ligas = require('./ligas');
 const { sincronizarPontosUsuario } = require('../../services/objetivos_service');
 
-const ManutencaoRankingUsuariosController = {
-    async executeManutencaoRankingUsuarios(req, res) {
+const ManutencaoLigaUsuariosController = {
+    async executeManutencaoLigaUsuarios(req, res) {
         try {
-            logger.info('Iniciando manutenção de ranking de usuários');
+            logger.info('Iniciando manutenção de liga de usuários');
 
             // Etapa 1: Buscar carteiras
             const carteiras = await BuscarCarteirasModel.getCarteiras();
@@ -49,23 +49,23 @@ const ManutencaoRankingUsuariosController = {
 
             logger.info('Sincronização de pontos concluída com sucesso');
 
-            // Etapa 4: Verificar o ranking de cada usuário
-            logger.info('Iniciando verificação do ranking dos usuários');
-            const rankingsOrdenados = [...rankings].sort((a, b) => b.valorMinimo - a.valorMinimo);
+            // Etapa 4: Determinar a liga de cada usuário
+            logger.info('Iniciando verificação da liga dos usuários');
+            const ligasOrdenadas = [...ligas].sort((a, b) => b.valorMinimo - a.valorMinimo);
 
             for (const usuarioId in usuariosProcessados) {
                 const valorTotal = usuariosProcessados[usuarioId].valor_total;
-                let nomeRanking = 'Cobre I'; // padrão mais baixo
+                let nomeLiga = 'Cobre I'; // padrão mais baixo
 
                 const usuario = usuariosMap[usuarioId];
                 if (usuario) {
                     logger.info(`Assinatura do usuário ${usuarioId}: ${usuario.assinatura}`);
                     if (usuario.assinatura === 'Poppy Basic') {
-                        nomeRanking = 'Cobre I';
+                        nomeLiga = 'Cobre I';
                     } else {
-                        for (const ranking of rankingsOrdenados) {
-                            if (valorTotal >= ranking.valorMinimo) {
-                                nomeRanking = ranking.nomeRanking;
+                        for (const liga of ligasOrdenadas) {
+                            if (valorTotal >= liga.valorMinimo) {
+                                nomeLiga = liga.nomeLiga;
                                 break;
                             }
                         }
@@ -74,22 +74,22 @@ const ManutencaoRankingUsuariosController = {
                     logger.warn(`Usuário ${usuarioId} não encontrado nos dados de usuários.`);
                 }
 
-                logger.info(`Verificação do ranking para o usuário ${usuarioId}:`);
-                logger.info(`Pontos totais (valor para ranking): ${valorTotal.toFixed(2)}`);
-                logger.info(`Ranking determinado: ${nomeRanking}`);
+                logger.info(`Verificação da liga para o usuário ${usuarioId}:`);
+                logger.info(`Pontos totais (valor para liga): ${valorTotal.toFixed(2)}`);
+                logger.info(`Liga determinada: ${nomeLiga}`);
                 logger.info('----------------------------------------');
 
-                usuariosProcessados[usuarioId].nomeRanking = nomeRanking;
+                usuariosProcessados[usuarioId].nomeLiga = nomeLiga;
             }
 
-            // Etapa 5: Atualizar o ranking no banco de dados
-            logger.info('Iniciando atualização do ranking dos usuários no banco de dados');
+            // Etapa 5: Atualizar a liga no banco de dados
+            logger.info('Iniciando atualização da liga dos usuários no banco de dados');
             const promessasUpdate = Object.entries(usuariosProcessados).map(
                 ([usuarioId, dados]) =>
-                    UpdateRankingUsuariosModel.executarUpdate(dados.nomeRanking, usuarioId)
+                    UpdateLigaUsuariosModel.executarUpdate(dados.nomeLiga, usuarioId)
             );
             await Promise.all(promessasUpdate);
-            logger.info('Atualização do ranking dos usuários concluída com sucesso');
+            logger.info('Atualização da liga dos usuários concluída com sucesso');
 
             return res.status(200).json({
                 message: 'Rotinas executadas com sucesso',
@@ -107,5 +107,4 @@ const ManutencaoRankingUsuariosController = {
     }
 };
 
-module.exports = ManutencaoRankingUsuariosController;
-
+module.exports = ManutencaoLigaUsuariosController;

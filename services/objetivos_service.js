@@ -499,7 +499,7 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, dataInicio = new Date()) {
  * atualiza carteiras.pontos_volateis e carteiras.pontos,
  * e retorna o total de pontos atualizado.
  *
- * Chamado pela rotina de manutenção de ranking para garantir que
+ * Chamado pela rotina de manutenção de liga para garantir que
  * carteiras.pontos reflita fielmente o progresso real das metas.
  *
  * @param {number} usuarioId

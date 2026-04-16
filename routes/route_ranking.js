@@ -4,7 +4,7 @@
 
 const express          = require('express');
 const router           = express.Router();
-const authMiddleware   = require('../middleware/authMiddleware');
+const authMiddleware   = require('../middleware/auth');
 const RankingController = require('../controllers/ranking/controller_ranking');
 
 // Somente usuários autenticados no painel Jinx podem consultar o ranking

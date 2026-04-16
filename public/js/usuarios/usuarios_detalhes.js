@@ -2,7 +2,7 @@ import dicionarioRespostas from './dicionario_respostas.js';
 import dicionarioRespostasConservador from './dicionario_respostas_conservador.js';
 import dicionarioRespostasModerado from './dicionario_respostas_moderado.js';
 import dicionarioRespostasAgressivo from './dicionario_respostas_agressivo.js';
-import rankingAcessoInvestimentos from './acesso_investimentos_por_ranking.js';
+import ligaAcessoInvestimentos from './acesso_investimentos_por_liga.js';
 
 // Variável para armazenar os dados dos pins
 let pinsData = [];
@@ -694,7 +694,7 @@ function displaySuitability(dados, usuario_id) {
 
 function loadInfo(usuario_id) {
     return Promise.all([
-        fetch(`/api/usuarios/${usuario_id}/ranking-usuarios`),
+        fetch(`/api/usuarios/${usuario_id}/liga-usuarios`),
         fetch(`/api/usuarios/${usuario_id}/sinistro-usuarios`)
     ])
     .then(responses => {
@@ -707,35 +707,35 @@ function loadInfo(usuario_id) {
             })
         );
     })
-    .then(([dadosRanking, dadosSinistro]) => {
-        console.log('Dados de Ranking:', dadosRanking);
+    .then(([dadosLiga, dadosSinistro]) => {
+        console.log('Dados de Liga:', dadosLiga);
         console.log('Dados de Sinistro:', dadosSinistro);
 
         // Processa os dados
-        const rankingData = dadosRanking && typeof dadosRanking === 'object' ? 
-            { ...dadosRanking } : { ranking: 'Não especificado' };
-            
-        const sinistroData = dadosSinistro && typeof dadosSinistro === 'object' ? 
+        const ligaData = dadosLiga && typeof dadosLiga === 'object' ?
+            { ...dadosLiga } : { liga: 'Não especificado' };
+
+        const sinistroData = dadosSinistro && typeof dadosSinistro === 'object' ?
             { ...dadosSinistro } : { sinistro: 'Não especificado' };
 
         // Exibe os dados combinados
-        displayInfo(rankingData, sinistroData, usuario_id);
+        displayInfo(ligaData, sinistroData, usuario_id);
     })
     .catch(error => {
         console.error('Erro ao carregar dados:', error);
-        const defaultRanking = { ranking: 'Não especificado' };
+        const defaultLiga = { liga: 'Não especificado' };
         const defaultSinistro = { sinistro: 'Não especificado' };
-        displayInfo(defaultRanking, defaultSinistro, usuario_id);
+        displayInfo(defaultLiga, defaultSinistro, usuario_id);
     });
 }
 
-function displayInfo(rankingData, sinistroData, usuario_id) {
+function displayInfo(ligaData, sinistroData, usuario_id) {
     const infoContainer = document.getElementById('infoContainer');
     if (infoContainer) {
-        // Procura pelos acessos de investimentos com base no ranking
-        const rankingName = rankingData.ranking || 'Não especificado';
-        const acessoInvestimentos = rankingAcessoInvestimentos.find(item => 
-            item.nomeRanking === rankingName
+        // Procura pelos acessos de investimentos com base na liga
+        const ligaName = ligaData.liga || 'Não especificado';
+        const acessoInvestimentos = ligaAcessoInvestimentos.find(item =>
+            item.nomeLiga === ligaName
         )?.acessoInvestimentos || ['Nenhum acesso disponível'];
 
         // Cria o template com os novos dados
@@ -743,7 +743,7 @@ function displayInfo(rankingData, sinistroData, usuario_id) {
             <div class="cards-basico">
                 <div class="card">
                     <div class="card-content">
-                        <p><strong>Ranking:</strong> ${rankingData.ranking || 'Não especificado'}</p>
+                        <p><strong>Liga:</strong> ${ligaData.liga || 'Não especificado'}</p>
                     </div>
                 </div>
             </div>

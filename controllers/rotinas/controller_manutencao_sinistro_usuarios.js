@@ -1,7 +1,7 @@
 const logger = require('../../logger');
 const BuscarSinistrosModel = require('../../models/rotinas/model_manutencao_buscar_carteiras');
 const UpdateSinistroUsuariosModel = require('../../models/rotinas/model_manutencao_update_sinistro_usuarios');
-const rankings = require('./sinistro'); // Importe o arquivo de rankings
+const ligas = require('./sinistro'); // Importa o arquivo de ligas
 
 const ManutencaoSinistroUsuariosController = {
     async executeManutencaoSinistroUsuarios(req, res) {
@@ -25,29 +25,29 @@ const ManutencaoSinistroUsuariosController = {
             try {
                 for (const sinistro of sinistros) {
                     logger.info(`Dados do sinistro do usuário ${sinistro.usuario_id}:`);
-                    logger.info(`Ranking: ${sinistro.ranking}`);
+                    logger.info(`Liga: ${sinistro.liga}`);
                     logger.info('----------------------------------------');
                 }
 
                 logger.info('Processamento de dados concluído com sucesso');
 
-                // Etapa 3: Definir valor do sinistro com base no ranking
+                // Etapa 3: Definir valor do sinistro com base na liga
                 logger.info('Iniciando definição do valor do sinistro');
 
                 for (const sinistro of sinistros) {
-                    if (sinistro.ranking === null) {
+                    if (sinistro.liga === null) {
                         sinistro.sinistro = 0;
-                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
+                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Liga não encontrada)`);
                         continue;
                     }
 
-                    const rankingEncontrado = rankings.find(r => r.nomeRanking === sinistro.ranking);
-                    if (rankingEncontrado) {
-                        sinistro.sinistro = rankingEncontrado.sinistro;
+                    const ligaEncontrada = ligas.find(r => r.nomeLiga === sinistro.liga);
+                    if (ligaEncontrada) {
+                        sinistro.sinistro = ligaEncontrada.sinistro;
                         logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id}`);
                     } else {
                         sinistro.sinistro = 0;
-                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Ranking não encontrado)`);
+                        logger.info(`Valor do sinistro definido de ${sinistro.sinistro}% para o usuário ${sinistro.usuario_id} (Liga não encontrada)`);
                     }
                 }
 

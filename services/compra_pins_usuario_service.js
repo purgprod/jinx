@@ -17,8 +17,8 @@ const BuscarTokensEmbAtivosModel = require('../models/rotinas/model_poppy_buscar
 const AtualizarQuantidadeTokensModel = require('../models/rotinas/model_poppy_comprar_pins_disponiveis');
 const UsersSaldosModel = require('../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../models/rotinas/model_poppy_atualizar_saldo_usuarios');
-const rankingAcessoInvestimentos = require('../public/js/usuarios/acesso_investimentos_por_ranking');
-const rankings = rankingAcessoInvestimentos.default;
+const ligaAcessoInvestimentos = require('../public/js/usuarios/acesso_investimentos_por_liga');
+const ligas = ligaAcessoInvestimentos.default;
 
 // Mutex compartilhado entre a rotina diária e os webhooks — evita compras concorrentes
 const mutex = new Mutex();
@@ -29,7 +29,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * Processa a compra de pins para um único usuário.
  *
  * @param {Object} usuario - Dados do usuário conforme retornados pela tabela carteiras JOIN users
- *   Campos obrigatórios: usuario_id, saldo, investido, suitability, suitability_complementar, ranking
+ *   Campos obrigatórios: usuario_id, saldo, investido, suitability, suitability_complementar, liga
  */
 async function processarUsuario(usuario) {
     try {
@@ -39,7 +39,7 @@ async function processarUsuario(usuario) {
             suitability:              usuario.suitability,
             suitability_complementar: usuario.suitability_complementar,
             saldo:                    usuario.saldo,
-            ranking:                  usuario.ranking
+            liga:                     usuario.liga
         };
 
         logger.info('-------------------------');
@@ -136,18 +136,18 @@ async function processarUsuario(usuario) {
 
         const usuarioComDistribuicao = calcularDistribuicao();
 
-        // Etapa 6: Buscar tokens disponíveis com base no ranking do usuário
-        const rankingUsuario = rankings.find(r => r.nomeRanking === usuarioComDistribuicao.ranking);
-        if (!rankingUsuario) {
-            logger.warn(`Ranking não encontrado para o usuário ${usuarioComDistribuicao.usuario_id}`);
+        // Etapa 6: Buscar tokens disponíveis com base na liga do usuário
+        const ligaUsuario = ligas.find(r => r.nomeLiga === usuarioComDistribuicao.liga);
+        if (!ligaUsuario) {
+            logger.warn(`Liga não encontrada para o usuário ${usuarioComDistribuicao.usuario_id}`);
             return usuarioComDistribuicao;
         }
 
         logger.info(
-            `Ranking do usuário ${usuarioComDistribuicao.usuario_id}: ${rankingUsuario.nomeRanking} | AcessoInvestimentos: ${rankingUsuario.acessoInvestimentos.join(', ')}`
+            `Liga do usuário ${usuarioComDistribuicao.usuario_id}: ${ligaUsuario.nomeLiga} | AcessoInvestimentos: ${ligaUsuario.acessoInvestimentos.join(', ')}`
         );
 
-        const riscosAcesso = rankingUsuario.acessoInvestimentos;
+        const riscosAcesso = ligaUsuario.acessoInvestimentos;
         const tokensDisponiveis  = await BuscarPinsDisponiveisModel.getPins(riscosAcesso);
         const tokensEmbAtivos    = await BuscarTokensEmbAtivosModel.getTokensEmb();
 

@@ -38,7 +38,7 @@ const ROTINAS_SEQUENCIAIS = [
     { id: 7,  nome: '[Poppy] Pagamento dos rendimentos diário',                 method: 'put',  url: `${BASE_URL}/api/rotinas/poppy-pagamento-rendimento-diario` },
     { id: 8,  nome: '[Poppy] Pagamento das assinaturas diário',                 method: 'put',  url: `${BASE_URL}/api/rotinas/poppy-pagamento-assinatura-diario` },
     { id: 2,  nome: '[Manutenção] Histórico do valor investido e rendimentos',  method: 'post', url: `${BASE_URL}/api/rotinas/investimento-rendimento-historico` },
-    { id: 9,  nome: '[Manutenção] Atualizar o ranking dos usuários',            method: 'put',  url: `${BASE_URL}/api/rotinas/manutencao-ranking-usuarios` },
+    { id: 9,  nome: '[Manutenção] Atualizar a liga dos usuários',               method: 'put',  url: `${BASE_URL}/api/rotinas/manutencao-liga-usuarios` },
     { id: 10, nome: '[Manutenção] Atualizar o sinistro dos usuários',           method: 'put',  url: `${BASE_URL}/api/rotinas/manutencao-sinistro-usuarios` },
     { id: 11, nome: '[Poppy] Compra diária de Pins',                            method: 'put',  url: `${BASE_URL}/api/rotinas/poppy-compra-diaria-pins` },
     { id: 13, nome: '[Manutenção] Histórico dos planos dos usuários',           method: 'post', url: `${BASE_URL}/api/rotinas/manutencao-planos-assinaturas-historico` },

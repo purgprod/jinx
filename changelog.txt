@@ -1,3 +1,81 @@
+#develop-74:
+- Renomear conceito "ranking" para "liga" em todo o ecossistema (tier/nível do usuário, ex: "Cobre I", "Bronze V") e renomear tabela ranking_pontos para ranking com adição da coluna liga:
+
+- migrations/renomear_ranking_para_liga.sql (novo):
+	- ALTER TABLE carteiras CHANGE ranking liga VARCHAR(50);
+
+- migrations/renomear_ranking_pontos_para_ranking.sql (novo):
+	- RENAME TABLE ranking_pontos TO ranking;
+	- ALTER TABLE ranking ADD COLUMN liga VARCHAR(50) AFTER pontos;
+	- UPDATE ranking JOIN carteiras para popular liga com o valor atual;
+	- Recria trigger como trg_ranking_atualizar: dispara quando carteiras.pontos OU carteiras.liga muda;
+
+- controllers/rotinas/ligas.js (renomeado de rankings.js):
+	- Todas as entradas: nomeRanking → nomeLiga;
+
+- controllers/rotinas/sinistro.js:
+	- nomeRanking → nomeLiga em todas as 50 entradas;
+	- Exportação: rankings → ligas;
+
+- controllers/rotinas/controller_manutencao_liga_usuarios.js (renomeado de controller_manutencao_ranking_usuarios.js):
+	- Import: ./rankings → ./ligas;
+	- executeManutencaoLigaUsuarios (renomeado de executeManutencaoRankingUsuarios);
+	- Todas as variáveis e logs: ranking → liga;
+
+- controllers/rotinas/controller_manutencao_sinistro_usuarios.js:
+	- Import: require('./sinistro') com ligas; variáveis rankingEncontrado → ligaEncontrada;
+	- Logs e referências: ranking → liga;
+
+- controllers/rotinas/controller_poppy_compra_diaria_pins.js:
+	- Import: acesso_investimentos_por_liga; variáveis rankings → ligas, rankingUsuario → ligaUsuario;
+	- usuario.ranking → usuario.liga; nomeRanking → nomeLiga;
+
+- controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js:
+	- URL: manutencao-liga-usuarios; variável e log: ranking → liga;
+
+- controllers/rotinas/cron.js:
+	- URL e nome da rotina id 9: ranking → liga;
+
+- controllers/usuarios/controller_liga_usuario.js (renomeado de controller_ranking_usuario.js):
+	- Classe LigaUsuarioController; método getLiga (renomeado de getRanking);
+
+- models/rotinas/model_manutencao_update_liga_usuarios.js (renomeado de model_manutencao_update_ranking_usuarios.js):
+	- SQL: UPDATE carteiras SET liga = ?;
+
+- models/usuarios/model_buscar_liga.js (renomeado de model_buscar_ranking.js):
+	- SQL: SELECT liga FROM carteiras;
+
+- models/ranking/model_ranking.js (renomeado de model_ranking_pontos.js):
+	- SELECT posicao, usuario_id, nome, pontos, liga FROM ranking;
+
+- controllers/ranking/controller_ranking.js:
+	- Import: model_ranking (antes model_ranking_pontos);
+
+- public/js/usuarios/acesso_investimentos_por_liga.js (renomeado de acesso_investimentos_por_ranking.js):
+	- ligaAcessoInvestimentos; nomeLiga em todas as entradas;
+
+- public/js/usuarios/usuarios_detalhes.js:
+	- Import: acesso_investimentos_por_liga; fetch URL: /liga-usuarios;
+	- Variáveis: dadosLiga, ligaData; exibição: Liga;
+
+- public/js/rotinas/rotinas.js:
+	- Case e função: ManutencaoLigaUsuarios; URL: manutencao-liga-usuarios;
+
+- public/js/ranking/ranking.js:
+	- Comentário: tabela ranking; adicionada coluna Liga na tabela exibida (colspan 3 → 4);
+
+- routes/route_rotinas.js:
+	- Import e rota: manutencao-liga-usuarios;
+
+- routes/route_usuarios.js:
+	- Import: UsuariosLigaController; rota: /liga-usuarios;
+
+- services/compra_pins_usuario_service.js:
+	- Import: acesso_investimentos_por_liga; variáveis ligas, ligaUsuario; usuario.liga; nomeLiga;
+
+- services/objetivos_service.js:
+	- Comentário: manutenção de liga;
+
 #develop-73:
 - Ranking de pontos: tabela no banco atualizada por trigger, endpoint para o app e seção Ranking no painel Jinx:
 

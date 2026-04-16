@@ -22,7 +22,7 @@ const UsuariosSuitabilityController = require('../controllers/usuarios/controlle
 const UsuariosSuitabilityUpdateController = require('../controllers/usuarios/controller_calculo_suitability_update');
 const UsuariosSuitabilityComplementarUpdateController = require('../controllers/usuarios/controller_calculo_suitability_complementar_update');
 const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usuarios/controller_perfil_suitability_completo_usuario');
-const UsuariosRankingController = require('../controllers/usuarios/controller_ranking_usuario');
+const UsuariosLigaController = require('../controllers/usuarios/controller_liga_usuario');
 const UsuariosSinistroController = require('../controllers/usuarios/controller_sinistro_usuario');
 const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
 const UsuariosObjetivosController = require('../controllers/usuarios/controller_objetivos_usuarios');
@@ -87,8 +87,8 @@ router.put('/api/usuarios/:id/calculo-suitability-complementar-update', Usuarios
 // Rota para obter qual o suitability e suitability_complementar de cada usuário
 router.get('/api/usuarios/:id/perfil-suitability-usuario-completo', UsuariosPerfilSuitabilityCompletoController.getSuitability);
 
-// Rota para obter qual o ranking de cada usuário
-router.get('/api/usuarios/:id/ranking-usuarios', UsuariosRankingController.getRanking);
+// Rota para obter qual a liga de cada usuário
+router.get('/api/usuarios/:id/liga-usuarios', UsuariosLigaController.getLiga);
 
 // Rota para obter qual o sinistro de cada usuário
 router.get('/api/usuarios/:id/sinistro-usuarios', UsuariosSinistroController.getSinistro);

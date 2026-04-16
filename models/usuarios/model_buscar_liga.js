@@ -1,25 +1,24 @@
-// models/usuarios/model_buscar_ranking.js
+// models/usuarios/model_buscar_liga.js
 
-const mysql = require('mysql2');
 const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
-class BuscarRankingUsuarioModel {
+class BuscarLigaUsuarioModel {
 
-    static async obterRankingUsuario(usuario_id) {
+    static async obterLigaUsuario(usuario_id) {
         const sqlQuery = `
-            SELECT 
-                ranking
+            SELECT
+                liga
             FROM carteiras
             WHERE usuario_id = ?
         `;
 
-        logger.info(`Buscando ranking do usuário com ID: ${usuario_id}`);
+        logger.info(`Buscando liga do usuário com ID: ${usuario_id}`);
 
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, [usuario_id], (error, results) => {
                 if (error) {
-                    logger.error(`Erro ao buscar ranking do usuário ${usuario_id}:`, error);
+                    logger.error(`Erro ao buscar liga do usuário ${usuario_id}:`, error);
                     reject(error);
                 } else {
                     if (results.length === 0) {
@@ -33,5 +32,4 @@ class BuscarRankingUsuarioModel {
     }
 }
 
-module.exports = BuscarRankingUsuarioModel;
-
+module.exports = BuscarLigaUsuarioModel;

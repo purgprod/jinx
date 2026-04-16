@@ -179,35 +179,35 @@ const PagamentoRendimentoDiarioController = {
                 }
             }
 
-            // Etapa 6: Executar a manutenção do ranking dos usuários
-            logger.info('Iniciando manutenção do ranking dos usuários');
-            let responseManutencaoRanking = null;
+            // Etapa 6: Executar a manutenção da liga dos usuários
+            logger.info('Iniciando manutenção da liga dos usuários');
+            let responseManutencaoLiga = null;
 
             try {
-                const response = await fetch('http://localhost:3000/api/rotinas/manutencao-ranking-usuarios', {
+                const response = await fetch('http://localhost:3000/api/rotinas/manutencao-liga-usuarios', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     }
                 });
 
-                responseManutencaoRanking = {
+                responseManutencaoLiga = {
                     status: response.ok,
                     dados: await response.json()
                 };
 
                 if (!response.ok) {
-                    logger.warn('Erro ao executar manutenção do ranking dos usuários');
+                    logger.warn('Erro ao executar manutenção da liga dos usuários');
                     logger.warn(`Resposta do servidor: ${response.status} ${response.statusText}`);
                 } else {
-                    logger.info('Manutenção do ranking dos usuários executada com sucesso');
-                    logger.info(`Resposta da API: ${JSON.stringify(responseManutencaoRanking.dados)}`);
+                    logger.info('Manutenção da liga dos usuários executada com sucesso');
+                    logger.info(`Resposta da API: ${JSON.stringify(responseManutencaoLiga.dados)}`);
                 }
 
             } catch (error) {
-                logger.error(`Erro ao executar manutenção do ranking dos usuários:`, error);
+                logger.error(`Erro ao executar manutenção da liga dos usuários:`, error);
                 logger.error(`Mensagem do erro: ${error.message}`);
-                responseManutencaoRanking = {
+                responseManutencaoLiga = {
                     status: false,
                     dados: {},
                     error: error.message
@@ -222,7 +222,7 @@ const PagamentoRendimentoDiarioController = {
                 usuariosPorToken: usuariosPorToken,
                 totalRendimentos: totalRendimentosPorUsuario,
                 atualizacoes: atualizacoes,
-                manutencaoRanking: responseManutencaoRanking
+                manutencaoLiga: responseManutencaoLiga
             });
 
         } catch (error) {

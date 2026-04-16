@@ -140,8 +140,8 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                 case '[Manutenção] - Atualizar o status execução para Pendente':
                     execucao = await ManutencaoUpdateStatusExecucaoPendente(rotinaId);
                     break;
-                case '[Manutenção] - Atualizar o ranking dos usuários':
-                    execucao = await ManutencaoRankingUsuarios(rotinaId);
+                case '[Manutenção] - Atualizar a liga dos usuários':
+                    execucao = await ManutencaoLigaUsuarios(rotinaId);
                     break;
                 case '[Manutenção] - Atualizar o sinistro dos usuários':
                     execucao = await ManutencaoSinistroUsuarios(rotinaId);
@@ -174,7 +174,7 @@ async function executarRotina(rotinaId, rotinaDescricao) {
                         '[Manutenção] - Checagem de Pins em modo sinistro',
                         '[Manutenção] - Checagem de Resultados Financeiros vencidos',
                         '[Manutenção] - Atualizar o status execução para Pendente',
-                        '[Manutenção] - Atualizar o ranking dos usuários',
+                        '[Manutenção] - Atualizar a liga dos usuários',
                         '[Manutenção] - Atualizar o sinistro dos usuários',
                         '[Manutenção] - Histórico dos planos dos usuários',
                         '[Poppy] - Recompra de Pins em modo sinistro',
@@ -363,9 +363,9 @@ async function ManutencaoUpdateStatusExecucaoPendente(rotinaId) {
     }
 }
 
-async function ManutencaoRankingUsuarios(rotinaId) {
+async function ManutencaoLigaUsuarios(rotinaId) {
     try {
-        const response = await fetch('/api/rotinas/manutencao-ranking-usuarios', {
+        const response = await fetch('/api/rotinas/manutencao-liga-usuarios', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -373,14 +373,14 @@ async function ManutencaoRankingUsuarios(rotinaId) {
         });
 
         if (response.ok) {
-            console.log('[Manutenção] - Rotina para fazer o ranking dos usuários executada com sucesso');
+            console.log('[Manutenção] - Rotina para atualizar a liga dos usuários executada com sucesso');
             return true;
         } else {
-            console.error('[Manutenção] - Erro ao executar rotina para fazer o ranking dos usuários:', await response.text());
+            console.error('[Manutenção] - Erro ao executar rotina para atualizar a liga dos usuários:', await response.text());
             return false;
         }
     } catch (error) {
-        console.error('[Manutenção] - Erro ao executar rotina para fazer o ranking dos usuários:', error);
+        console.error('[Manutenção] - Erro ao executar rotina para atualizar a liga dos usuários:', error);
         return false;
     }
 }
@@ -573,7 +573,7 @@ window.ManutencaoRotinaInvestimentoERendimento = ManutencaoRotinaInvestimentoERe
 window.ManutencaoRotinaChecagemPinsSinistro = ManutencaoRotinaChecagemPinsSinistro;
 window.ManutencaoRotinaChecagemResultadosFinanceirosVencimento = ManutencaoRotinaChecagemResultadosFinanceirosVencimento;
 window.ManutencaoUpdateStatusExecucaoPendente = ManutencaoUpdateStatusExecucaoPendente;
-window.ManutencaoRankingUsuarios = ManutencaoRankingUsuarios;
+window.ManutencaoLigaUsuarios = ManutencaoLigaUsuarios;
 window.ManutencaoSinistroUsuarios = ManutencaoSinistroUsuarios;
 window.ManutencaoRotinaHistoricoPlanosUsuarios = ManutencaoRotinaHistoricoPlanosUsuarios;
 window.PoppyRotinaRecompraPinsSinistro = PoppyRotinaRecompraPinsSinistro;

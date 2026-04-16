@@ -44,7 +44,7 @@ const ManutencaoInvestimentoRendimentoHistoricoController = require('../controll
 const ManutencaoChecagemPinsSinistroController = require('../controllers/rotinas/controller_manutencao_checagem_pins_sinistro.js');
 const ManutencaoUpdateStatusExecucaoPendenteController = require('../controllers/rotinas/controller_manutencao_update_status_execucao_pendente');
 const ManutencaoChecagemResultadosFinanceirosVencimentoController = require('../controllers/rotinas/controller_manutencao_checagem_resultados_financeiros_vencimento');
-const ManutencaoRankingUsuariosController = require('../controllers/rotinas/controller_manutencao_ranking_usuarios');
+const ManutencaoLigaUsuariosController = require('../controllers/rotinas/controller_manutencao_liga_usuarios');
 const ManutencaoSinistroUsuariosController = require('../controllers/rotinas/controller_manutencao_sinistro_usuarios');
 const ManutencaoPlanosAssinaturasHistoricoController = require('../controllers/rotinas/controller_manutencao_planos_assinaturas_historicos');
 
@@ -88,10 +88,10 @@ router.get('/api/rotinas/manutencao-update-status-execucao-pendente', rotinasAut
 // Rota para inativar um resultado financeiro vencido
 router.put('/api/rotinas/manutencao-inativar-resultado-financeiro-vencido', rotinasAuth, lockMiddleware, ManutencaoChecagemResultadosFinanceirosVencimentoController.executeChecagemResultadosFinanceiros);
 
-// Rota para rankear os nossos usuários baseados no saldo deles
-router.put('/api/rotinas/manutencao-ranking-usuarios', rotinasAuth, lockMiddleware, ManutencaoRankingUsuariosController.executeManutencaoRankingUsuarios);
+// Rota para atualizar a liga dos usuários com base nos pontos deles
+router.put('/api/rotinas/manutencao-liga-usuarios', rotinasAuth, lockMiddleware, ManutencaoLigaUsuariosController.executeManutencaoLigaUsuarios);
 
-// Rota para setar o sinistro dos nossos usuários baseados no ranking deles
+// Rota para setar o sinistro dos nossos usuários baseados na liga deles
 router.put('/api/rotinas/manutencao-sinistro-usuarios', rotinasAuth, lockMiddleware, ManutencaoSinistroUsuariosController.executeManutencaoSinistroUsuarios);
 
 // Rota para gravar no banco os planos das assinaturas diário
