@@ -22,6 +22,22 @@ const UpdatePorcentagemEmblemasModel = {
                 }
             });
         });
+    },
+
+    async updatePorcentagemTx(novoValor, conn) {
+        const [result] = await conn.execute(
+            'UPDATE porcentagem_emblemas SET porcentagem_emblemas = ? WHERE id = 1',
+            [novoValor]
+        );
+        return result;
+    },
+
+    async updateJurosEMBTx(novoValor, conn) {
+        const [result] = await conn.execute(
+            "UPDATE resultados_financeiros SET juros_a_a = ? WHERE risco = 'EMB'",
+            [novoValor]
+        );
+        return result;
     }
 };
 

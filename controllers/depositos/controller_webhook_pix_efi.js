@@ -34,6 +34,13 @@ const FalharSaqueModel       = require('../../models/saques/model_saque_falhar')
 const BuscarCarteiraModel    = require('../../models/endpoints/model_buscar_saldo_carteira');
 const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_saldo_carteira');
 
+// --- Engine de Objetivos ---
+const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service');
+
+// --- Compra automática de pins pós-depósito ---
+const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
+const { processarUsuario } = require('../../services/compra_pins_usuario_service');
+
 // ---------------------------------------------------------------------------
 // Utilitários BigInt
 // ---------------------------------------------------------------------------
@@ -122,9 +129,27 @@ async function processarPixRecebido(pix) {
             // Nenhuma linha afetada → depósito já foi processado; aborta para não creditar de novo
             throw new Error(`Depósito txid=${txid} não estava em 'Analisando' — possível reprocessamento duplicado`);
         }
+        // Alocar saldo nos objetivos do usuário
+        await alocarSaldoEntreObjetivos(conn, deposito.usuario_id, valor);
     });
 
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);
+
+    // Dispara compra de pins em background — não bloqueia a resposta ao Efí
+    setImmediate(async () => {
+        try {
+            const usuario = await BuscarUsuariosCarteirasModel.getUsuarioCarteiraPorId(deposito.usuario_id);
+            if (usuario) {
+                logger.info(`[WebhookPix] Iniciando compra automática de pins. userId=${deposito.usuario_id}`);
+                await processarUsuario(usuario);
+                logger.info(`[WebhookPix] Compra automática de pins concluída. userId=${deposito.usuario_id}`);
+            } else {
+                logger.warn(`[WebhookPix] Usuário inativo ou não encontrado para compra automática. userId=${deposito.usuario_id}`);
+            }
+        } catch (errCompra) {
+            logger.error(`[WebhookPix] Erro na compra automática de pins. userId=${deposito.usuario_id}`, { erro: errCompra.message });
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------

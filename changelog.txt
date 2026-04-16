@@ -1,3 +1,111 @@
+#develop-72:
+- Engine de Objetivos e Metas: sistema completo de objetivos financeiros com alocação/dedução automática de saldo, pontuação e integração transacional em depósitos, saques e rendimentos:
+
+- services/objetivos_service.js (novo):
+	- Engine central de objetivos: gerarMetas (distribuição igualitária de valor e pontos por prazo), alocarSaldoEntreObjetivos (FIFO: aloca saldo novo nas metas pendentes em ordem), deduzirSaldoObjetivos (LIFO: deduz saldo nas metas mais recentes, protege Patrimônio), recalcularMetasObjetivo (recria metas ao editar valor_alvo ou prazo), sincronizarPontosUsuario (recalcula pontos_volateis e pontos_total na carteira);
+	- Correção de bug: em _deduzirNasMetas, removida guarda objetivo_completo === 1 antes de reabrirMeta — meta agora sempre é reaberta quando saldo cai abaixo do alvo, eliminando race condition entre a cron de rendimento e transação de saque (MySQL REPEATABLE READ);
+
+- models/objetivos/model_objetivos_leitura.js (novo):
+	- Métodos: buscarObjetivosAtivos, buscarPatrimonio, buscarMetasPorObjetivo, buscarMetasPorObjetivoParaAlocacao, buscarMetasPorObjetivoParaDedicao, usuarioPossuiObjetivosComMetas;
+
+- models/objetivos/model_objetivos_escrita.js (novo):
+	- Métodos: criarObjetivo, criarPatrimonio, editarObjetivo, cancelarObjetivo;
+
+- models/objetivos/model_metas_leitura.js (novo):
+	- Métodos: buscarMetasPorObjetivo, buscarMetaAtiva;
+
+- models/objetivos/model_metas_escrita.js (novo):
+	- Métodos: criarMeta, atualizarSaldoMeta, concluirMeta, reabrirMeta, cancelarMetasObjetivo, resetarSaldoMetasObjetivo;
+
+- controllers/objetivos/controller_criar_objetivo.js (novo):
+	- execute: cria objetivo secundário (não-Patrimônio) com metas via gerarMetas dentro de withTransaction;
+	- configurarPatrimonio: configura ou reconfigura metas do objetivo Patrimônio (bloqueado se já houver saldo alocado);
+
+- controllers/objetivos/controller_listar_objetivos.js (novo):
+	- Lista todos os objetivos ativos do usuário com progresso;
+
+- controllers/objetivos/controller_detalhar_objetivo.js (novo):
+	- Retorna detalhe de um objetivo com suas metas individuais;
+
+- controllers/objetivos/controller_editar_objetivo.js (novo):
+	- Edita descrição, valor_alvo ou prazo; mudanças estruturais disparam recalcularMetasObjetivo;
+
+- controllers/objetivos/controller_cancelar_objetivo.js (novo):
+	- Cancela objetivo e suas metas (soft-delete); protege objetivo Patrimônio de cancelamento direto;
+
+- controllers/usuarios/controller_objetivos_usuarios.js (novo):
+	- Busca objetivos de um usuário para visualização no painel Jinx;
+
+- routes/route_objetivos.js (novo):
+	- Rotas autenticadas: POST /api/objetivos/:id, GET /api/objetivos/:id, GET /api/objetivos/:id/:objetivoId, PUT /api/objetivos/:id/:objetivoId, DELETE /api/objetivos/:id/:objetivoId, POST /api/objetivos/:id/patrimonio;
+
+- controllers/endpoints/controller_historico_patrimonio.js (novo):
+	- Retorna histórico de patrimônio do usuário para exibição em gráfico;
+
+- controllers/endpoints/controller_historico_rendimentos.js (novo):
+	- Retorna histórico de rendimentos do usuário para exibição em gráfico;
+
+- models/endpoints/model_historico_patrimonio.js (novo):
+	- Query de histórico de patrimônio por usuário;
+
+- models/endpoints/model_historico_rendimentos.js (novo):
+	- Query de histórico de rendimentos diários por usuário;
+
+- services/compra_pins_usuario_service.js (novo):
+	- Extrai lógica de compra de pins de um único usuário da rotina diária; Mutex compartilhado evita compras concorrentes entre rotina e webhook; usado pelo webhook Efí Bank via setImmediate para garantir alocação imediata após depósito confirmado;
+
+- controllers/depositos/controller_deposito_executar.js:
+	- Crédito de saldo, atualização de status e alocação nos objetivos agora dentro de withTransaction (atômicos);
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- alocarSaldoEntreObjetivos inserido dentro da transação do webhook; compra automática de pins disparada via setImmediate após confirmação do depósito usando compra_pins_usuario_service;
+
+- controllers/depositos/controller_webhook_pix_nubank.js:
+	- Arquivo removido (integração Nubank descontinuada);
+
+- controllers/emblemas/controller_update_porcentagem_emblemas.js:
+	- Atualização de porcentagem_emblemas e juros_a_a do token EMB agora dentro de withTransaction (atômicos);
+
+- controllers/endpoints/controller_cadastro_usuario.js:
+	- Registro de novo usuário agora usa withTransaction; cria automaticamente objetivo Patrimônio via ObjetivosEscrita.criarPatrimonio na mesma transação;
+
+- controllers/endpoints/controller_deposito.js:
+	- Adicionada validação de pré-requisito: bloqueia depósito (403, codigo: OBJETIVOS_NAO_CONFIGURADOS) se o usuário não possuir nenhum objetivo com metas configuradas;
+
+- controllers/endpoints/controller_saque.js:
+	- Adicionada ETAPA 9: deduzirSaldoObjetivos dentro da transação principal do saque; retorna alerta_objetivos na resposta quando viabilidade de objetivos for comprometida;
+
+- controllers/rotinas/controller_manutencao_ranking_usuarios.js:
+	- Substituído uso direto de carteiras.pontos por chamada a sincronizarPontosUsuario(usuarioId) para garantir pontos atualizados com base nos objetivos;
+
+- controllers/rotinas/controller_poppy_pagamento_rendimento_diario.js:
+	- alocarSaldoEntreObjetivos adicionado dentro da transação de crédito de rendimento;
+
+- models/emblemas/model_update_porcentagem_emblemas.js:
+	- Adicionados métodos updatePorcentagemTx e updateJurosEMBTx que aceitam conn para uso transacional;
+
+- models/endpoints/model_criar_novo_usuario.js:
+	- Parâmetro conn adicionado para suporte a withTransaction no cadastro;
+
+- models/rotinas/model_poppy_buscar_usuarios_e_carteiras.js:
+	- Adicionado método getUsuarioCarteiraPorId para busca individual de usuário e carteira (usado pelo webhook de depósito);
+
+- routes/route_endpoints.js:
+	- Adicionadas rotas de histórico de patrimônio e rendimentos;
+
+- routes/route_usuarios.js:
+	- Adicionada rota para controller_objetivos_usuarios;
+
+- server.js:
+	- Adicionados import e registro de route_objetivos;
+
+- public/js/usuarios/usuarios_detalhes.js:
+	- Adicionada seção de objetivos e metas na tela de detalhes do usuário no painel Jinx;
+
+#develop-71:
+- Novas funções e melhorias em rotinas, emblemas, sinistro e carteiras:
+	- (ver commit jinx-develop-71)
+
 #develop-70:
 - Autenticação biométrica (WebAuthn/Passkeys), sanitização token→pin e melhorias de UI no painel Jinx:
 

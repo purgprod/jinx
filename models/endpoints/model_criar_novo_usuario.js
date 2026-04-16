@@ -18,15 +18,16 @@ exports.findByCpf = async (cpf) => {
     return rows[0] || null;
 };
 
-exports.createUser = async ({ nome_completo, cpf, celular, email, hashedPassword }) => {
+exports.createUser = async ({ nome_completo, cpf, celular, email, hashedPassword }, conn = null) => {
     const query = `
         INSERT INTO users (nome_completo, cpf, celular, email, password, termos_de_uso)
         VALUES (?, ?, ?, ?, ?, 1)
     `;
+    const params = [nome_completo, cpf, celular, email, hashedPassword];
     try {
-        const [result] = await pool.promise().execute(query, [
-            nome_completo, cpf, celular, email, hashedPassword
-        ]);
+        const [result] = conn
+            ? await conn.execute(query, params)
+            : await pool.promise().execute(query, params);
         logger.info(`Novo usuário criado com sucesso. ID: ${result.insertId}`);
         return result.insertId;
     } catch (error) {

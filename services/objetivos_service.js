@@ -1,0 +1,540 @@
+// services/objetivos_service.js
+//
+// Engine central de Objetivos, Metas e Pontuação da Purg.
+//
+// Expõe três funções públicas:
+//
+//   alocarSaldoEntreObjetivos(conn, usuarioId, valorNovo)
+//     → Chamada após depósito confirmado ou pagamento de rendimento.
+//       Distribui o valor igualitariamente entre os objetivos ativos do usuário,
+//       preenchendo as metas em ordem cronológica (FIFO).
+//
+//   deduzirSaldoObjetivos(conn, usuarioId, valorDeduzido)
+//     → Chamada DENTRO do withTransaction do saque.
+//       Remove saldo virtual respeitando a hierarquia:
+//       1. Objetivos secundários primeiro (LIFO nas metas)
+//       2. Patrimônio por último (LIFO nas metas)
+//       Cancela automaticamente objetivos secundários zerados.
+//       Retorna alerta de viabilidade se aplicável.
+//
+//   gerarMetas(valorAlvo, prazo, pontosTotal)
+//     → Utilitário que gera o array de metas a partir dos parâmetros do objetivo.
+
+'use strict';
+
+const logger = require('../logger');
+const ObjetivosLeitura = require('../models/objetivos/model_objetivos_leitura');
+const ObjetivosEscrita = require('../models/objetivos/model_objetivos_escrita');
+const MetasLeitura     = require('../models/objetivos/model_metas_leitura');
+const MetasEscrita     = require('../models/objetivos/model_metas_escrita');
+
+// ---------------------------------------------------------------------------
+// Utilitários BigInt (precisão de 8 casas decimais — padrão do projeto)
+// ---------------------------------------------------------------------------
+const SCALE   = 8;
+const TEN_POW = 10n ** BigInt(SCALE);
+
+function decimalToBigInt(value) {
+    if (value === null || value === undefined) return 0n;
+    let s = typeof value === 'number' ? value.toFixed(SCALE) : String(value).trim();
+    if (!s || s === 'null' || s === 'undefined') return 0n;
+    const negative = s.startsWith('-');
+    if (negative) s = s.slice(1);
+    const [intPart, fracPart = ''] = s.split('.');
+    const big = BigInt(intPart || '0') * TEN_POW
+              + BigInt(fracPart.slice(0, SCALE).padEnd(SCALE, '0'));
+    return negative ? -big : big;
+}
+
+function bigIntToDecimalString(bi) {
+    const negative = bi < 0n;
+    const abs      = negative ? -bi : bi;
+    const intPart  = abs / TEN_POW;
+    const fracNum  = abs % TEN_POW;
+    const fracPart = fracNum.toString().padStart(SCALE, '0').replace(/0+$/, '');
+    return (negative ? '-' : '') + (fracPart ? `${intPart}.${fracPart}` : `${intPart}`);
+}
+
+// ---------------------------------------------------------------------------
+// Privado: resetar metas (trava_inicial)
+// ---------------------------------------------------------------------------
+async function _resetarMetasObjetivo(conn, objetivo, usuarioId) {
+    await MetasEscrita.resetarSaldoMetasObjetivo(objetivo.objetivo_id, conn);
+    await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, '0', conn);
+    await ObjetivosEscrita.registrarRecalculo({
+        usuarioId,
+        objetivoId:   objetivo.objetivo_id,
+        motivo:       'trava_inicial',
+        saldoNaData:  String(objetivo.saldo_alocado_total),
+    }, conn);
+    logger.warn(`[ObjetivosService] Trava inicial ativada — objetivo ${objetivo.objetivo_id} resetado.`);
+}
+
+// ---------------------------------------------------------------------------
+// Privado: atualizar pontos_volateis na carteira
+// ---------------------------------------------------------------------------
+async function _atualizarPontosVolateis(conn, usuarioId) {
+    const objetivos = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId, conn);
+    let pontosVolateis = 0;
+
+    for (const objetivo of objetivos) {
+        const metas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        for (const meta of metas) {
+            if (Number(meta.objetivo_completo) === 1) continue; // metas completas → pontos permanentes
+            const investir = Number(meta.objetivo_investir);
+            if (investir <= 0) continue;
+            const percentual = Math.min(Number(meta.saldo_alocado) / investir * 100, 100);
+            pontosVolateis += Math.floor(Number(meta.objetivo_pontos) * percentual / 100);
+        }
+    }
+
+    await ObjetivosEscrita.atualizarPontosVolateis(usuarioId, pontosVolateis, conn);
+}
+
+// ---------------------------------------------------------------------------
+// Privado: concluir objetivo (pontos já foram concedidos meta a meta)
+// ---------------------------------------------------------------------------
+async function _concluirObjetivo(conn, usuarioId, objetivo) {
+    await ObjetivosEscrita.concluirObjetivo(objetivo.objetivo_id, conn);
+    logger.info(`[ObjetivosService] Objetivo ${objetivo.objetivo_id} (${objetivo.objetivo_descricao}) concluído.`);
+}
+
+// ---------------------------------------------------------------------------
+// Privado: alocar um valor numa lista de metas (FIFO, ASC)
+// Retorna BigInt com o que NÃO foi alocado (sobra).
+// concederPontos=false é usado no recálculo para evitar dupla contagem.
+// ---------------------------------------------------------------------------
+async function _alocarNasMetas(conn, metas, valorBig, usuarioId, concederPontos = true) {
+    let restante = valorBig;
+
+    for (const meta of metas) {
+        if (restante <= 0n) break;
+
+        const saldoAtualBig = decimalToBigInt(String(meta.saldo_alocado));
+        const alvoMetaBig   = decimalToBigInt(String(meta.objetivo_investir));
+        const espaco        = alvoMetaBig - saldoAtualBig;
+
+        if (espaco <= 0n) continue; // meta já cheia
+
+        const adicionar  = restante < espaco ? restante : espaco;
+        const novoSaldo  = bigIntToDecimalString(saldoAtualBig + adicionar);
+
+        await MetasEscrita.atualizarSaldoMeta(meta.id, novoSaldo, conn);
+
+        if (saldoAtualBig + adicionar >= alvoMetaBig) {
+            await MetasEscrita.concluirMeta(meta.id, conn);
+            if (concederPontos) {
+                const pontosMeta = Number(meta.objetivo_pontos);
+                if (pontosMeta > 0) {
+                    await ObjetivosEscrita.adicionarPontosPermanentes(usuarioId, pontosMeta, conn);
+                }
+            }
+        }
+
+        restante -= adicionar;
+    }
+
+    return restante; // valor não alocado
+}
+
+// ---------------------------------------------------------------------------
+// Privado: deduzir um valor numa lista de metas (LIFO, DESC)
+// Retorna BigInt com o que NÃO foi deduzido (sobra).
+// ---------------------------------------------------------------------------
+async function _deduzirNasMetas(conn, metas, valorBig) {
+    let restante = valorBig;
+
+    for (const meta of metas) {
+        if (restante <= 0n) break;
+
+        const saldoBig = decimalToBigInt(String(meta.saldo_alocado));
+        if (saldoBig <= 0n) continue;
+
+        const deduzir   = restante < saldoBig ? restante : saldoBig;
+        const novoSaldo = bigIntToDecimalString(saldoBig - deduzir);
+
+        await MetasEscrita.atualizarSaldoMeta(meta.id, novoSaldo, conn);
+
+        // Reabrir meta se o novo saldo ficou abaixo do alvo (independente do estado em memória)
+        if (saldoBig - deduzir < decimalToBigInt(String(meta.objetivo_investir))) {
+            await MetasEscrita.reabrirMeta(meta.id, conn);
+        }
+
+        restante -= deduzir;
+    }
+
+    return restante; // valor não deduzido (zerou o objetivo antes)
+}
+
+// ===========================================================================
+// PÚBLICO 1: Alocar saldo entre objetivos
+// ===========================================================================
+/**
+ * Distribui um valor novo entre os objetivos ativos do usuário.
+ * Chamado após: confirmação de depósito (webhook + execução manual) e rendimentos.
+ *
+ * @param {import('mysql2/promise').PoolConnection} conn - Conexão de transação aberta
+ * @param {number} usuarioId
+ * @param {string|number} valorNovo - Valor a distribuir (string ou number, ex: "125.50")
+ */
+async function alocarSaldoEntreObjetivos(conn, usuarioId, valorNovo) {
+    const valorBig = decimalToBigInt(String(valorNovo));
+    if (valorBig <= 0n) return;
+
+    const objetivos = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId, conn);
+    if (!objetivos.length) {
+        logger.warn(`[ObjetivosService] Usuário ${usuarioId} sem objetivos ativos — alocação ignorada.`);
+        return;
+    }
+
+    const N = BigInt(objetivos.length);
+    const partePorObjetivo = valorBig / N;
+    const resto            = valorBig % N; // distribui um wei extra aos primeiros `resto` objetivos
+
+    for (let i = 0; i < objetivos.length; i++) {
+        const objetivo = objetivos[i];
+        // +1 nos primeiros `resto` objetivos para não perder frações
+        const parteI = partePorObjetivo + (BigInt(i) < resto ? 1n : 0n);
+        if (parteI <= 0n) continue;
+
+        const metas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        if (!metas.length) {
+            logger.warn(`[ObjetivosService] Objetivo ${objetivo.objetivo_id} sem metas — alocação ignorada.`);
+            continue;
+        }
+
+        // --- Trava Inicial (apenas no primeiro aporte de cada objetivo) ---
+        if (!objetivo.primeiro_aporte_feito) {
+            const meta1        = metas[0];
+            const meta1Big     = decimalToBigInt(String(meta1.objetivo_investir));
+            const valorAlvoBig = decimalToBigInt(String(objetivo.objetivo_valor_total));
+            // Threshold: valor_meta_1 + 30% do valor_alvo total
+            const threshold    = meta1Big + (valorAlvoBig * 30n / 100n);
+
+            if (parteI > threshold) {
+                await _resetarMetasObjetivo(conn, objetivo, usuarioId);
+                // Não aloca nada neste objetivo neste ciclo — usuário deve reconfigurar
+                continue;
+            }
+
+            await ObjetivosEscrita.marcarPrimeiroAporte(objetivo.objetivo_id, conn);
+        }
+
+        // --- Alocação FIFO nas metas ---
+        const sobra = await _alocarNasMetas(conn, metas, parteI, usuarioId);
+        const valorAlocado = parteI - sobra;
+
+        // Atualizar saldo_alocado_total
+        const novoTotal = bigIntToDecimalString(
+            decimalToBigInt(String(objetivo.saldo_alocado_total)) + valorAlocado
+        );
+        await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, novoTotal, conn);
+
+        // Verificar se todas as metas foram completadas
+        const metasAtualizadas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        const todasCompletas   = metasAtualizadas.length > 0
+            && metasAtualizadas.every(m => Number(m.objetivo_completo) === 1);
+        if (todasCompletas) {
+            await _concluirObjetivo(conn, usuarioId, objetivo);
+        }
+    }
+
+    // Recalcular pontos_volateis após todas as alocações
+    await _atualizarPontosVolateis(conn, usuarioId);
+}
+
+// ===========================================================================
+// PÚBLICO 2: Deduzir saldo dos objetivos (saque)
+// ===========================================================================
+/**
+ * Remove saldo virtual dos objetivos seguindo a hierarquia de proteção:
+ *   1. Objetivos secundários (LIFO nas metas de cada um)
+ *   2. Objetivo Patrimônio por último (LIFO nas metas)
+ *
+ * Cancela automaticamente objetivos secundários zerados.
+ * Deve ser chamado DENTRO de um withTransaction existente.
+ *
+ * @param {import('mysql2/promise').PoolConnection} conn
+ * @param {number} usuarioId
+ * @param {string|number} valorDeduzido
+ * @returns {{ alerta: string|null }} Alerta de viabilidade, ou null
+ */
+async function deduzirSaldoObjetivos(conn, usuarioId, valorDeduzido) {
+    let restante = decimalToBigInt(String(valorDeduzido));
+    if (restante <= 0n) return { alerta: null };
+
+    // --- Etapa 1: Deduzir dos objetivos secundários ---
+    const secundarios = await ObjetivosLeitura.buscarObjetivosSecundarios(usuarioId, conn);
+
+    for (const objetivo of secundarios) {
+        if (restante <= 0n) break;
+
+        const metas          = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'DESC', conn);
+        const saldoAntesBig  = decimalToBigInt(String(objetivo.saldo_alocado_total));
+        const sobraApos      = await _deduzirNasMetas(conn, metas, restante);
+        const deduzido       = restante - sobraApos;
+
+        if (deduzido > 0n) {
+            const novoTotal = bigIntToDecimalString(saldoAntesBig - deduzido);
+            await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, novoTotal, conn);
+
+            // Cancelar automaticamente se zerou
+            if (saldoAntesBig - deduzido <= 0n) {
+                await ObjetivosEscrita.cancelarObjetivo(objetivo.objetivo_id, conn);
+                logger.info(`[ObjetivosService] Objetivo secundário ${objetivo.objetivo_id} zerado e cancelado.`);
+            }
+        }
+
+        restante = sobraApos;
+    }
+
+    // --- Etapa 2: Deduzir do Patrimônio (proteção — último recurso) ---
+    if (restante > 0n) {
+        const patrimonio = await ObjetivosLeitura.buscarPatrimonio(usuarioId, conn);
+        if (patrimonio) {
+            const metas         = await MetasLeitura.buscarMetasAtivas(patrimonio.objetivo_id, 'DESC', conn);
+            const saldoAntesBig = decimalToBigInt(String(patrimonio.saldo_alocado_total));
+            const sobraApos     = await _deduzirNasMetas(conn, metas, restante);
+            const deduzido      = restante - sobraApos;
+
+            if (deduzido > 0n) {
+                const novoTotal = bigIntToDecimalString(saldoAntesBig - deduzido);
+                await ObjetivosEscrita.atualizarSaldoTotal(patrimonio.objetivo_id, novoTotal, conn);
+            }
+
+            restante = sobraApos;
+        }
+    }
+
+    if (restante > 0n) {
+        // Saldo virtual esgotado antes de cobrir o valor total do saque
+        // Isso é esperado se o usuário não tinha saldo virtual suficiente alocado
+        logger.warn(`[ObjetivosService] Saldo virtual insuficiente para cobrir dedução completa. Usuário ${usuarioId}.`);
+    }
+
+    // Recalcular pontos_volateis
+    await _atualizarPontosVolateis(conn, usuarioId);
+
+    // Verificar viabilidade
+    return _verificarViabilidade(usuarioId, conn);
+}
+
+// ---------------------------------------------------------------------------
+// Privado: verificar viabilidade das metas restantes
+// ---------------------------------------------------------------------------
+async function _verificarViabilidade(usuarioId, conn) {
+    const objetivos = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId, conn);
+
+    for (const objetivo of objetivos) {
+        const metas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        const metasIncompletas = metas.filter(m => Number(m.objetivo_completo) === 0);
+        if (!metasIncompletas.length) continue;
+
+        // Soma do que ainda falta nas metas incompletas
+        let faltaTotal = 0n;
+        for (const meta of metasIncompletas) {
+            faltaTotal += decimalToBigInt(String(meta.objetivo_investir))
+                        - decimalToBigInt(String(meta.saldo_alocado));
+        }
+
+        // Aporte médio necessário por meta restante
+        const aporteMedioNecessario = faltaTotal / BigInt(metasIncompletas.length);
+
+        // Aporte médio original (valor_alvo / prazo)
+        const numTotal = Number(objetivo.objetivo_numero_total);
+        if (numTotal <= 0) continue;
+        const aporteMedioOriginal = decimalToBigInt(String(objetivo.objetivo_valor_total)) / BigInt(numTotal);
+
+        // Se o necessário for mais de 20% acima do original → alerta
+        if (aporteMedioNecessario > aporteMedioOriginal + (aporteMedioOriginal * 20n / 100n)) {
+            return {
+                alerta: `O objetivo "${objetivo.objetivo_descricao}" requer recálculo: ` +
+                        `o aporte necessário por meta (R$ ${bigIntToDecimalString(aporteMedioNecessario)}) ` +
+                        `está acima do planejado (R$ ${bigIntToDecimalString(aporteMedioOriginal)}).`
+            };
+        }
+    }
+
+    return { alerta: null };
+}
+
+// ===========================================================================
+// PÚBLICO 3: Recalcular metas de um objetivo (edição de valor_alvo ou prazo)
+// ===========================================================================
+/**
+ * Cancela as metas antigas, gera novas metas com os parâmetros atualizados
+ * e redistribui o saldo_alocado_total atual nas novas metas (FIFO).
+ *
+ * @param {import('mysql2/promise').PoolConnection} conn
+ * @param {number} usuarioId
+ * @param {object} objetivo - Registro atual do objetivo_descricao
+ * @param {number} novoValorAlvo
+ * @param {number} novoPrazo
+ * @param {number} novosPontosTotal
+ * @param {string} motivo - 'alteracao_alvo' | 'alteracao_prazo'
+ */
+async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo, novoPrazo, novosPontosTotal, motivo) {
+    const saldoAtualStr = String(objetivo.saldo_alocado_total);
+
+    // Registrar recálculo
+    await ObjetivosEscrita.registrarRecalculo({
+        usuarioId,
+        objetivoId:  objetivo.objetivo_id,
+        motivo,
+        saldoNaData: saldoAtualStr,
+    }, conn);
+
+    // Cancelar metas antigas
+    await MetasEscrita.cancelarMetasObjetivo(objetivo.objetivo_id, conn);
+
+    // Atualizar cabeçalho do objetivo
+    await ObjetivosEscrita.editarObjetivo({
+        objetivoId:   objetivo.objetivo_id,
+        descricao:    objetivo.objetivo_descricao,
+        valorTotal:   novoValorAlvo,
+        numeroTotal:  novoPrazo,
+        pontosTotal:  novosPontosTotal,
+    }, conn);
+
+    // Gerar e inserir novas metas (datas a partir do mês atual do recálculo)
+    const novasMetas = gerarMetas(novoValorAlvo, novoPrazo, novosPontosTotal);
+    for (const meta of novasMetas) {
+        await MetasEscrita.criarMeta({
+            usuarioId,
+            objetivoId:    objetivo.objetivo_id,
+            numero:        meta.numero,
+            valorInvestir: meta.valorInvestir,
+            pontos:        meta.pontos,
+            dataLimite:    meta.dataLimite,
+        }, conn);
+    }
+
+    // Resetar saldo total no cabeçalho antes de redistribuir
+    await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, '0', conn);
+
+    // Redistribuir saldo atual nas novas metas (FIFO)
+    const saldoBig = decimalToBigInt(saldoAtualStr);
+    if (saldoBig > 0n) {
+        const novasMetasDb = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        const sobra        = await _alocarNasMetas(conn, novasMetasDb, saldoBig, usuarioId, false);
+        const realocado    = saldoBig - sobra;
+        const novoTotal    = bigIntToDecimalString(realocado);
+        await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, novoTotal, conn);
+
+        // Verificar conclusão após redistribuição
+        const metasAtualizadas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+        const todasCompletas   = metasAtualizadas.length > 0
+            && metasAtualizadas.every(m => Number(m.objetivo_completo) === 1);
+        if (todasCompletas) {
+            await _concluirObjetivo(conn, usuarioId, { ...objetivo, objetivo_pontos_total: novosPontosTotal });
+        }
+    }
+
+    // Resetar primeiro_aporte_feito para que a trava seja reavaliada no próximo ciclo
+    await ObjetivosEscrita.marcarPrimeiroAporte(objetivo.objetivo_id, conn); // mantém como "feito" para não re-triggar trava imediatamente
+
+    await _atualizarPontosVolateis(conn, usuarioId);
+
+    logger.info(`[ObjetivosService] Recálculo de objetivo ${objetivo.objetivo_id} concluído. Motivo: ${motivo}.`);
+}
+
+// ===========================================================================
+// PÚBLICO 4: Utilitário de geração de metas
+// ===========================================================================
+/**
+ * Retorna o último dia do mês como string YYYY-MM-DD.
+ */
+function _ultimoDiaMes(year, month) {
+    // new Date(year, month+1, 0) = último dia do mês (month é 0-indexed)
+    const d = new Date(year, month + 1, 0);
+    return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Gera o array de metas a partir dos parâmetros do objetivo.
+ * Distribui o valor_alvo igualitariamente entre `prazo` metas.
+ * O restante fracional vai para a última meta.
+ * Cada meta recebe data_limite = último dia do mês correspondente.
+ *
+ * @param {number} valorAlvo   - Valor total do objetivo (ex: 600)
+ * @param {number} prazo       - Número de metas/meses (ex: 9)
+ * @param {number} pontosTotal - Total de pontos do objetivo (ex: 360)
+ * @param {Date}   dataInicio  - Mês de início (padrão: mês atual)
+ * @returns {{ numero, valorInvestir, pontos, dataLimite }[]}
+ */
+function gerarMetas(valorAlvo, prazo, pontosTotal, dataInicio = new Date()) {
+    if (prazo <= 0) throw new Error('Prazo deve ser maior que zero.');
+
+    const valorCentsTotal = Math.round(valorAlvo * 100);
+    const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
+    const restoValor      = valorCentsTotal - valorPorMeta * prazo;
+
+    const pontosPorMeta   = Math.floor(pontosTotal / prazo);
+    const restoPontos     = pontosTotal - pontosPorMeta * prazo;
+
+    const anoInicio = dataInicio.getFullYear();
+    const mesInicio = dataInicio.getMonth(); // 0-indexed
+
+    const metas = [];
+    for (let i = 1; i <= prazo; i++) {
+        const isUltima  = i === prazo;
+        const mesOffset = mesInicio + (i - 1);
+        const ano       = anoInicio + Math.floor(mesOffset / 12);
+        const mes       = mesOffset % 12;
+        metas.push({
+            numero:        i,
+            valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
+            pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+            dataLimite:    _ultimoDiaMes(ano, mes),
+        });
+    }
+    return metas;
+}
+
+// ===========================================================================
+// PÚBLICO 5: Sincronizar pontos de um usuário (sem transação)
+// ===========================================================================
+/**
+ * Recalcula pontos_volateis com base no estado atual das metas,
+ * atualiza carteiras.pontos_volateis e carteiras.pontos,
+ * e retorna o total de pontos atualizado.
+ *
+ * Chamado pela rotina de manutenção de ranking para garantir que
+ * carteiras.pontos reflita fielmente o progresso real das metas.
+ *
+ * @param {number} usuarioId
+ * @returns {Promise<number>} Total de pontos atualizados (pontos_permanentes + pontos_volateis)
+ */
+async function sincronizarPontosUsuario(usuarioId) {
+    // Lê pontos_permanentes antes de atualizar (não muda nesta função)
+    const rowAntes = await ObjetivosLeitura.buscarPontosCarteira(usuarioId);
+    const permanentes = rowAntes ? Number(rowAntes.pontos_permanentes) : 0;
+
+    // Recalcula pontos_volateis com base no progresso atual das metas
+    const objetivos = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId);
+    let pontosVolateis = 0;
+
+    for (const objetivo of objetivos) {
+        const metas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC');
+        for (const meta of metas) {
+            if (Number(meta.objetivo_completo) === 1) continue;
+            const investir = Number(meta.objetivo_investir);
+            if (investir <= 0) continue;
+            const percentual = Math.min(Number(meta.saldo_alocado) / investir * 100, 100);
+            pontosVolateis += Math.floor(Number(meta.objetivo_pontos) * percentual / 100);
+        }
+    }
+
+    // Persiste os valores recalculados
+    await ObjetivosEscrita.atualizarPontosVolateis(usuarioId, pontosVolateis);
+
+    return permanentes + pontosVolateis;
+}
+
+module.exports = {
+    alocarSaldoEntreObjetivos,
+    deduzirSaldoObjetivos,
+    recalcularMetasObjetivo,
+    gerarMetas,
+    sincronizarPontosUsuario,
+};

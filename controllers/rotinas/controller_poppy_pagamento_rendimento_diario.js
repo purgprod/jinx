@@ -1,5 +1,6 @@
 const logger = require('../../logger');
 const { withTransaction } = require('../../database/transaction');
+const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service');
 const BuscarPinsModel = require('../../models/rotinas/model_poppy_buscar_pins');
 const BuscarUsuariosQuantidadeRendimentoPinsModel = require('../../models/rotinas/model_poppy_buscar_usuarios_quantidade_rendimento_pins');
 const BuscarSaldosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_saldos_carteiras');
@@ -143,7 +144,7 @@ const PagamentoRendimentoDiarioController = {
 
                     const novoSaldo = parseFloat(saldoAtual.saldo) + rendimentoTotal;
 
-                    // Crédito de saldo + registro de histórico: atômicos — ambos ou nenhum
+                    // Crédito de saldo + registro de histórico + alocação de objetivos: atômicos
                     let resultadoRegistro;
                     await withTransaction(async (conn) => {
                         await AtualizarCarteiraUsuarioModel.atualizarCarteiraUsuario(
@@ -152,6 +153,8 @@ const PagamentoRendimentoDiarioController = {
                         resultadoRegistro = await RendimentosPinsModel.rendimentosPins(
                             parseInt(usuarioId), rendimentoTotal, conn
                         );
+                        // Alocar rendimento nos objetivos do usuário
+                        await alocarSaldoEntreObjetivos(conn, parseInt(usuarioId), rendimentoTotal);
                     });
 
                     atualizacoes.push({

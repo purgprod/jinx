@@ -18,6 +18,9 @@ const { enviarPix } = require('../../services/efi_pix');
 
 const { withTransaction } = require('../../database/transaction');
 
+// Engine de Objetivos — dedução dentro da mesma transação do saque
+const { deduzirSaldoObjetivos } = require('../../services/objetivos_service');
+
 const SCALE   = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
 
@@ -225,9 +228,10 @@ const SaqueController = {
                 return res.status(500).json({ error: 'Erro ao processar ativos do sistema.' });
             }
 
-            // ETAPAS 6 + 7 + 8 — atômicas via transação MySQL.
-            // Se qualquer passo falhar, ROLLBACK desfaz ledger, movimentação e débito juntos.
+            // ETAPAS 6 + 7 + 8 + 9 — atômicas via transação MySQL.
+            // Se qualquer passo falhar, ROLLBACK desfaz ledger, movimentação, débito e objetivos juntos.
             let novo_valor_formatted;
+            let alertaObjetivos = null;
             try {
                 await withTransaction(async (conn) => {
                     // ETAPA 6 – Registro de Transações (Ledger)
@@ -265,6 +269,14 @@ const SaqueController = {
                     const novo_valor_big   = saldoOriginalBig - (saldoTruncBig - amountBigTx);
                     novo_valor_formatted   = bigIntToDecimalString(novo_valor_big);
                     await AtualizarCarteiraSaqueModel.updateCarteira(novo_valor_formatted, id, conn);
+
+                    // ETAPA 9 – Dedução virtual nos objetivos (LIFO + proteção Patrimônio)
+                    // Participa da mesma transação: rollback desfaz tudo se falhar.
+                    const resultadoObjetivos = await deduzirSaldoObjetivos(conn, parseInt(id, 10), amountStr);
+                    if (resultadoObjetivos?.alerta) {
+                        alertaObjetivos = resultadoObjetivos.alerta;
+                        logger.warn('[Saque] Alerta de viabilidade de objetivos', { userId: id, alerta: alertaObjetivos });
+                    }
                 });
             } catch (errTx) {
                 logger.error('Erro na transação de débito/tokens — rollback executado', { userId: id, err: errTx });
@@ -305,7 +317,8 @@ const SaqueController = {
                     valor_investido_antes:  investidoTrunc,
                     valor_investido_depois: bigIntToDecimalString(investidoAfterBig),
                     chave_pix:            chavePixValue,
-                    ...(endToEndId && { end_to_end_id: endToEndId, status_pix: 'Processando' })
+                    ...(endToEndId && { end_to_end_id: endToEndId, status_pix: 'Processando' }),
+                    ...(alertaObjetivos && { alerta_objetivos: alertaObjetivos })
                 }
             };
 

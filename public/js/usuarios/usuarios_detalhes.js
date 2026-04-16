@@ -45,6 +45,8 @@ function loadUserDetails(usuario_id) {
                 </div>
                 <h3>Pins do Usuário</h3>
                 <div id="pinsContainer" class="cards-container"></div>
+                <h3>Objetivos</h3>
+                <div id="objetivosContainer"></div>
                 <h3>Suitability</h3>
                 <div id="suitabilityContainer" class="suitability-container"></div>
                 <h3>Respostas Principais</h3>
@@ -67,13 +69,14 @@ function loadUserDetails(usuario_id) {
             });
 
             Promise.all([
-                loadUserPins(usuario_id), 
+                loadUserPins(usuario_id),
                 loadUltimosDadosFinanceiros(usuario_id),
-                loadDadosFinanceirosHistoricos(usuario_id), 
+                loadDadosFinanceirosHistoricos(usuario_id),
                 loadDadosRendimentosHistoricos(usuario_id),
-                loadSuitability(usuario_id),  
+                loadSuitability(usuario_id),
                 loadSuitabilityCompleto(usuario_id),
-                loadInfo(usuario_id)
+                loadInfo(usuario_id),
+                loadObjetivos(usuario_id)
             ]).then(() => {
                 return Promise.all([
                 loadSaldos(usuario_id),
@@ -1372,6 +1375,86 @@ function resetarSenha(usuario_id) {
         console.error('Erro ao redefinir a senha:', error);
         alert('Erro ao redefinir a senha.');
     });
+}
+
+function loadObjetivos(usuario_id) {
+    return fetch(`/api/usuarios/${usuario_id}/objetivos`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao buscar objetivos');
+            return response.json();
+        })
+        .then(({ objetivos }) => {
+            const container = document.getElementById('objetivosContainer');
+            if (!container) return;
+
+            if (!objetivos || objetivos.length === 0) {
+                container.innerHTML = '<p style="color:#888;">Nenhum objetivo cadastrado.</p>';
+                return;
+            }
+
+            container.innerHTML = objetivos.map(obj => {
+                const progresso = obj.valor_alvo > 0
+                    ? Math.min((obj.saldo_alocado_total / obj.valor_alvo) * 100, 100).toFixed(1)
+                    : 0;
+
+                const linhasMetas = obj.metas.map(m => {
+                    const pct = m.meta > 0
+                        ? Math.min((m.aporte / m.meta) * 100, 100).toFixed(1)
+                        : 0;
+                    const dataFormatada = m.data_limite
+                        ? new Date(m.data_limite).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                        : '—';
+                    const metaFmt   = m.meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const aporteFmt = m.aporte.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const rowStyle  = m.completo ? 'background-color:#f0fff0;' : '';
+
+                    return `
+                        <tr style="${rowStyle}">
+                            <td>Meta ${m.numero}</td>
+                            <td>${dataFormatada}</td>
+                            <td>${metaFmt}</td>
+                            <td>${aporteFmt}</td>
+                            <td><strong>${pct}%</strong></td>
+                        </tr>`;
+                }).join('');
+
+                const totalMetaFmt   = obj.valor_alvo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const totalAporteFmt = obj.saldo_alocado_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const badge          = obj.is_patrimonio
+                    ? '<span style="font-size:11px;background:#4682B4;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px;">Patrimônio</span>'
+                    : '';
+                const completoBadge  = obj.objetivo_completo
+                    ? '<span style="font-size:11px;background:#4CAF50;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px;">Concluído</span>'
+                    : '';
+
+                return `
+                    <div class="card" style="width:100%;max-width:100%;margin-bottom:16px;flex:unset;">
+                        <p style="margin:0 0 4px;font-size:15px;font-weight:bold;color:#333;">
+                            ${obj.descricao}${badge}${completoBadge}
+                        </p>
+                        <p style="margin:0 0 12px;font-size:13px;color:#666;">
+                            Alvo: ${totalMetaFmt} &nbsp;|&nbsp; Aportado: ${totalAporteFmt} &nbsp;|&nbsp; Progresso geral: <strong>${progresso}%</strong>
+                        </p>
+                        <table class="rotinas-table" style="margin-top:0;">
+                            <thead>
+                                <tr>
+                                    <th>Meta</th>
+                                    <th>Data Limite</th>
+                                    <th>Meta (R$)</th>
+                                    <th>Aporte (R$)</th>
+                                    <th>%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${linhasMetas || '<tr><td colspan="5" style="color:#888;">Sem metas cadastradas.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }).join('');
+        })
+        .catch(error => {
+            console.error('Erro ao carregar objetivos:', error);
+        });
 }
 
 window.loadUserDetails = loadUserDetails;

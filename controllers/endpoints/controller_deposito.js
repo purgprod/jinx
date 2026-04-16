@@ -6,6 +6,7 @@ const BuscarDepositoPendenteModel = require('../../models/endpoints/model_deposi
 const SolicitacaoDepositoModel    = require('../../models/endpoints/model_deposito_registro_solicitacao');
 const AtualizarDepositoQrModel    = require('../../models/depositos/model_deposito_atualizar_qr');
 const DadosCadastroModel          = require('../../models/endpoints/model_dados_cadastro');
+const ObjetivosLeitura            = require('../../models/objetivos/model_objetivos_leitura');
 
 // Serviço Efí Bank Pix
 const { criarCobrancaPix } = require('../../services/efi_pix');
@@ -47,6 +48,16 @@ const DepositoController = {
         logger.info('Iniciando processo de solicitação de deposito', { userId: id, amount });
 
         try {
+            // 1.5. Validação de Objetivos — usuário deve ter ao menos um objetivo com metas configuradas
+            const possuiObjetivos = await ObjetivosLeitura.usuarioPossuiObjetivosComMetas(parseInt(id, 10));
+            if (!possuiObjetivos) {
+                logger.warn('Depósito bloqueado: usuário sem objetivos configurados', { userId: id });
+                return res.status(403).json({
+                    error: 'Configure ao menos um objetivo com metas antes de realizar o primeiro depósito.',
+                    codigo: 'OBJETIVOS_NAO_CONFIGURADOS',
+                });
+            }
+
             // 2. Verificação de Idempotência / Estado Pendente
             const depositosPendentes = await BuscarDepositoPendenteModel.getDepositoPendente(id);
 

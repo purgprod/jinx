@@ -2,7 +2,9 @@
 
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
-const cadastroModel = require('../../models/endpoints/model_criar_novo_usuario');
+const cadastroModel    = require('../../models/endpoints/model_criar_novo_usuario');
+const ObjetivosEscrita = require('../../models/objetivos/model_objetivos_escrita');
+const { withTransaction } = require('../../database/transaction');
 const logger = require('../../logger');
 
 async function cadastrarUsuario(req, res) {
@@ -26,12 +28,18 @@ async function cadastrarUsuario(req, res) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const novoId = await cadastroModel.createUser({
-            nome_completo: nome_completo.trim().toUpperCase(),
-            cpf,
-            celular,
-            email: email.trim().toLowerCase(),
-            hashedPassword
+        let novoId;
+        await withTransaction(async (conn) => {
+            novoId = await cadastroModel.createUser({
+                nome_completo: nome_completo.trim().toUpperCase(),
+                cpf,
+                celular,
+                email: email.trim().toLowerCase(),
+                hashedPassword,
+            }, conn);
+
+            // Criar objetivo Patrimônio automaticamente (sem metas ainda)
+            await ObjetivosEscrita.criarPatrimonio(novoId, conn);
         });
 
         logger.info(`Cadastro de novo usuário realizado com sucesso. ID: ${novoId}`);

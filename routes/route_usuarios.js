@@ -25,6 +25,7 @@ const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usua
 const UsuariosRankingController = require('../controllers/usuarios/controller_ranking_usuario');
 const UsuariosSinistroController = require('../controllers/usuarios/controller_sinistro_usuario');
 const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
+const UsuariosObjetivosController = require('../controllers/usuarios/controller_objetivos_usuarios');
 
 // Todas as rotas de usuários requerem autenticação
 router.use('/api/usuarios', checkAuthenticated);
@@ -94,6 +95,9 @@ router.get('/api/usuarios/:id/sinistro-usuarios', UsuariosSinistroController.get
 
 // Rota para obter o suitability complementar do usuário
 router.get('/api/usuarios/:id/suitability-complementar', UsuariosSuitabilityComplementarController.getSuitabilityComplementar);
+
+// Rota para obter os objetivos e metas do usuário (painel admin)
+router.get('/api/usuarios/:id/objetivos', UsuariosObjetivosController.getObjetivos);
 
 module.exports = router;
 

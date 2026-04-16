@@ -4,8 +4,11 @@ const logger = require('../../logger');
 // Models
 const BuscarCarteiraModel = require('../../models/endpoints/model_buscar_saldo_carteira');
 const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_saldo_carteira');
-// Novo Model importado
 const SolicitacaoExecutarDepositoModel = require('../../models/depositos/model_deposito_registro_executado');
+const { withTransaction } = require('../../database/transaction');
+
+// Engine de Objetivos
+const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service');
 
 const SCALE = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
@@ -51,21 +54,24 @@ const ExecutarDepositoController = {
             const saldoAtualBig = decimalToBigInt(String(carteira.saldo ?? '0'));
             const depositoBig = decimalToBigInt(String(amount));
 
-            // 2. Persistência do Crédito (Write Layer + Wallet)
+            // 2. Persistência do Crédito + Alocação de Objetivos (atômicos)
             const novoSaldoBig = saldoAtualBig + depositoBig;
             const novoSaldoStr = bigIntToDecimalString(novoSaldoBig);
 
-            await AtualizarCarteiraModel.updateCarteira(novoSaldoStr, id);
+            let registroResult;
+            await withTransaction(async (conn) => {
+                await AtualizarCarteiraModel.updateCarteira(novoSaldoStr, id, conn);
 
-            // 3. Atualização do Status da Solicitação (Side Effect / State Transition)
-            // Semântica: Executamos após o crédito para garantir que o registro reflita a realidade financeira.
-            const registroResult = await SolicitacaoExecutarDepositoModel.executarSolicitacao(id);
+                // 3. Atualização do Status da Solicitação
+                registroResult = await SolicitacaoExecutarDepositoModel.executarSolicitacao(id, conn);
 
-            if (registroResult.affectedRows === 0) {
-                // Warning: O dinheiro foi creditado, mas o registro da solicitação não foi alterado.
-                // Em um ambiente ideal, isso estaria dentro de uma transação para Rollback.
-                logger.error('Divergência de estado: Saldo creditado, mas solicitação não encontrada para atualização', { userId: id });
-            }
+                if (registroResult.affectedRows === 0) {
+                    logger.error('Divergência de estado: Saldo creditado, mas solicitação não encontrada para atualização', { userId: id });
+                }
+
+                // 4. Alocar saldo nos objetivos do usuário
+                await alocarSaldoEntreObjetivos(conn, parseInt(id, 10), amount);
+            });
 
             logger.info('Fluxo de deposito finalizado', { userId: id, montante: amount, status: 'Executado' });
 

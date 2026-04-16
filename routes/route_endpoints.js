@@ -39,6 +39,8 @@ const TrocaSenhaController = require('../controllers/endpoints/controller_troca_
 const RecuperacaoSenhaController = require('../controllers/mailing/controller_recuperacao_de_senha');
 const CadastroUsuarioController  = require('../controllers/endpoints/controller_cadastro_usuario');
 const AtualizarPerfilController  = require('../controllers/endpoints/controller_atualizar_perfil');
+const HistoricoPatrimonioController = require('../controllers/endpoints/controller_historico_patrimonio');
+const HistoricoRendimentosController = require('../controllers/endpoints/controller_historico_rendimentos');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -143,6 +145,12 @@ router.get('/api/v1/saque-historico/:id', authMiddleware.checkAuthenticated, Saq
 
 // Rota para o histórico de depositos do usuário
 router.get('/api/v1/deposito-historico/:id', authMiddleware.checkAuthenticated, DepositoHistoricoUsuarioController.getDepositoHistoricoUsuario);
+
+// Rota para o histórico de patrimônio do usuário (gráfico de crescimento)
+router.get('/api/v1/historico-patrimonio/:id', authMiddleware.checkAuthenticated, HistoricoPatrimonioController.getHistoricoPatrimonio);
+
+// Rota para o histórico de rendimentos do usuário (gráfico de crescimento)
+router.get('/api/v1/historico-rendimentos/:id', authMiddleware.checkAuthenticated, HistoricoRendimentosController.getHistoricoRendimentos);
 
 // Rota para carregar os saques pendentes do usuário
 router.get('/api/v1/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);

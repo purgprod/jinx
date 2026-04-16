@@ -1,4 +1,5 @@
 const UpdatePorcentagemEmblemasModel = require('../../models/emblemas/model_update_porcentagem_emblemas');
+const { withTransaction } = require('../../database/transaction');
 const logger = require('../../logger');
 
 const UpdatePorcentagemEmblemasController = {
@@ -14,18 +15,14 @@ const UpdatePorcentagemEmblemasController = {
                 });
             }
 
-            const result = await UpdatePorcentagemEmblemasModel.updatePorcentagem(porcentagem_emblemas);
-            
-            if (result.affectedRows > 0) {
-                logger.info('Porcentagem atualizada com sucesso');
-                return res.status(200).json({
-                    message: 'Porcentagem atualizada com sucesso'
-                });
-            }
+            await withTransaction(async (conn) => {
+                await UpdatePorcentagemEmblemasModel.updatePorcentagemTx(porcentagem_emblemas, conn);
+                await UpdatePorcentagemEmblemasModel.updateJurosEMBTx(porcentagem_emblemas, conn);
+            });
 
-            logger.warn('Nenhuma alteração realizada');
+            logger.info(`Porcentagem de emblemas e juros_a_a EMB atualizados para: ${porcentagem_emblemas}`);
             return res.status(200).json({
-                message: 'Nenhuma alteração realizada'
+                message: 'Porcentagem atualizada com sucesso'
             });
 
         } catch (error) {

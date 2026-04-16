@@ -3,6 +3,7 @@ const BuscarCarteirasModel = require('../../models/rotinas/model_manutencao_busc
 const BuscarUsuariosModel = require('../../models/rotinas/model_manutencao_buscar_usuarios');
 const UpdateRankingUsuariosModel = require('../../models/rotinas/model_manutencao_update_ranking_usuarios');
 const rankings = require('./rankings');
+const { sincronizarPontosUsuario } = require('../../services/objetivos_service');
 
 const ManutencaoRankingUsuariosController = {
     async executeManutencaoRankingUsuarios(req, res) {
@@ -24,39 +25,29 @@ const ManutencaoRankingUsuariosController = {
             const usuariosMap = {};
             usuarios.forEach(u => { usuariosMap[u.usuario_id] = u; });
 
-            // Etapa 3: Processar os dados para somar pontos por usuário
-            logger.info('Processando dados para somar pontos por usuário');
+            // Etapa 3: Recalcular e sincronizar pontos de cada usuário com base nas metas
+            logger.info('Sincronizando pontos de cada usuário a partir do progresso real das metas');
             const usuariosProcessados = {};
 
             for (const carteira of carteiras) {
                 const usuarioId = carteira.usuario_id;
-                // Garantir que pontos seja número válido
-                const pontosRaw = carteira.pontos;
-                const pontos = typeof pontosRaw === 'number'
-                    ? pontosRaw
-                    : parseFloat(pontosRaw);
 
-                if (isNaN(pontos)) {
-                    logger.warn(`Pontos inválidos para o usuário ${usuarioId}`);
-                    continue;
-                }
+                try {
+                    const pontos = await sincronizarPontosUsuario(usuarioId);
 
-                if (!usuariosProcessados[usuarioId]) {
                     usuariosProcessados[usuarioId] = {
-                        pontos_total: 0,
-                        valor_total: 0
+                        pontos_total: pontos,
+                        valor_total:  pontos
                     };
+
+                    logger.info(`Usuário ${usuarioId} → Pontos sincronizados: ${pontos}`);
+                    logger.info('----------------------------------------');
+                } catch (errSync) {
+                    logger.error(`Erro ao sincronizar pontos do usuário ${usuarioId}: ${errSync.message}`);
                 }
-
-                usuariosProcessados[usuarioId].pontos_total += pontos;
-                // Para manter compatibilidade no ranking
-                usuariosProcessados[usuarioId].valor_total = usuariosProcessados[usuarioId].pontos_total;
-
-                logger.info(`Usuário ${usuarioId} → Pontos acumulados: ${usuariosProcessados[usuarioId].pontos_total.toFixed(8)}`);
-                logger.info('----------------------------------------');
             }
 
-            logger.info('Processamento de pontos concluído com sucesso');
+            logger.info('Sincronização de pontos concluída com sucesso');
 
             // Etapa 4: Verificar o ranking de cada usuário
             logger.info('Iniciando verificação do ranking dos usuários');
