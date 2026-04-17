@@ -1,3 +1,14 @@
+#develop-75:
+- Correção de bugs pós-deploy do develop-74: trigger trg_ranking_atualizar ausente no banco, servidor rodando código antigo e pontos_permanentes não gravados via trigger:
+
+- banco de dados (purg):
+	- trigger trg_ranking_atualizar criado em carteiras (havia sido dropado junto com trg_ranking_pontos_atualizar durante a migration mas nunca recriado): dispara em UPDATE de carteiras.pontos OU carteiras.liga; reconstrói a tabela ranking com posicao, usuario_id, nome, pontos e liga; exclui usuario_id = 1 (Purg) e pontos = 0;
+	- tabela ranking populada manualmente com o estado atual das carteiras após criação do trigger;
+	- corrigido pontos_permanentes do usuário 3: estava 0 (deveria ser 40) pois a meta 1 do Patrimônio foi concluída via trigger trg_carteiras_after_update_investido sem passar pelo service, que é quem chama adicionarPontosPermanentes; pontos recalculados de 12 para 52 (40 permanentes + 12 voláteis); ranking reordenado automaticamente pelo trigger;
+
+- servidor:
+	- reiniciado para carregar o código atualizado do develop-74 (process estava rodando versão anterior que ainda usava SET ranking = ? e acessava sinistro.ranking — causando Unknown column 'ranking' in 'SET' na cron de manutenção de liga e sinistro definido como 0% para todos os usuários);
+
 #develop-74:
 - Renomear conceito "ranking" para "liga" em todo o ecossistema (tier/nível do usuário, ex: "Cobre I", "Bronze V") e renomear tabela ranking_pontos para ranking com adição da coluna liga:
 
