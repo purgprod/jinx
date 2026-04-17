@@ -21,6 +21,7 @@ const route_endpoints  = require('./routes/route_endpoints');
 const route_biometria  = require('./routes/route_biometria');
 const route_objetivos  = require('./routes/route_objetivos');
 const route_ranking    = require('./routes/route_ranking');
+const route_lulu       = require('./routes/route_lulu');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -178,6 +179,7 @@ app.use('/', route_endpoints);
 app.use('/', route_biometria);
 app.use('/', route_objetivos);
 app.use('/', route_ranking);
+app.use('/', route_lulu);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {

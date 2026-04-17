@@ -1,3 +1,40 @@
+#develop-81:
+- Implementação da Lulu — engine de amortização diária da taxa de cartão de crédito:
+
+- migrations/criar_tabelas_lulu.sql (novo):
+	- lulu_config: configurações globais (percentual_deducao, taxa_cartao_percentual), única linha id=1 fixo; defaults 10% e 2%;
+	- lulu_taxas: taxa individual registrada a cada cobrança aprovada; acumula valor_recuperado até Quitada;
+	- lulu_deducoes: auditoria de cada dedução diária por taxa;
+	- lulu_historico_diario: snapshot diário de total_pendente e total_usuarios para gráficos;
+	- Insere rotinas id=15 e id=16 na tabela rotinas;
+
+- models/lulu/ (novos: 8 arquivos):
+	- config_buscar / config_atualizar / taxa_inserir / taxa_atualizar / deducao_inserir / usuarios_para_deduzir / resumo / historico / top10;
+
+- controllers/rotinas/controller_lulu_amortizacao_diaria.js (novo):
+	- Agrupa taxas por usuário FIFO; dedução = rendimento × percentual/100; distribui entre as taxas em ordem; nunca deduz além do valor restante (sobra fica na carteira); withTransaction atômico;
+
+- controllers/rotinas/controller_lulu_snapshot_diario.js (novo):
+	- Grava snapshot diário ao final da cadeia;
+
+- controllers/lulu/controller_lulu_dashboard.js (novo):
+	- GET /api/lulu/resumo | /historico | /top10 | /config; PUT /api/lulu/config;
+
+- routes/route_lulu.js (novo);
+
+- controllers/rotinas/controller_poppy_cobranca_metas_cartao.js:
+	- Após cobrança aprovada: calcula taxa = valor × taxa_cartao_percentual/100 e insere em lulu_taxas;
+
+- controllers/rotinas/cron.js:
+	- id=15 (amortização) e id=16 (snapshot) adicionados à cadeia sequencial diária, após assinatura;
+
+- routes/route_rotinas.js: rotas lulu-amortizacao-diaria e lulu-snapshot-diario;
+- server.js: route_lulu registrado;
+- public/index.html: botão Lulu no menu + script lulu.js;
+- public/script.js: tabRouteMap /lulu + event listener;
+- public/style.css: #luluButton adicionado ao seletor de estilo e hover dos botões do menu;
+- public/js/lulu/lulu.js (novo): painel com cards de resumo, 2 gráficos Chart.js (pendente + usuários), tabela top 10 e formulário de configuração editável;
+
 #develop-80:
 - Implementação de cobrança mensal automática no cartão de crédito para as metas do usuário (Efí Bank):
 

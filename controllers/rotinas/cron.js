@@ -42,6 +42,8 @@ const ROTINAS_SEQUENCIAIS = [
     { id: 10, nome: '[Manutenção] Atualizar o sinistro dos usuários',           method: 'put',  url: `${BASE_URL}/api/rotinas/manutencao-sinistro-usuarios` },
     { id: 11, nome: '[Poppy] Compra diária de Pins',                            method: 'put',  url: `${BASE_URL}/api/rotinas/poppy-compra-diaria-pins` },
     { id: 13, nome: '[Manutenção] Histórico dos planos dos usuários',           method: 'post', url: `${BASE_URL}/api/rotinas/manutencao-planos-assinaturas-historico` },
+    { id: 15, nome: '[Lulu] Amortização diária de taxa de cartão',             method: 'put',  url: `${BASE_URL}/api/rotinas/lulu-amortizacao-diaria` },
+    { id: 16, nome: '[Lulu] Snapshot diário do painel',                        method: 'put',  url: `${BASE_URL}/api/rotinas/lulu-snapshot-diario` },
 ];
 
 //----------------------------------------------
@@ -82,10 +84,10 @@ cron.schedule('58 23 * * *', async () => {
 });
 
 //----------------------------------------------
-// ROTINA MENSAL — dia 1 de cada mês às 07:00
+// ROTINA MENSAL — dia 25 de cada mês às 07:00
 // Cobra no cartão de crédito o valor total das metas ativas de cada usuário
 //----------------------------------------------
-cron.schedule('00 07 1 * *', async () => {
+cron.schedule('00 07 25 * *', async () => {
     logger.info('Iniciando rotina mensal: [Poppy] Cobrança das metas — Cartão de Crédito');
     try {
         const r = await axios.put(`${BASE_URL}/api/rotinas/poppy-cobranca-metas-cartao`);

@@ -21,6 +21,10 @@ const CobrancaAtualizarModel   = require('../../models/cartoes/model_cobranca_at
 const BuscarCarteiraModel      = require('../../models/endpoints/model_buscar_saldo_carteira');
 const AtualizarCarteiraModel   = require('../../models/endpoints/model_atualizar_saldo_carteira');
 
+// Lulu: registra taxa após cobrança aprovada
+const LuluConfigBuscarModel = require('../../models/lulu/model_lulu_config_buscar');
+const LuluTaxaInserirModel  = require('../../models/lulu/model_lulu_taxa_inserir');
+
 // ---------------------------------------------------------------------------
 // Utilitários BigInt (mesmo padrão do webhook Pix)
 // ---------------------------------------------------------------------------
@@ -73,6 +77,14 @@ const CobrancaMetasCartaoController = {
         const descricao     = descricaoFatura();
 
         let totalAprovadas = 0, totalWaiting = 0, totalRecusadas = 0;
+
+        // Config da Lulu (taxa cobrada pelo Efí) — carregada uma vez para toda a rotina
+        let luluConfig = null;
+        try {
+            luluConfig = await LuluConfigBuscarModel.getConfig();
+        } catch (err) {
+            logger.warn('[CobrancaCartao] Não foi possível carregar config da Lulu. Taxas não serão registradas.', { erro: err.message });
+        }
 
         let usuarios;
         try {
@@ -159,6 +171,19 @@ const CobrancaMetasCartaoController = {
                         logger.error(`[CobrancaCartao] Erro ao sincronizar liga. userId=${uid}`, { erro: e.message });
                     }
                 });
+
+                // Registra taxa na Lulu para amortização diária
+                if (luluConfig) {
+                    try {
+                        const valorTaxa = (parseFloat(valor) * parseFloat(luluConfig.taxa_cartao_percentual) / 100).toFixed(2);
+                        if (parseFloat(valorTaxa) > 0) {
+                            await LuluTaxaInserirModel.inserir({ usuarioId: uid, cobrancaCartaoId: cobrancaId, valorTaxa });
+                            logger.info(`[CobrancaCartao] Taxa Lulu registrada. userId=${uid}, valorTaxa=${valorTaxa}`);
+                        }
+                    } catch (errLulu) {
+                        logger.error(`[CobrancaCartao] Erro ao registrar taxa Lulu. userId=${uid}`, { erro: errLulu.message });
+                    }
+                }
 
                 logger.info(`[CobrancaCartao] Aprovada. userId=${uid}, valor=${valor}, chargeId=${resultadoEfi.chargeId}`);
                 totalAprovadas++;
