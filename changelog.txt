@@ -1,3 +1,16 @@
+#develop-79:
+- Sincronização imediata de pontos, liga e ranking após confirmação de depósito ou saque:
+
+- services/liga_service.js (novo):
+	- sincronizarLigaUsuario(usuarioId): chama sincronizarPontosUsuario, determina nomeLiga com base nos pontos e assinatura do usuário e atualiza carteiras.liga; o trigger trg_ranking_atualizar dispara automaticamente ao UPDATE de liga, mantendo ranking sincronizado;
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- Depósito confirmado (pix REALIZADO): setImmediate chama sincronizarLigaUsuario após o commit;
+	- Saque revertido (NAO_REALIZADO): dentro da transação chama alocarSaldoEntreObjetivos para realocar o saldo devolvido; setImmediate chama sincronizarLigaUsuario após o commit;
+
+- controllers/endpoints/controller_saque.js:
+	- Após commit da transação de débito: setImmediate chama sincronizarLigaUsuario;
+
 #develop-78:
 - Correção de crash em usuarios_detalhes.js ao abrir suitability de usuário sem dados preenchidos:
 

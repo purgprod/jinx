@@ -37,6 +37,9 @@ const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_s
 // --- Engine de Objetivos ---
 const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service');
 
+// --- Liga ---
+const { sincronizarLigaUsuario } = require('../../services/liga_service');
+
 // --- Compra automática de pins pós-depósito ---
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
 const { processarUsuario } = require('../../services/compra_pins_usuario_service');
@@ -135,6 +138,16 @@ async function processarPixRecebido(pix) {
 
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);
 
+    // Atualiza pontos, liga e ranking em background
+    setImmediate(async () => {
+        try {
+            await sincronizarLigaUsuario(deposito.usuario_id);
+            logger.info(`[WebhookPix] Liga/pontos sincronizados pós-depósito. userId=${deposito.usuario_id}`);
+        } catch (errLiga) {
+            logger.error(`[WebhookPix] Erro ao sincronizar liga pós-depósito. userId=${deposito.usuario_id}`, { erro: errLiga.message });
+        }
+    });
+
     // Dispara compra de pins em background — não bloqueia a resposta ao Efí
     setImmediate(async () => {
         try {
@@ -196,9 +209,20 @@ async function processarPagamentoEnviado(pagamento) {
     await withTransaction(async (conn) => {
         await FalharSaqueModel.falharPorE2e(endToEndId, motivo, conn);
         await AtualizarCarteiraModel.updateCarteira(saldoRevertido, saque.usuario_id, conn);
+        await alocarSaldoEntreObjetivos(conn, saque.usuario_id, String(saque.valor_saque));
     });
 
     logger.info(`[WebhookPix] Saldo revertido. userId=${saque.usuario_id}, valor=${saque.valor_saque}`);
+
+    // Atualiza pontos, liga e ranking em background após reversão
+    setImmediate(async () => {
+        try {
+            await sincronizarLigaUsuario(saque.usuario_id);
+            logger.info(`[WebhookPix] Liga/pontos sincronizados pós-reversão de saque. userId=${saque.usuario_id}`);
+        } catch (errLiga) {
+            logger.error(`[WebhookPix] Erro ao sincronizar liga pós-reversão. userId=${saque.usuario_id}`, { erro: errLiga.message });
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------

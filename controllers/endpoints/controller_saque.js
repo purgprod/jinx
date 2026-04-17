@@ -21,6 +21,9 @@ const { withTransaction } = require('../../database/transaction');
 // Engine de Objetivos — dedução dentro da mesma transação do saque
 const { deduzirSaldoObjetivos } = require('../../services/objetivos_service');
 
+// Liga — sincronização de pontos/liga/ranking após commit
+const { sincronizarLigaUsuario } = require('../../services/liga_service');
+
 const SCALE   = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
 
@@ -282,6 +285,16 @@ const SaqueController = {
                 logger.error('Erro na transação de débito/tokens — rollback executado', { userId: id, err: errTx });
                 return res.status(500).json({ error: 'Erro ao processar débito do saque. Nenhuma alteração foi salva.' });
             }
+
+            // Atualiza pontos, liga e ranking em background após commit
+            setImmediate(async () => {
+                try {
+                    await sincronizarLigaUsuario(parseInt(id, 10));
+                    logger.info('[Saque] Liga/pontos sincronizados pós-saque.', { userId: id });
+                } catch (errLiga) {
+                    logger.error('[Saque] Erro ao sincronizar liga pós-saque.', { userId: id, erro: errLiga.message });
+                }
+            });
 
             // ETAPA 9 – Envio automático do Pix via Efí Bank
             // Semântica: disparado imediatamente após todas as deduções.
