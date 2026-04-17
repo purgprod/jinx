@@ -1,3 +1,11 @@
+#develop-76:
+- Remoção do trigger trg_carteiras_after_update_investido: correção da causa raiz do bug de pontos_permanentes não gravados:
+
+- migrations/remover_trigger_investido_objetivos.sql (novo):
+	- DROP TRIGGER trg_carteiras_after_update_investido;
+	- Motivo: o trigger comparava carteiras.investido (valor total em pins) com objetivos.objetivo_investir (meta de alocação de saldo), que são métricas diferentes; além disso marcava objetivo_completo = 1 sem chamar adicionarPontosPermanentes, fazendo com que metas concluídas por esse caminho nunca gerassem pontos permanentes;
+	- A conclusão de metas passa a ser responsabilidade exclusiva do service objetivos_service.js (_alocarNasMetas), que executa concluirMeta e adicionarPontosPermanentes na mesma transação;
+
 #develop-75:
 - Correção de bugs pós-deploy do develop-74: trigger trg_ranking_atualizar ausente no banco, servidor rodando código antigo e pontos_permanentes não gravados via trigger:
 
