@@ -19,6 +19,27 @@ async function loadLuluResults() {
         centerPanel.innerHTML = `
             <h2 class="page-title">Lulu — Amortização de Taxas de Cartão</h2>
 
+            <!-- Configurações — topo da página -->
+            <h2>Configurações</h2>
+            <form id="luluConfigForm">
+                <div class="lulu-config-fields">
+                    <div class="lulu-config-field">
+                        <label for="lulu-percentual">Dedução diária do rendimento (%)</label>
+                        <input type="number" id="lulu-percentual" step="0.01" min="0.01" max="100"
+                               value="${Number(config.percentual_deducao).toFixed(2)}">
+                    </div>
+                    <div class="lulu-config-field">
+                        <label for="lulu-taxa-cartao">Taxa cobrada pelo Efí (%)</label>
+                        <input type="number" id="lulu-taxa-cartao" step="0.01" min="0.01" max="100"
+                               value="${Number(config.taxa_cartao_percentual).toFixed(2)}">
+                    </div>
+                </div>
+                <div class="lulu-config-actions">
+                    <button type="submit" class="button-azul" style="margin:0;">Salvar</button>
+                    <span id="lulu-config-msg" class="lulu-config-msg" style="display:none;"></span>
+                </div>
+            </form>
+
             <!-- Cards de resumo -->
             <div class="cards-basico">
                 <div class="card">
@@ -55,35 +76,10 @@ async function loadLuluResults() {
                 </thead>
                 <tbody></tbody>
             </table>
-
-            <!-- Configurações -->
-            <h2>Configurações</h2>
-            <form id="lulu-config-form">
-                <table class="data-table">
-                    <tr>
-                        <td><label for="lulu-percentual">Percentual de dedução diária (%):</label></td>
-                        <td><input type="number" id="lulu-percentual" step="0.01" min="0.01" max="100"
-                                   value="${Number(config.percentual_deducao).toFixed(2)}"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="lulu-taxa-cartao">Taxa cobrada pelo Efí (%):</label></td>
-                        <td><input type="number" id="lulu-taxa-cartao" step="0.01" min="0.01" max="100"
-                                   value="${Number(config.taxa_cartao_percentual).toFixed(2)}"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <div class="button-container">
-                                <button type="submit" class="button-azul">Salvar</button>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                <p id="lulu-config-msg" style="color:green; display:none;"></p>
-            </form>
         `;
 
         // Gráfico: Total Pendente
-        const labels = historico.map(h => h.data);
+        const labels   = historico.map(h => h.data);
         const pendentes = historico.map(h => parseFloat(h.total_pendente));
         const usuarios  = historico.map(h => h.total_usuarios);
 
@@ -149,11 +145,11 @@ async function loadLuluResults() {
         }
 
         // Formulário de config
-        document.getElementById('lulu-config-form').addEventListener('submit', async (e) => {
+        document.getElementById('luluConfigForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const percentual   = document.getElementById('lulu-percentual').value;
-            const taxaCartao   = document.getElementById('lulu-taxa-cartao').value;
-            const msg          = document.getElementById('lulu-config-msg');
+            const percentual = document.getElementById('lulu-percentual').value;
+            const taxaCartao = document.getElementById('lulu-taxa-cartao').value;
+            const msg        = document.getElementById('lulu-config-msg');
 
             try {
                 const resp = await fetch('/api/lulu/config', {
@@ -162,9 +158,9 @@ async function loadLuluResults() {
                     body: JSON.stringify({ percentual_deducao: percentual, taxa_cartao_percentual: taxaCartao })
                 });
                 const data = await resp.json();
-                msg.textContent = resp.ok ? data.message : (data.error || 'Erro ao salvar.');
-                msg.style.color = resp.ok ? 'green' : 'red';
-                msg.style.display = 'block';
+                msg.textContent   = resp.ok ? data.message : (data.error || 'Erro ao salvar.');
+                msg.style.color   = resp.ok ? '#2e7d32' : '#c62828';
+                msg.style.display = 'inline';
                 setTimeout(() => { msg.style.display = 'none'; }, 3000);
             } catch (err) {
                 console.error('Erro ao salvar config Lulu:', err);

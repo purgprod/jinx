@@ -389,6 +389,67 @@ body {
     font-weight: bold;
 }
 
+#luluConfigForm {
+    background-color: #F4F6FA;
+    border: 1px solid #D4D4D4;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 30px;
+    max-width: 560px;
+}
+
+#luluConfigForm .lulu-config-fields {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+#luluConfigForm .lulu-config-field {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 180px;
+}
+
+#luluConfigForm label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+}
+
+#luluConfigForm input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #B0B8C8;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+#luluConfigForm input[type="number"]:focus {
+    outline: none;
+    border-color: #4682B4;
+    box-shadow: 0 0 0 3px rgba(70, 130, 180, 0.15);
+}
+
+#luluConfigForm .lulu-config-actions {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#luluConfigForm .lulu-config-msg {
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .button-azul, .button-vermelho, .button-verde {
     margin: 20px auto;
     padding: 10px 20px;
