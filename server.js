@@ -156,6 +156,8 @@ const rotasSPA = [
     '/saques',
     '/depositos',
     '/rotinas',
+    '/ranking',
+    '/lulu',
 ];
 
 rotasSPA.forEach(rota => {

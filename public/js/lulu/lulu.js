@@ -65,7 +65,7 @@ async function loadLuluResults() {
 
             <!-- Top 10 -->
             <h2>Top 10 — Maiores Saldos Devedores</h2>
-            <table class="data-table" id="lulu-top10-table">
+            <table class="rotinas-table" id="lulu-top10-table">
                 <thead>
                     <tr>
                         <th>#</th>
