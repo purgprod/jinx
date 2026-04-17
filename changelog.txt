@@ -1,3 +1,40 @@
+#develop-80:
+- Implementação de cobrança mensal automática no cartão de crédito para as metas do usuário (Efí Bank):
+
+- migrations/criar_tabela_cartoes_usuario.sql (novo):
+	- Tabela cartoes_usuario: armazena o payment_token gerado pelo JS SDK do Efí no frontend (Purg nunca manipula dados sensíveis do cartão); campos: payment_token, bandeira, ultimos_digitos, nome_titular, mes_validade, ano_validade, ativo;
+
+- migrations/criar_tabela_cobrancas_cartao.sql (novo):
+	- Tabela cobrancas_cartao: registra cada tentativa de cobrança mensal; campo referencia_mes garante idempotência (uma cobrança Aprovada/Processando por usuário por mês); status: Processando | Aprovada | Recusada;
+
+- services/efi_cartao.js (novo):
+	- cobrarCartao(): chama createOneStepCharge do SDK Efí com payment.credit_card; instância separada do efi_pix.js pois cartão não requer certificado mTLS; converte valor decimal para centavos; retorna { chargeId, status, total };
+
+- models/cartoes/ (novos):
+	- model_cartao_salvar.js: desativa cartões anteriores e insere o novo como ativo (atômico);
+	- model_cartao_buscar.js: retorna cartão ativo sem expor payment_token;
+	- model_cartao_remover.js: desativa cartão ativo;
+	- model_cobranca_inserir.js: insere cobrança com status Processando;
+	- model_cobranca_atualizar.js: atualizarStatus() para falhas (fora de transação); atualizarAprovada() para uso dentro de withTransaction;
+	- model_usuarios_para_cobrar.js: query que retorna usuários com cartão ativo + objetivos ativos + sem cobrança no mês corrente;
+
+- controllers/endpoints/controller_cartao.js (novo):
+	- POST   /api/v1/cartao/:id  — salva/substitui token do cartão;
+	- GET    /api/v1/cartao/:id  — retorna dados públicos do cartão (sem token);
+	- DELETE /api/v1/cartao/:id  — remove cartão cadastrado;
+
+- controllers/rotinas/controller_poppy_cobranca_metas_cartao.js (novo):
+	- Para cada usuário elegível: registra cobrança → chama Efí → se approved: credita carteira + alocarSaldoEntreObjetivos + marca Aprovada (atômico via withTransaction) + sincronizarLigaUsuario em setImmediate; se waiting: mantém Processando; se erro/recusa: marca Recusada;
+
+- routes/route_endpoints.js:
+	- Adicionadas rotas POST/GET/DELETE /api/v1/cartao/:id com autenticação;
+
+- routes/route_rotinas.js:
+	- Adicionada rota PUT /api/rotinas/poppy-cobranca-metas-cartao;
+
+- controllers/rotinas/cron.js:
+	- Cron mensal: dia 1 de cada mês às 07:00 chama poppy-cobranca-metas-cartao;
+
 #develop-79:
 - Sincronização imediata de pontos, liga e ranking após confirmação de depósito ou saque:
 

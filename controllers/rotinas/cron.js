@@ -81,4 +81,18 @@ cron.schedule('58 23 * * *', async () => {
     }
 });
 
+//----------------------------------------------
+// ROTINA MENSAL — dia 1 de cada mês às 07:00
+// Cobra no cartão de crédito o valor total das metas ativas de cada usuário
+//----------------------------------------------
+cron.schedule('00 07 1 * *', async () => {
+    logger.info('Iniciando rotina mensal: [Poppy] Cobrança das metas — Cartão de Crédito');
+    try {
+        const r = await axios.put(`${BASE_URL}/api/rotinas/poppy-cobranca-metas-cartao`);
+        logger.info(`Rotina mensal concluída. Resposta: ${r.data.message}`);
+    } catch (error) {
+        logger.error('[Poppy] Erro na rotina mensal de cobrança de cartão:', { message: error.message });
+    }
+});
+
 logger.info('Agendador iniciado com sucesso');

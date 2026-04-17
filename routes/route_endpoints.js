@@ -42,6 +42,7 @@ const AtualizarPerfilController  = require('../controllers/endpoints/controller_
 const HistoricoPatrimonioController = require('../controllers/endpoints/controller_historico_patrimonio');
 const HistoricoRendimentosController = require('../controllers/endpoints/controller_historico_rendimentos');
 const RankingController              = require('../controllers/ranking/controller_ranking');
+const CartaoController               = require('../controllers/endpoints/controller_cartao');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -289,6 +290,34 @@ router.post(
   CancelarDepositoController.cancelarDeposito
 );
 
+//------------CARTÃO DE CRÉDITO------------
+
+// Salva (ou substitui) o token do cartão de crédito do usuário
+router.post(
+  '/api/v1/cartao/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('payment_token').notEmpty().withMessage('payment_token é obrigatório.').isString()
+  ],
+  CartaoController.salvarCartao
+);
+
+// Retorna os dados públicos do cartão ativo (sem token)
+router.get(
+  '/api/v1/cartao/:id',
+  authMiddleware.checkAuthenticated,
+  [param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.')],
+  CartaoController.buscarCartao
+);
+
+// Remove o cartão cadastrado
+router.delete(
+  '/api/v1/cartao/:id',
+  authMiddleware.checkAuthenticated,
+  [param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.')],
+  CartaoController.removerCartao
+);
 
 module.exports = router;
 

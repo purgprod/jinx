@@ -56,6 +56,7 @@ const PoppyPagamentoAssinaturaDiarioController = require('../controllers/rotinas
 const PoppyCompraDiariaPinsController = require('../controllers/rotinas/controller_poppy_compra_diaria_pins.js');
 const PoppyPagamentoEmblemasDiarioController = require('../controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js');
 const VenderTodosPinsController = require('../controllers/rotinas/controller_vender_todos_pins.js');
+const CobrancaMetasCartaoController = require('../controllers/rotinas/controller_poppy_cobranca_metas_cartao.js');
 
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DE MANUTENÇÃO DO ECOSSISTEMA
@@ -121,6 +122,9 @@ router.put('/api/rotinas/poppy-pagamento-emblema-diario', rotinasAuth, lockMiddl
 
 // Rota de sanitização: vende todos os Pins de todos os clientes e devolve o valor em saldo
 router.put('/api/rotinas/vender-todos-pins', rotinasAuth, lockMiddleware, VenderTodosPinsController.executarVendaTodosPins);
+
+// Rotina mensal: cobrança das metas no cartão de crédito (dia 1 de cada mês)
+router.put('/api/rotinas/poppy-cobranca-metas-cartao', rotinasAuth, lockMiddleware, CobrancaMetasCartaoController.executarCobrancas);
 
 module.exports = router;
 
