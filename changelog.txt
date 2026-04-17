@@ -1,3 +1,17 @@
+#develop-82:
+- Correções e melhorias na aba Lulu e nas rotas SPA:
+
+- server.js:
+	- /ranking e /lulu adicionados ao array rotasSPA: reload direto da URL deixava de servir index.html e retornava Cannot GET;
+
+- public/js/lulu/lulu.js:
+	- Tabela Top 10 trocada de class="data-table" para class="rotinas-table" (data-table não possui estilos definidos no CSS do projeto);
+	- Seção Configurações movida para o topo da página (antes dos cards e gráficos);
+	- Design do formulário de configuração redesenhado: labels escuros (#1a1a1a, font-weight 700), inputs com borda definida, fundo branco e destaque azul no foco, botão Salvar inline com mensagem de feedback;
+
+- public/style.css:
+	- Adicionado bloco #luluConfigForm com estilos de layout flex, label, input e ações;
+
 #develop-81:
 - Implementação da Lulu — engine de amortização diária da taxa de cartão de crédito:
 
