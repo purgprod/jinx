@@ -49,9 +49,10 @@ async function login(req, res) {
 
         /* ---------- Cria sessão ---------- */
         req.session.user = {
-            id    : user.usuario_id,   // ajuste ao nome verdadeiro da coluna
-            email : user.email,
-            nome  : user.nome
+            id           : user.usuario_id,
+            email        : user.email,
+            nome         : user.apelido,
+            nome_completo: user.nome_completo
         };
 
         logger.info(`Login bem-sucedido na Purg: ${user.email}`);

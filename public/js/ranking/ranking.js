@@ -57,7 +57,7 @@ async function loadRankingResults() {
 
             tr.innerHTML = `
                 <td style="font-weight:600; white-space:nowrap;">${posicaoLabel}</td>
-                <td>${entry.nome}</td>
+                <td>${entry.apelido}</td>
                 <td>${entry.liga || '—'}</td>
                 <td style="text-align:right;">${Number(entry.pontos).toLocaleString('pt-BR')}</td>
             `;

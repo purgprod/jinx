@@ -138,7 +138,7 @@ function createCardsHTML(users) {
         return `
         <div class="card" data-id="${user.usuario_id}">
             <span class="card-id">#${user.usuario_id}</span>
-            <h3 class="card-title">${user.nome}</h3>
+            <h3 class="card-title">${user.apelido}</h3>
             <p><strong>E-mail:</strong> ${user.email}</p>
             <p><strong>CPF:</strong> ${user.cpf || '—'}</p>
             <p><strong>Celular:</strong> ${user.celular || '—'}</p>

@@ -6,17 +6,17 @@ const logger = require('../../logger');
 class UsersCriarModel {
 
     // Método para criar um novo usuário
-    static async createUser({ usuario_id, nome, email, password }) {
+    static async createUser({ usuario_id, apelido, email, password }) {
         logger.info(`Iniciando a criação de usuário para o e-mail: ${email}`);
-        
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const query = `
-            INSERT INTO users (usuario_id, nome, email, password)
+            INSERT INTO users (usuario_id, apelido, email, password)
             VALUES (?, ?, ?, ?)
         `;
         try {
             // Executa a query de inserção
-            const [results] = await connection.promise().execute(query, [usuario_id, nome, email, hashedPassword]);
+            const [results] = await connection.promise().execute(query, [usuario_id, apelido, email, hashedPassword]);
             logger.info('Usuário criado com sucesso.');
             logger.info(`Resultados da inserção: ${Array.isArray(results) ? results.length + " registro(s)" : "affectedRows=" + (results?.affectedRows ?? "?")}`); // Loga os resultados da inserção
             return results; // Opcional: retorna os resultados

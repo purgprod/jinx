@@ -5,7 +5,7 @@ const BiometriaModel = {
 
     async buscarUsuarioPorEmail(email) {
         const query = `
-            SELECT usuario_id, email, nome
+            SELECT usuario_id, email, nome_completo
             FROM users
             WHERE email = ? AND status_ativo = 1
             LIMIT 1
@@ -16,7 +16,7 @@ const BiometriaModel = {
 
     async buscarDadosSessaoPorId(usuario_id) {
         const query = `
-            SELECT usuario_id, email, nome
+            SELECT usuario_id, email, nome_completo
             FROM users
             WHERE usuario_id = ?
             LIMIT 1

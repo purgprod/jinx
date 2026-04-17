@@ -9,12 +9,12 @@ class UsuariosCriarController {
 // Endpoint para criar um novo usuário
 
 static async createUser(req, res) {
-        const { nome, email, password } = req.body;
-        logger.info('Tentativa de criação de usuário', { nome, email });
+        const { nome_completo: apelido, email, password } = req.body;
+        logger.info('Tentativa de criação de usuário', { apelido, email });
 
         try {
             const usuarioId = await UsuariosNextUserIdModel.getNextUserId();
-            await UsuariosCriarModel.createUser({ usuario_id: usuarioId, nome, email, password });
+            await UsuariosCriarModel.createUser({ usuario_id: usuarioId, apelido, email, password });
             logger.info('Usuário criado com sucesso', { usuario_id: usuarioId });
 	    res.status(201).json({ message: 'Usuário criado com sucesso!' });
         } catch (error) {

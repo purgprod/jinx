@@ -13,7 +13,7 @@ function loadUserDetails(usuario_id) {
         const centerPanel = document.querySelector('.center-panel');
         if (centerPanel) {
             centerPanel.innerHTML = `
-                <h2>Detalhes do usuário ${data.nome}</h2>
+                <h2>Detalhes do usuário ${data.apelido}</h2>
                 <form id="financialDetailsForm">
                     ${generateUserInputFields(data)}
                     <div class="button-container">
@@ -1222,8 +1222,8 @@ function generateUserInputFields(data) {
         <input type="text" id="assinatura" name="assinatura" value="${data.assinatura ?? ''}" readonly>
         <label for="data_ultima_alteracao_assinatura">Data da Assinatura:</label>
         <input type="date" id="data_ultima_alteracao_assinatura" name="data_ultima_alteracao_assinatura" value="${data.data_ultima_alteracao_assinatura ? formatDate(data.data_ultima_alteracao_assinatura) : ''}" readonly>
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" name="nome" value="${data.nome ?? ''}" readonly>
+        <label for="apelido">Apelido:</label>
+        <input type="text" id="apelido" name="apelido" value="${data.apelido ?? ''}" readonly>
         <label for="nome_completo">Nome Completo:</label>
         <input type="text" id="nome_completo" name="nome_completo" value="${data.nome_completo ?? ''}" readonly>
         <label for="cpf">CPF:</label>

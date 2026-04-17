@@ -19,7 +19,7 @@ const BiometriaController = {
      */
     async cadastroIniciar(req, res) {
         try {
-            const { id: usuario_id, email, nome } = req.session.user;
+            const { id: usuario_id, email, nome_completo } = req.session.user;
 
             const credenciaisExistentes = await BiometriaModel.buscarCredenciaisPorUsuario(usuario_id);
             const excludeCredentials = credenciaisExistentes.map(c => ({
@@ -32,7 +32,7 @@ const BiometriaController = {
                 rpID:      RP_ID,
                 userID:    String(usuario_id),
                 userName:  email,
-                userDisplayName: nome,
+                userDisplayName: nome_completo,
                 attestation: 'none',
                 authenticatorSelection: {
                     authenticatorAttachment: 'platform',   // apenas biometria do dispositivo
@@ -199,16 +199,16 @@ const BiometriaController = {
             delete req.session.biometriaUsuarioId;
 
             req.session.user = {
-                id:    usuario.usuario_id,
-                email: usuario.email,
-                nome:  usuario.nome
+                id:            usuario.usuario_id,
+                email:         usuario.email,
+                nome_completo: usuario.nome_completo
             };
 
             logger.info(`[Biometria] Login biométrico bem-sucedido — usuario_id: ${usuario_id}`);
             return res.status(200).json({
                 success:    true,
                 usuario_id: usuario.usuario_id,
-                nome:       usuario.nome,
+                nome:       usuario.nome_completo,
                 email:      usuario.email
             });
 

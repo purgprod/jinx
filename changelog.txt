@@ -1,3 +1,47 @@
+#develop-77:
+- Renomear coluna ranking.nome para ranking.apelido e ajustar trigger e referências no código:
+
+- migrations/renomear_ranking_nome_para_apelido.sql (novo):
+	- ALTER TABLE ranking CHANGE nome apelido VARCHAR(255) NOT NULL;
+	- Recria trigger trg_ranking_atualizar: passa a usar u.apelido (users.apelido) em vez de u.nome_completo para preencher a coluna;
+
+- models/ranking/model_ranking.js:
+	- SELECT nome → SELECT apelido;
+
+- public/js/ranking/ranking.js:
+	- entry.nome → entry.apelido;
+
+- Renomear coluna users.nome para users.apelido e ajustar todas as referências no código:
+- Renomear coluna users.nome para users.apelido e ajustar todas as referências no código:
+
+- migrations/renomear_users_nome_para_apelido.sql (novo):
+	- ALTER TABLE users CHANGE nome apelido TEXT DEFAULT NULL;
+
+- models/usuarios/model_criar_usuarios.js:
+	- Parâmetro e coluna no INSERT: nome → apelido;
+
+- models/endpoints/model_biometria.js:
+	- SELECT nome → SELECT nome_completo (usado como userDisplayName no WebAuthn);
+
+- controllers/endpoints/controller_autenticacao_purg.js:
+	- Sessão: user.nome → user.apelido; adicionado nome_completo à sessão para uso no WebAuthn;
+
+- controllers/endpoints/controller_biometria.js:
+	- cadastroIniciar: session.nome → session.nome_completo para userDisplayName;
+	- loginConcluir: sessão e resposta JSON usam nome_completo em vez de nome;
+
+- controllers/usuarios/controller_criar_usuarios.js:
+	- Body: nome_completo (req.body) → apelido (alias) repassado ao model;
+
+- public/js/usuarios/criar_novo_usuario.js:
+	- Variável e campo enviado no fetch: nome → nome_completo;
+
+- public/js/usuarios/usuarios.js:
+	- Card de usuário: user.nome → user.apelido;
+
+- public/js/usuarios/usuarios_detalhes.js:
+	- Título e campo do formulário: data.nome → data.apelido; label/id/name do input: nome → apelido;
+
 #develop-76:
 - Remoção do trigger trg_carteiras_after_update_investido: correção da causa raiz do bug de pontos_permanentes não gravados:
 

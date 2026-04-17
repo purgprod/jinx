@@ -17,7 +17,7 @@ function loadCreateUserForm() {
 
 // Função para enviar os dados do novo usuário
 function submitNewUser() {
-    const nome = document.getElementById('novoNome').value;
+    const nome_completo = document.getElementById('novoNome').value;
     const email = document.getElementById('novoEmail').value;
 
     // Senha padrão
@@ -29,7 +29,7 @@ function submitNewUser() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nome, email, password }), // Enviando os dados
+        body: JSON.stringify({ nome_completo, email, password }),
     })
     .then(response => {
         if (response.ok) {
