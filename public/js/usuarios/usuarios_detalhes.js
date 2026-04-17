@@ -161,6 +161,8 @@ function loadSuitability(usuario_id) {
             console.log('Suitability Data:', dadosSuitability);
             
             const suitability = dadosSuitability[0];
+            if (!suitability) return;
+
             const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
             suitabilityInputs.forEach(input => {
                 const key = input.name;

@@ -1,3 +1,9 @@
+#develop-78:
+- Correção de crash em usuarios_detalhes.js ao abrir suitability de usuário sem dados preenchidos:
+
+- public/js/usuarios/usuarios_detalhes.js:
+	- Adicionado guard if (!suitability) return após dadosSuitability[0]: evita TypeError ao tentar ler propriedades de undefined quando o array retornado pela API está vazio;
+
 #develop-77:
 - Renomear coluna ranking.nome para ranking.apelido e ajustar trigger e referências no código:
 
