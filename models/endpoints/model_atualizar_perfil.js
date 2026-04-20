@@ -4,6 +4,7 @@ const pool   = require('../../database/database_purg');
 const logger = require('../../logger');
 
 const CAMPOS_PERMITIDOS = [
+    'apelido',
     'nome_completo',
     'celular',
     'cep',
@@ -15,6 +16,14 @@ const CAMPOS_PERMITIDOS = [
     'pix_email',
     'pix_chave',
 ];
+
+exports.apelidoEmUso = async (apelido, usuarioId) => {
+    const [rows] = await pool.promise().execute(
+        'SELECT usuario_id FROM users WHERE LOWER(apelido) = LOWER(?) AND usuario_id <> ?',
+        [apelido, usuarioId]
+    );
+    return rows.length > 0;
+};
 
 exports.atualizarPerfil = async (usuarioId, campos) => {
     const chaves = Object.keys(campos).filter(k => CAMPOS_PERMITIDOS.includes(k));

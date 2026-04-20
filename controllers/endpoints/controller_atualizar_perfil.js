@@ -19,6 +19,7 @@ async function atualizarPerfil(req, res) {
     }
 
     const CAMPOS_PERMITIDOS = [
+        'apelido',
         'nome_completo',
         'celular',
         'cep',
@@ -43,6 +44,13 @@ async function atualizarPerfil(req, res) {
     }
 
     try {
+        if (campos.apelido !== undefined) {
+            const emUso = await atualizarPerfilModel.apelidoEmUso(campos.apelido, usuarioId);
+            if (emUso) {
+                return res.status(409).json({ success: false, message: 'Esse apelido já está em uso. Escolha outro.' });
+            }
+        }
+
         await atualizarPerfilModel.atualizarPerfil(usuarioId, campos);
         logger.info(`Perfil do usuário ID ${usuarioId} atualizado com sucesso.`);
         return res.status(200).json({ success: true, message: 'Perfil atualizado com sucesso.' });

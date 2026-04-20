@@ -1,3 +1,50 @@
+#develop-83:
+- Correções de bugs, melhorias de segurança e novas funcionalidades no cadastro e perfil de usuário:
+
+- migrations/corrigir_trigger_pontos_volateis.sql (novo):
+	- Corrigido trigger trg_carteiras_before_update: recalculava carteiras.pontos usando apenas pontos_permanentes (SUM de objetivo_pontos completados), ignorando pontos_volateis; corrigido para SET NEW.pontos = GREATEST(1, total_obj + NEW.pontos_volateis);
+	- Trigger também passa a sincronizar pontos_permanentes no mesmo UPDATE;
+	- Script de correção pontual aplicado: UPDATE em todas as carteiras para realinhar pontos_permanentes e pontos com o estado real dos objetivos;
+	- Ranking reconstruído manualmente após correção dos dados;
+
+- migrations/adicionar_tema_users.sql (novo):
+	- Adicionado campo tema ENUM('claro', 'escuro') NOT NULL DEFAULT 'claro' na tabela users;
+
+- controllers/endpoints/controller_tema.js (novo):
+	- GET /api/v1/tema/:id e PUT /api/v1/tema/:id;
+	- Corrigido bug: req.params.id não era convertido com parseInt, causando falha silenciosa na query;
+	- Adicionada proteção IDOR nos dois métodos: usuário só pode consultar/alterar o próprio tema;
+
+- models/endpoints/model_tema.js (novo):
+	- Corrigido bug: query usava WHERE id = ? em vez de WHERE usuario_id = ?, retornando sempre zero linhas;
+
+- migrations/adicionar_termos_users.sql (novo):
+	- Adicionados campos termos_de_privacidade e termos_de_riscos_da_plataforma (TINYINT(1) NOT NULL DEFAULT 1) na tabela users, posicionados após termos_de_uso;
+
+- routes/route_endpoints.js:
+	- POST /api/v1/cadastro: adicionadas validações obrigatórias para termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma (valor deve ser '1') e para data_nascimento (formato YYYY-MM-DD) e genero;
+	- PUT /api/v1/edita-perfil/:id: adicionado campo apelido (2–30 chars) com validação de unicidade case-insensitive (retorna 409 se já em uso);
+
+- controllers/endpoints/controller_atualizar_perfil.js:
+	- apelido adicionado à whitelist de CAMPOS_PERMITIDOS;
+	- Verificação de unicidade do apelido via apelidoEmUso() antes do UPDATE; retorna 409 com mensagem se apelido já existir;
+
+- models/endpoints/model_atualizar_perfil.js:
+	- apelido adicionado à whitelist de CAMPOS_PERMITIDOS;
+	- Nova função apelidoEmUso(apelido, usuarioId): query com LOWER() nos dois lados para comparação case-insensitive;
+
+- controllers/endpoints/controller_cadastro_usuario.js:
+	- Extraídos data_nascimento, genero e os 3 termos do req.body e repassados ao model;
+	- Adicionada chamada createCarteira(novoId, conn) entre createUser e criarPatrimonio: corrige FK constraint failure (objetivos_descricao referencia carteiras, não users diretamente);
+
+- models/endpoints/model_criar_novo_usuario.js:
+	- Nova função createCarteira(usuarioId, conn): insere linha em carteiras dentro da mesma transação de cadastro;
+	- createUser atualizado: inclui data_nascimento, genero e os 3 termos no INSERT; valores deixam de ser hardcoded (1) e passam a vir do body;
+
+- banco de dados (prod e dev):
+	- users.usuario_id: adicionado AUTO_INCREMENT (coluna existia como PK sem auto-increment, causando insertId = 0);
+	- Migrations adicionar_tema_users, adicionar_termos_users e corrigir_trigger_pontos_volateis aplicadas em prod e dev;
+
 #develop-82:
 - Correções e melhorias na aba Lulu e nas rotas SPA:
 

@@ -43,6 +43,7 @@ const HistoricoPatrimonioController = require('../controllers/endpoints/controll
 const HistoricoRendimentosController = require('../controllers/endpoints/controller_historico_rendimentos');
 const RankingController              = require('../controllers/ranking/controller_ranking');
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
+const TemaController                 = require('../controllers/endpoints/controller_tema');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -61,6 +62,13 @@ router.post(
       .isString().withMessage('O nome completo deve ser um texto válido.')
       .isLength({ min: 3 }).withMessage('O nome completo deve ter no mínimo 3 caracteres.')
       .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome completo deve conter apenas letras.'),
+    body('data_nascimento')
+      .notEmpty().withMessage('A data de nascimento é obrigatória.')
+      .isDate({ format: 'YYYY-MM-DD' }).withMessage('A data de nascimento deve estar no formato YYYY-MM-DD.'),
+    body('genero')
+      .notEmpty().withMessage('O gênero é obrigatório.')
+      .isString().withMessage('O gênero deve ser um texto válido.')
+      .notEmpty().withMessage('O gênero não pode ser vazio.'),
     body('cpf')
       .notEmpty().withMessage('O CPF é obrigatório.')
       .matches(/^\d{11}$/).withMessage('O CPF deve conter exatamente 11 dígitos numéricos.'),
@@ -76,6 +84,12 @@ router.post(
       .isLength({ min: 8 }).withMessage('A senha deve ter no mínimo 8 caracteres.')
       .matches(/[A-Z]/).withMessage('A senha deve conter pelo menos uma letra maiúscula.')
       .matches(/[!@#$%*]/).withMessage('A senha deve conter pelo menos um caractere especial (! @ # $ % *).'),
+    body('termos_de_uso')
+      .equals('1').withMessage('É necessário aceitar os termos de uso.'),
+    body('termos_de_privacidade')
+      .equals('1').withMessage('É necessário aceitar a política de privacidade.'),
+    body('termos_de_riscos_da_plataforma')
+      .equals('1').withMessage('É necessário aceitar os termos de riscos da plataforma.'),
   ],
   CadastroUsuarioController.cadastrarUsuario
 );
@@ -157,6 +171,20 @@ router.get('/api/v1/historico-rendimentos/:id', authMiddleware.checkAuthenticate
 // Rota para o ranking de pontos (todos os usuários com pontuação > 0)
 router.get('/api/v1/ranking', authMiddleware.checkAuthenticated, RankingController.getRanking);
 
+// Rota para consultar a preferência de tema do usuário
+router.get('/api/v1/tema/:id', authMiddleware.checkAuthenticated, TemaController.getTema);
+
+// Rota para atualizar a preferência de tema do usuário
+router.put(
+  '/api/v1/tema/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('tema').isIn(['claro', 'escuro']).withMessage('O tema deve ser "claro" ou "escuro".'),
+  ],
+  TemaController.setTema
+);
+
 // Rota para carregar os saques pendentes do usuário
 router.get('/api/v1/buscar-saques-pendentes/:id', authMiddleware.checkAuthenticated, BuscarSaquesPendentesUsuarioController.getSaquesPendentes);
 
@@ -174,6 +202,10 @@ router.put(
   authMiddleware.checkAuthenticated,
   [
     param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('apelido')
+      .optional()
+      .isString().withMessage('O apelido deve ser um texto válido.')
+      .isLength({ min: 2, max: 30 }).withMessage('O apelido deve ter entre 2 e 30 caracteres.'),
     body('nome_completo')
       .optional()
       .isString().withMessage('O nome completo deve ser um texto válido.')

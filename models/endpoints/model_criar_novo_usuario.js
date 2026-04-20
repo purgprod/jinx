@@ -2,6 +2,19 @@
 const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
+exports.createCarteira = async (usuarioId, conn = null) => {
+    const query = `INSERT INTO carteiras (usuario_id) VALUES (?)`;
+    try {
+        const [result] = conn
+            ? await conn.execute(query, [usuarioId])
+            : await pool.promise().execute(query, [usuarioId]);
+        return result;
+    } catch (error) {
+        logger.error(`Erro ao criar carteira para usuário ID ${usuarioId}: ${error.message}`);
+        throw error;
+    }
+};
+
 exports.findByEmail = async (email) => {
     const [rows] = await pool.promise().execute(
         'SELECT usuario_id FROM users WHERE email = ? LIMIT 1',
@@ -18,12 +31,14 @@ exports.findByCpf = async (cpf) => {
     return rows[0] || null;
 };
 
-exports.createUser = async ({ nome_completo, cpf, celular, email, hashedPassword }, conn = null) => {
+exports.createUser = async ({ nome_completo, data_nascimento, genero, cpf, celular, email, hashedPassword,
+                               termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma }, conn = null) => {
     const query = `
-        INSERT INTO users (nome_completo, cpf, celular, email, password, termos_de_uso)
-        VALUES (?, ?, ?, ?, ?, 1)
+        INSERT INTO users (nome_completo, data_nascimento, genero, cpf, celular, email, password, termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const params = [nome_completo, cpf, celular, email, hashedPassword];
+    const params = [nome_completo, data_nascimento, genero, cpf, celular, email, hashedPassword,
+                    termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma];
     try {
         const [result] = conn
             ? await conn.execute(query, params)

@@ -13,7 +13,8 @@ async function cadastrarUsuario(req, res) {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { nome_completo, cpf, celular, email, password } = req.body;
+    const { nome_completo, data_nascimento, genero, cpf, celular, email, password,
+            termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma } = req.body;
 
     try {
         const emailExistente = await cadastroModel.findByEmail(email.trim().toLowerCase());
@@ -32,11 +33,18 @@ async function cadastrarUsuario(req, res) {
         await withTransaction(async (conn) => {
             novoId = await cadastroModel.createUser({
                 nome_completo: nome_completo.trim().toUpperCase(),
+                data_nascimento,
+                genero,
                 cpf,
                 celular,
                 email: email.trim().toLowerCase(),
                 hashedPassword,
+                termos_de_uso,
+                termos_de_privacidade,
+                termos_de_riscos_da_plataforma,
             }, conn);
+
+            await cadastroModel.createCarteira(novoId, conn);
 
             // Criar objetivo Patrimônio automaticamente (sem metas ainda)
             await ObjetivosEscrita.criarPatrimonio(novoId, conn);
