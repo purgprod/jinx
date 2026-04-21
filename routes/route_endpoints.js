@@ -237,6 +237,10 @@ router.put(
       .isString().withMessage('O nome completo deve ser um texto válido.')
       .isLength({ min: 3 }).withMessage('O nome completo deve ter no mínimo 3 caracteres.')
       .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome completo deve conter apenas letras.'),
+    body('genero')
+      .optional()
+      .isString().withMessage('O gênero deve ser um texto válido.')
+      .notEmpty().withMessage('O gênero não pode ser vazio.'),
     body('celular')
       .optional()
       .matches(/^\d{10,11}$/).withMessage('O celular deve conter 10 ou 11 dígitos numéricos.'),

@@ -21,6 +21,7 @@ async function atualizarPerfil(req, res) {
     const CAMPOS_PERMITIDOS = [
         'apelido',
         'nome_completo',
+        'genero',
         'celular',
         'cep',
         'logradouro',

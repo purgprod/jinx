@@ -1,3 +1,15 @@
+#develop-85:
+- Adicionado suporte ao campo genero no endpoint de edição de perfil:
+
+- controllers/endpoints/controller_atualizar_perfil.js:
+	- genero adicionado à whitelist de CAMPOS_PERMITIDOS;
+
+- models/endpoints/model_atualizar_perfil.js:
+	- genero adicionado à whitelist de CAMPOS_PERMITIDOS;
+
+- routes/route_endpoints.js:
+	- PUT /api/v1/edita-perfil/:id: adicionada validação opcional para genero (string não vazia);
+
 #develop-84:
 - Novos endpoints de tipo de acesso e preferência de login + correções no fluxo biométrico:
 

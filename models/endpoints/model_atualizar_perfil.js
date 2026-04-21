@@ -6,6 +6,7 @@ const logger = require('../../logger');
 const CAMPOS_PERMITIDOS = [
     'apelido',
     'nome_completo',
+    'genero',
     'celular',
     'cep',
     'logradouro',
