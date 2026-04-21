@@ -1,3 +1,30 @@
+#develop-84:
+- Novos endpoints de tipo de acesso e preferência de login + correções no fluxo biométrico:
+
+- migrations/adicionar_preferencia_login_users.sql (novo):
+	- Adicionado campo preferencia_login ENUM('senha', 'biometria') NULL DEFAULT NULL na tabela users, após tema;
+
+- models/endpoints/model_tipo_acesso.js (novo):
+	- buscarPreferenciaLoginPorEmail(email): retorna o valor de preferencia_login diretamente da tabela users;
+	- atualizarPreferenciaLogin(usuarioId, preferencia): UPDATE em users.preferencia_login;
+
+- controllers/endpoints/controller_tipo_acesso.js (novo):
+	- GET POST /api/v1/tipo-acesso: rota pública; recebe email, retorna { tipo: 'senha' | 'biometria' | null }; busca preferencia_login da tabela users; retorna 404 se usuário não encontrado;
+	- PUT /api/v1/preferencia-login/:id: requer autenticação + proteção IDOR; aceita apenas 'senha' ou 'biometria'; atualiza users.preferencia_login;
+
+- routes/route_endpoints.js:
+	- POST /api/v1/tipo-acesso registrado antes do middleware de autenticação global (rota pública);
+	- PUT /api/v1/preferencia-login/:id registrado com validação isIn(['senha', 'biometria']);
+
+- server.js:
+	- route_biometria movido para antes de route_endpoints: corrige bug onde router.use('/api/v1/*', checkAuthenticated) em route_endpoints interceptava as rotas públicas de login biométrico, retornando 401 antes de chegarem ao handler correto;
+
+- controllers/endpoints/controller_biometria.js:
+	- ORIGIN corrigido de 'https://app.purg.com.br' para 'https://purg.com.br';
+	- cadastroIniciar: log ampliado com email, rpID e origin para diagnóstico;
+	- cadastroConcluir: log do origin recebido pelo dispositivo vs origin esperado para diagnóstico de falhas;
+	- loginIniciar: removido allowCredentials da chamada generateAuthenticationOptions (era passado com IDs específicos, forçando busca local no dispositivo); com allowCredentials: [] o autenticador descobre automaticamente as passkeys disponíveis (Google Password Manager, iCloud Keychain, Samsung Pass);
+
 #develop-83:
 - Correções de bugs, melhorias de segurança e novas funcionalidades no cadastro e perfil de usuário:
 

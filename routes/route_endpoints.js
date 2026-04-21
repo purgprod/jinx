@@ -44,8 +44,21 @@ const HistoricoRendimentosController = require('../controllers/endpoints/control
 const RankingController              = require('../controllers/ranking/controller_ranking');
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
 const TemaController                 = require('../controllers/endpoints/controller_tema');
+const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
 
 //------------ AUTENTICAÇÃO --------------//
+
+// Rota para verificar tipo de acesso (biometria ou senha) - Não requer autenticação
+router.post(
+  '/api/v1/tipo-acesso',
+  [
+    body('email')
+      .notEmpty().withMessage('O e-mail é obrigatório.')
+      .isEmail().withMessage('Informe um e-mail válido.')
+      .normalizeEmail(),
+  ],
+  TipoAcessoController.getTipoAcesso
+);
 
 // Rota para login - Não requer autenticação
 router.post('/api/v1/login', AuthController.login);
@@ -123,6 +136,19 @@ router.post(
 
 // Demais rotas requerem autenticação
 router.use('/api/v1/*', authMiddleware.checkAuthenticated);
+
+// Rota para atualizar preferência de login do usuário
+router.put(
+  '/api/v1/preferencia-login/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('preferencia_login')
+      .notEmpty().withMessage('A preferência de login é obrigatória.')
+      .isIn(['senha', 'biometria']).withMessage('A preferência de login deve ser "senha" ou "biometria".'),
+  ],
+  TipoAcessoController.setPreferenciaLogin
+);
 
 // Rota para logout
 router.post('/api/v1/logout', authMiddleware.checkAuthenticated, AuthController.logout);

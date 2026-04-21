@@ -9,7 +9,7 @@ const logger = require('../../logger');
 
 const RP_ID   = process.env.WEBAUTHN_RP_ID   || 'purg.com.br';
 const RP_NAME = process.env.WEBAUTHN_RP_NAME  || 'Purg';
-const ORIGIN  = process.env.WEBAUTHN_ORIGIN   || 'https://app.purg.com.br';
+const ORIGIN  = process.env.WEBAUTHN_ORIGIN   || 'https://purg.com.br';
 
 const BiometriaController = {
 
@@ -46,7 +46,7 @@ const BiometriaController = {
             // Guarda o challenge na sessão para validar na etapa seguinte
             req.session.biometriaChallenge = options.challenge;
 
-            logger.info(`[Biometria] Opções de cadastro geradas — usuario_id: ${usuario_id}`);
+            logger.info(`[Biometria] Opções de cadastro geradas — usuario_id: ${usuario_id}, email: ${email}, rpID: ${RP_ID}, origin: ${ORIGIN}`);
             return res.status(200).json(options);
 
         } catch (error) {
@@ -68,6 +68,9 @@ const BiometriaController = {
                 return res.status(400).json({ error: 'Cadastro não iniciado. Chame /cadastro/iniciar primeiro.' });
             }
 
+            const originRecebido = JSON.parse(Buffer.from(req.body.response.clientDataJSON, 'base64').toString()).origin;
+            logger.info(`[Biometria] Tentativa de cadastro — usuario_id: ${usuario_id}, origin recebido: ${originRecebido}, origin esperado: ${ORIGIN}, rpID: ${RP_ID}`);
+
             const verificacao = await verifyRegistrationResponse({
                 response:             req.body,
                 expectedChallenge:    challenge,
@@ -77,7 +80,7 @@ const BiometriaController = {
             });
 
             if (!verificacao.verified || !verificacao.registrationInfo) {
-                logger.warn(`[Biometria] Verificação de cadastro reprovada — usuario_id: ${usuario_id}`);
+                logger.warn(`[Biometria] Verificação de cadastro reprovada — usuario_id: ${usuario_id}, origin recebido: ${originRecebido}`);
                 return res.status(400).json({ error: 'Verificação biométrica não passou' });
             }
 
@@ -126,14 +129,9 @@ const BiometriaController = {
                 return res.status(404).json({ error: 'Nenhuma credencial biométrica cadastrada para este usuário' });
             }
 
-            const allowCredentials = credenciais.map(c => ({
-                id:   c.credential_id,
-                type: 'public-key'
-            }));
-
             const options = await generateAuthenticationOptions({
                 rpID: RP_ID,
-                allowCredentials,
+                allowCredentials: [],
                 userVerification: 'required',
                 timeout: 60000
             });
