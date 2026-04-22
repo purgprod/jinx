@@ -13,7 +13,7 @@ async function cadastrarUsuario(req, res) {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { nome_completo, data_nascimento, genero, cpf, celular, email, password,
+    const { nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, password,
             termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma } = req.body;
 
     try {
@@ -33,6 +33,7 @@ async function cadastrarUsuario(req, res) {
         await withTransaction(async (conn) => {
             novoId = await cadastroModel.createUser({
                 nome_completo: nome_completo.trim().toUpperCase(),
+                nome_da_mae: nome_da_mae ? nome_da_mae.trim().toUpperCase() : null,
                 data_nascimento,
                 genero,
                 cpf,

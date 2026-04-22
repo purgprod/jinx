@@ -112,19 +112,22 @@ const BiometriaController = {
      */
     async loginIniciar(req, res) {
         try {
-            const { email } = req.body;
+            const email = (req.body.email || '').trim().toLowerCase();
+            logger.info(`[Biometria] loginIniciar chamado — email recebido: "${email}"`);
 
             if (!email) {
+                logger.warn('[Biometria] loginIniciar — email vazio, abortando');
                 return res.status(400).json({ error: 'E-mail obrigatório' });
             }
 
             const usuario = await BiometriaModel.buscarUsuarioPorEmail(email);
             if (!usuario) {
-                // Resposta genérica para não revelar existência de cadastro
+                logger.warn(`[Biometria] loginIniciar — usuário não encontrado para email: "${email}"`);
                 return res.status(404).json({ error: 'Nenhuma credencial biométrica encontrada' });
             }
 
             const credenciais = await BiometriaModel.buscarCredenciaisPorUsuario(usuario.usuario_id);
+            logger.info(`[Biometria] loginIniciar — usuario_id: ${usuario.usuario_id}, credenciais encontradas: ${credenciais.length}`);
             if (!credenciais.length) {
                 return res.status(404).json({ error: 'Nenhuma credencial biométrica cadastrada para este usuário' });
             }

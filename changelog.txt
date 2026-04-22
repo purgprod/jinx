@@ -1,3 +1,28 @@
+#develop-86:
+- Novo endpoint de ligas, campo nome_da_mae no cadastro, data_limite nas metas e objetivo_descricao na listagem de objetivos:
+
+- controllers/endpoints/controller_ligas.js (novo):
+	- GET /api/v1/ligas: retorna a lista completa das 50 ligas com nome e pontuacao_minima; requer autenticação; dados estáticos importados de controllers/rotinas/ligas.js (sem consulta ao banco);
+
+- routes/route_endpoints.js:
+	- GET /api/v1/ligas registrado com authMiddleware.checkAuthenticated;
+	- POST /api/v1/cadastro: adicionada validação opcional para nome_da_mae (string, mín. 3 chars, apenas letras);
+
+- controllers/endpoints/controller_cadastro_usuario.js:
+	- nome_da_mae extraído do req.body e repassado ao createUser; aplicados trim().toUpperCase() quando presente, null quando ausente;
+
+- models/endpoints/model_criar_novo_usuario.js:
+	- createUser: nome_da_mae adicionado à assinatura, ao INSERT e aos params; campo opcional (aceita null);
+
+- controllers/objetivos/controller_listar_objetivos.js:
+	- GET /api/v1/objetivos/:id: chave descricao renomeada para objetivo_descricao na resposta JSON;
+
+- controllers/endpoints/controller_biometria.js:
+	- loginIniciar: email normalizado com trim().toLowerCase() antes da busca; adicionados logs de diagnóstico (email recebido, usuário não encontrado, quantidade de credenciais);
+
+- controllers/objetivos/controller_detalhar_objetivo.js:
+	- GET /api/v1/objetivos/:id/:objetivo_id: campo data_limite adicionado ao mapeamento de cada meta (null quando ausente);
+
 #develop-85:
 - Adicionado suporte ao campo genero no endpoint de edição de perfil:
 

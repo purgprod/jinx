@@ -39,6 +39,7 @@ const DetalharObjetivoController = {
                     percentual:        Math.round(percentual * 100) / 100,
                     pontos:            m.objetivo_pontos,
                     completo:          Boolean(m.objetivo_completo),
+                    data_limite:       m.data_limite ?? null,
                 };
             });
 

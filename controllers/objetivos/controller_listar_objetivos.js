@@ -41,7 +41,7 @@ const ListarObjetivosController = {
 
                 return {
                     objetivo_id:         obj.objetivo_id,
-                    descricao:           obj.objetivo_descricao,
+                    objetivo_descricao:  obj.objetivo_descricao,
                     is_patrimonio:       Boolean(obj.is_patrimonio),
                     valor_alvo:          Number(obj.objetivo_valor_total),
                     prazo_total:         obj.objetivo_numero_total,

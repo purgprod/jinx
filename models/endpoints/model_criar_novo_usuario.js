@@ -31,13 +31,13 @@ exports.findByCpf = async (cpf) => {
     return rows[0] || null;
 };
 
-exports.createUser = async ({ nome_completo, data_nascimento, genero, cpf, celular, email, hashedPassword,
+exports.createUser = async ({ nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, hashedPassword,
                                termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma }, conn = null) => {
     const query = `
-        INSERT INTO users (nome_completo, data_nascimento, genero, cpf, celular, email, password, termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, password, termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const params = [nome_completo, data_nascimento, genero, cpf, celular, email, hashedPassword,
+    const params = [nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, hashedPassword,
                     termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma];
     try {
         const [result] = conn

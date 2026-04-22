@@ -45,6 +45,7 @@ const RankingController              = require('../controllers/ranking/controlle
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
 const TemaController                 = require('../controllers/endpoints/controller_tema');
 const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
+const LigasController                = require('../controllers/endpoints/controller_ligas');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -55,7 +56,7 @@ router.post(
     body('email')
       .notEmpty().withMessage('O e-mail é obrigatório.')
       .isEmail().withMessage('Informe um e-mail válido.')
-      .normalizeEmail(),
+      .toLowerCase(),
   ],
   TipoAcessoController.getTipoAcesso
 );
@@ -75,6 +76,11 @@ router.post(
       .isString().withMessage('O nome completo deve ser um texto válido.')
       .isLength({ min: 3 }).withMessage('O nome completo deve ter no mínimo 3 caracteres.')
       .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome completo deve conter apenas letras.'),
+    body('nome_da_mae')
+      .optional()
+      .isString().withMessage('O nome da mãe deve ser um texto válido.')
+      .isLength({ min: 3 }).withMessage('O nome da mãe deve ter no mínimo 3 caracteres.')
+      .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/).withMessage('O nome da mãe deve conter apenas letras.'),
     body('data_nascimento')
       .notEmpty().withMessage('A data de nascimento é obrigatória.')
       .isDate({ format: 'YYYY-MM-DD' }).withMessage('A data de nascimento deve estar no formato YYYY-MM-DD.'),
@@ -196,6 +202,9 @@ router.get('/api/v1/historico-rendimentos/:id', authMiddleware.checkAuthenticate
 
 // Rota para o ranking de pontos (todos os usuários com pontuação > 0)
 router.get('/api/v1/ranking', authMiddleware.checkAuthenticated, RankingController.getRanking);
+
+// Rota para a tabela de ligas e pontuação mínima de cada uma
+router.get('/api/v1/ligas', authMiddleware.checkAuthenticated, LigasController.getLigas);
 
 // Rota para consultar a preferência de tema do usuário
 router.get('/api/v1/tema/:id', authMiddleware.checkAuthenticated, TemaController.getTema);
