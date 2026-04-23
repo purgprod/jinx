@@ -60,8 +60,9 @@ async function criarCobrancaPix({ valor, cpf, nome, expiracao = 3600, infoAdicio
 
         const body = {
             calendario:     { expiracao },
-            devedor:        { cpf, nome },
+            devedor:        { cpf: String(cpf).replace(/\D/g, ''), nome },
             valor:          { original: valor },
+            chave:          process.env.EFI_PIX_KEY,
             infoAdicionais: [{ nome: 'Origem', valor: infoAdicional }]
         };
 

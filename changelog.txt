@@ -1,3 +1,25 @@
+#develop-87:
+- Integração Efí Bank: correções no fluxo de depósito Pix e configuração inicial da integração:
+
+- .gitignore:
+	- certs/ adicionado: impede que o certificado mTLS privado (.p12) seja versionado;
+
+- scripts/registrar_webhook_efi.js (novo):
+	- Script de uso único para registrar a URL do webhook Pix na Efí Bank via pixConfigWebhook; executa com node scripts/registrar_webhook_efi.js;
+
+- services/efi_pix.js:
+	- criarCobrancaPix: CPF do devedor sanitizado com .replace(/\D/g, '') antes de enviar à Efí (API exige formato ^[0-9]{11}$ — banco pode armazenar CPF formatado com pontos e traço);
+	- criarCobrancaPix: campo chave adicionado ao body com valor lido de EFI_PIX_KEY (.env); campo é obrigatório pela API /v2/cob da Efí Bank;
+
+- routes/route_depositos.js:
+	- Adicionada rota POST /api/pix/webhook/pix: a Efí Bank envia notificações de Pix recebido para {webhookUrl}/pix (sufixo obrigatório da API), não para a URL base registrada; ambas as rotas apontam para WebhookPixEfiController.receberWebhook;
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- Validação de CPF do pagador corrigida: CPF ausente no payload agora é aceito (muitos bancos não enviam o campo pagador.cpf); rejeição e devolução automática ocorrem apenas quando o CPF é explicitamente informado e diverge do CPF cadastrado; o txid já garante univocidade do QR Code pago;
+
+- models/depositos/model_deposito_rejeitar.js:
+	- status_deposito alterado de 'Rejeitado' para 'Cancelado' para consistência com os demais status do sistema;
+
 #develop-86:
 - Novo endpoint de ligas, campo nome_da_mae no cadastro, data_limite nas metas e objetivo_descricao na listagem de objetivos:
 

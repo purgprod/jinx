@@ -14,7 +14,7 @@ const RejeitarDepositoModel = {
         const query = `
             UPDATE depositos
             SET
-                status_deposito = 'Rejeitado',
+                status_deposito = 'Cancelado',
                 motivo          = ?
             WHERE txid = ?
               AND status_deposito = 'Analisando';

@@ -14,6 +14,8 @@ router.post('/api/depositos/executar/:id', ExecutarDepositoController.execute);
 
 // Webhook Efí Bank — sem autenticação de sessão (chamado diretamente pelo Efí)
 // Validação feita internamente via token no header 'x-efi-webhook-token'
+// A Efí envia notificações de Pix recebido para {webhookUrl}/pix (sufixo obrigatório da API)
 router.post('/api/pix/webhook', express.json(), WebhookPixEfiController.receberWebhook);
+router.post('/api/pix/webhook/pix', express.json(), WebhookPixEfiController.receberWebhook);
 
 module.exports = router;

@@ -97,11 +97,12 @@ async function processarPixRecebido(pix) {
     const cpfPagador    = normalizarCpf(pagador?.cpf);
     const cpfCadastrado = normalizarCpf(deposito.cpf);
 
-    logger.info(`[WebhookPix] Depósito recebido. txid=${txid}, cpfPagador=${cpfPagador}, cpfCadastrado=${cpfCadastrado}`);
+    logger.info(`[WebhookPix] Depósito recebido. txid=${txid}, cpfPagador=${cpfPagador || 'não informado'}, cpfCadastrado=${cpfCadastrado}`);
 
-    // Valida CPF: pagador deve ser o próprio titular
-    if (!cpfPagador || cpfPagador !== cpfCadastrado) {
-        const motivo = `CPF do pagador (${cpfPagador || 'não informado'}) diverge do CPF cadastrado. Devolução solicitada.`;
+    // Valida CPF apenas quando o banco do pagador envia o dado.
+    // CPF ausente é aceito pois o txid já garante que é o QR Code correto sendo pago.
+    if (cpfPagador && cpfPagador !== cpfCadastrado) {
+        const motivo = `CPF do pagador (${cpfPagador}) diverge do CPF cadastrado. Devolução solicitada.`;
         logger.warn(`[WebhookPix] CPF divergente. txid=${txid}. ${motivo}`);
 
         await RejeitarDepositoModel.rejeitarPorTxid(txid, motivo);
