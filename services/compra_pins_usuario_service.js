@@ -18,6 +18,7 @@ const AtualizarQuantidadeTokensModel = require('../models/rotinas/model_poppy_co
 const UsersSaldosModel = require('../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../models/rotinas/model_poppy_atualizar_saldo_usuarios');
 const ligaAcessoInvestimentos = require('../public/js/usuarios/acesso_investimentos_por_liga');
+const BuscarSaquePendenteModel = require('../models/endpoints/model_saque_buscar_saque_pendente');
 const ligas = ligaAcessoInvestimentos.default;
 
 // Mutex compartilhado entre a rotina diária e os webhooks — evita compras concorrentes
@@ -33,6 +34,14 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  */
 async function processarUsuario(usuario) {
     try {
+        // Bloqueia compra automática enquanto há saque aguardando confirmação do banco.
+        // Garante que o saldo reservado para o saque não seja reinvestido em pins.
+        const saquePendente = await BuscarSaquePendenteModel.getSaquePendente(usuario.usuario_id);
+        if (saquePendente && saquePendente.length > 0) {
+            logger.info(`[CompraPin] Usuário ${usuario.usuario_id} possui saque em Processando. Compra automática ignorada.`);
+            return;
+        }
+
         const usuarioOrganizado = {
             usuario_id:               usuario.usuario_id,
             investido:                usuario.investido,
