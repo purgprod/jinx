@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const depositosButton = document.getElementById("depositosButton");
     const rankingButton   = document.getElementById("rankingButton");
     const luluButton      = document.getElementById("luluButton");
+    const adminButton     = document.getElementById("adminButton");
 
     console.log("Element references initialized");
 
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '/rotinas':                rotinasButton,
         '/ranking':                rankingButton,
         '/lulu':                   luluButton,
+        '/admin':                  adminButton,
     };
 
     // Carrega o conteúdo da aba correspondente ao path (simula clique no botão)
@@ -165,6 +167,14 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Botão 'Lulu' clicado");
             pushRoute('/lulu');
             loadLuluResults();
+        });
+    }
+
+    if (adminButton) {
+        adminButton.addEventListener("click", () => {
+            console.log("Botão 'Admin' clicado");
+            pushRoute('/admin');
+            loadAdminPanel();
         });
     }
 

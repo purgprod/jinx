@@ -78,7 +78,14 @@ async function processarPixRecebido(pix) {
     const { txid, endToEndId, valor, pagador } = pix;
 
     if (!txid) {
-        logger.warn('[WebhookPix] Pix recebido sem txid — ignorado.', { endToEndId });
+        if (endToEndId) {
+            // Efí envia confirmação de PIX enviado (saque) dentro de pix[] sem txid.
+            // Roteamos para o handler de pagamento enviado com status REALIZADO.
+            logger.info(`[WebhookPix] Pix sem txid — confirmação de saque via Efí. endToEndId=${endToEndId}`);
+            await processarPagamentoEnviado({ endToEndId, status: pix.status || 'REALIZADO', valor });
+        } else {
+            logger.warn('[WebhookPix] Pix sem txid nem endToEndId — ignorado. Payload completo:', { pix });
+        }
         return;
     }
 
@@ -130,16 +137,13 @@ async function processarPixRecebido(pix) {
         await AtualizarCarteiraModel.updateCarteira(novoSaldo, deposito.usuario_id, conn);
         const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.usuario_id, conn);
         if (resultado.affectedRows === 0) {
-            // Nenhuma linha afetada → depósito já foi processado; aborta para não creditar de novo
             throw new Error(`Depósito txid=${txid} não estava em 'Analisando' — possível reprocessamento duplicado`);
         }
-        // Alocar saldo nos objetivos do usuário
         await alocarSaldoEntreObjetivos(conn, deposito.usuario_id, valor);
     });
 
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);
 
-    // Atualiza pontos, liga e ranking em background
     setImmediate(async () => {
         try {
             await sincronizarLigaUsuario(deposito.usuario_id);
@@ -149,7 +153,6 @@ async function processarPixRecebido(pix) {
         }
     });
 
-    // Dispara compra de pins em background — não bloqueia a resposta ao Efí
     setImmediate(async () => {
         try {
             const usuario = await BuscarUsuariosCarteirasModel.getUsuarioCarteiraPorId(deposito.usuario_id);
@@ -215,7 +218,6 @@ async function processarPagamentoEnviado(pagamento) {
 
     logger.info(`[WebhookPix] Saldo revertido. userId=${saque.usuario_id}, valor=${saque.valor_saque}`);
 
-    // Atualiza pontos, liga e ranking em background após reversão
     setImmediate(async () => {
         try {
             await sincronizarLigaUsuario(saque.usuario_id);

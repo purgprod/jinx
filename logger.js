@@ -38,6 +38,16 @@ const logFormat = winston.format.combine(
     })
 );
 
+const debugTransport = new winston.transports.DailyRotateFile({
+    filename: path.join(logDirectory, 'debug-%DATE%.log'),
+    datePattern: 'YYYY-MM-DD',
+    maxSize: '50m',
+    maxFiles: '7d',
+    zippedArchive: true,
+    level: 'debug',
+    silent: true
+});
+
 const logger = winston.createLogger({
     level: 'info',
     format: logFormat,
@@ -47,10 +57,31 @@ const logger = winston.createLogger({
             datePattern: 'YYYY-MM-DD',
             maxSize: '20m',
             maxFiles: '14d',
-            zippedArchive: true
+            zippedArchive: true,
+            level: 'info'
         }),
-        new winston.transports.Console()
+        new winston.transports.Console({ level: 'info' }),
+        debugTransport
     ]
 });
+
+let _debugEnabled = false;
+
+logger.setDebugMode = function (enabled) {
+    _debugEnabled = enabled;
+    if (enabled) {
+        logger.level = 'debug';
+        debugTransport.silent = false;
+        logger.info('[DEBUG] Modo debug ATIVADO — logs gravados em debug-*.log');
+    } else {
+        logger.level = 'info';
+        debugTransport.silent = true;
+        logger.info('[DEBUG] Modo debug DESATIVADO');
+    }
+};
+
+logger.isDebugEnabled = function () {
+    return _debugEnabled;
+};
 
 module.exports = logger;

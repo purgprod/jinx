@@ -29,6 +29,27 @@ const RejeitarDepositoModel = {
                 resolve(results);
             });
         });
+    },
+
+    async rejeitarPorId(depositoId, motivo) {
+        const query = `
+            UPDATE depositos
+            SET
+                status_deposito = 'Cancelado',
+                motivo          = ?
+            WHERE id = ?
+              AND status_deposito = 'Analisando';
+        `;
+
+        return new Promise((resolve, reject) => {
+            connection.query(query, [motivo, depositoId], (error, results) => {
+                if (error) {
+                    logger.error(`[Model] Erro ao rejeitar depósito ID=${depositoId}:`, error);
+                    return reject(new Error('Erro ao rejeitar depósito.'));
+                }
+                resolve(results);
+            });
+        });
     }
 };
 

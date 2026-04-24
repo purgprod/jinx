@@ -242,7 +242,7 @@ body {
     margin-bottom: 20px;
 }
 
-#usuariosButton, #configButton, #resultadosButton, #pinsButton, #ecossistemaButton, #receitasButton, #rotinasButton, #assinaturasButton, #emblemasButton, #rankingButton, #luluButton, #saquesButton, #depositosButton {
+#usuariosButton, #configButton, #resultadosButton, #pinsButton, #ecossistemaButton, #receitasButton, #rotinasButton, #assinaturasButton, #emblemasButton, #rankingButton, #luluButton, #saquesButton, #depositosButton, #adminButton {
     display: block;
     width: 100%;
     font-size: 18px;
@@ -255,7 +255,7 @@ body {
     cursor: pointer;
 }
 
-#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #pinsButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover, #assinaturasButton:hover, #emblemasButton:hover, #rankingButton:hover, #luluButton:hover, #saquesButton:hover, #depositosButton:hover {
+#usuariosButton:hover, #configButton:hover, #resultadosButton:hover, #pinsButton:hover, #ecossistemaButton:hover, #receitasButton:hover, #rotinasButton:hover, #assinaturasButton:hover, #emblemasButton:hover, #rankingButton:hover, #luluButton:hover, #saquesButton:hover, #depositosButton:hover, #adminButton:hover {
     background-color: #657BB4;
 }
 
@@ -581,3 +581,97 @@ body {
     background-color: darkred; /* Cor de fundo mais escura ao passar o mouse */
 }
 
+
+/* ── Admin: toggle de modo debug ── */
+.admin-debug-card {
+    background-color: #202A37;
+    border-radius: 8px;
+    padding: 24px 32px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.admin-debug-card h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+}
+
+.admin-debug-card p {
+    color: #9AA5B4;
+    margin: 0;
+    font-size: 14px;
+}
+
+.debug-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.debug-toggle-label {
+    color: #D4D4D4;
+    font-size: 15px;
+    min-width: 90px;
+}
+
+/* Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    inset: 0;
+    background-color: #3D4E63;
+    border-radius: 28px;
+    cursor: pointer;
+    transition: background-color 0.25s;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    top: 4px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.25s;
+}
+
+.switch input:checked + .slider {
+    background-color: #A0D47C;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(24px);
+}
+
+.debug-status-badge {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background-color: #3D4E63;
+    color: #9AA5B4;
+    transition: background-color 0.25s, color 0.25s;
+}
+
+.debug-status-badge.ativo {
+    background-color: #2D4A1E;
+    color: #A0D47C;
+}

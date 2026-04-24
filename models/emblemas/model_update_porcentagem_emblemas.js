@@ -38,6 +38,14 @@ const UpdatePorcentagemEmblemasModel = {
             [novoValor]
         );
         return result;
+    },
+
+    async updateTaxaIrTx(novaTaxaIr, conn) {
+        const [result] = await conn.execute(
+            'UPDATE porcentagem_emblemas SET taxa_ir = ? WHERE id = 1',
+            [novaTaxaIr]
+        );
+        return result;
     }
 };
 

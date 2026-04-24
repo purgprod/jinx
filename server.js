@@ -22,6 +22,7 @@ const route_biometria  = require('./routes/route_biometria');
 const route_objetivos  = require('./routes/route_objetivos');
 const route_ranking    = require('./routes/route_ranking');
 const route_lulu       = require('./routes/route_lulu');
+const route_admin      = require('./routes/route_admin');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -116,6 +117,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// Debug: loga body/query de entrada e o corpo de cada resposta JSON
+app.use((req, res, next) => {
+    if (!logger.isDebugEnabled()) return next();
+
+    const body  = req.body  && Object.keys(req.body).length  ? JSON.stringify(req.body)  : '—';
+    const query = req.query && Object.keys(req.query).length ? JSON.stringify(req.query) : '—';
+    logger.debug(`[REQ] ${req.method} ${req.url} | body: ${body} | query: ${query}`);
+
+    const _json = res.json.bind(res);
+    res.json = function (data) {
+        logger.debug(`[RES] ${req.method} ${req.url} → ${res.statusCode} | ${JSON.stringify(data).substring(0, 500)}`);
+        return _json(data);
+    };
+
+    next();
+});
+
 // --- ENDPOINTS DE AUTENTICAÇÃO ---
 
 app.post('/auth/login/jinx', loginLimiter, (req, res, next) => {
@@ -158,6 +176,7 @@ const rotasSPA = [
     '/rotinas',
     '/ranking',
     '/lulu',
+    '/admin',
 ];
 
 rotasSPA.forEach(rota => {
@@ -182,6 +201,7 @@ app.use('/', route_endpoints);
 app.use('/', route_objetivos);
 app.use('/', route_ranking);
 app.use('/', route_lulu);
+app.use('/', route_admin);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {

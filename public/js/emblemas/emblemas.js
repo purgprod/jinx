@@ -18,7 +18,17 @@ function loadEmblemasResults() {
                         </td>
                     </tr>
                     <tr>
-                        <td><label>Rendimento diário por token (R$ 0,01) líq. IR 15%:</label></td>
+                        <td><label for="taxaIr">Alíquota de IR sobre rendimentos (%):</label></td>
+                        <td>
+                            <input type="text"
+                                   id="taxaIr"
+                                   name="taxaIr"
+                                   value="Carregando..."
+                                   readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label id="labelRendimentoDiario">Rendimento diário por token (R$ 0,01) líq. IR:</label></td>
                         <td>
                             <input type="text"
                                    id="previewRendimentoDiario"
@@ -27,7 +37,7 @@ function loadEmblemasResults() {
                         </td>
                     </tr>
                     <tr>
-                        <td><label>Rendimento diário por R$ 1,00 investido líq. IR 15%:</label></td>
+                        <td><label id="labelRendimentoPorReal">Rendimento diário por R$ 1,00 investido líq. IR:</label></td>
                         <td>
                             <input type="text"
                                    id="previewRendimentoPorReal"
@@ -77,25 +87,29 @@ function loadEmblemasResults() {
                 console.log('Dados recebidos de /api/emblemas/buscar-porcentagem:', data);
                 if (Array.isArray(data) && data.length > 0 && data[0].porcentagem_emblemas) {
                     const porcentagem = parseFloat(data[0].porcentagem_emblemas);
-                    const valueElement = document.getElementById('porcentagem');
-                    if (valueElement) {
-                        valueElement.value = `${porcentagem.toFixed(2)}%`;
-                    }
-                    atualizarPreviewRendimento(porcentagem);
+                    const ir = parseFloat(data[0].taxa_ir ?? 0.15);
+
+                    const elPorcentagem = document.getElementById('porcentagem');
+                    if (elPorcentagem) elPorcentagem.value = `${porcentagem.toFixed(2)}%`;
+
+                    const elIr = document.getElementById('taxaIr');
+                    if (elIr) elIr.value = `${(ir * 100).toFixed(2)}%`;
+
+                    atualizarPreviewRendimento(porcentagem, ir);
                 } else {
                     console.error('Resposta da API não está no formato esperado');
-                    const valueElement = document.getElementById('porcentagem');
-                    if (valueElement) {
-                        valueElement.value = 'Dados não disponíveis';
-                    }
+                    const elPorcentagem = document.getElementById('porcentagem');
+                    if (elPorcentagem) elPorcentagem.value = 'Dados não disponíveis';
+                    const elIr = document.getElementById('taxaIr');
+                    if (elIr) elIr.value = 'Dados não disponíveis';
                 }
             })
             .catch(error => {
                 console.error('Erro ao buscar porcentagem:', error);
-                const valueElement = document.getElementById('porcentagem');
-                if (valueElement) {
-                    valueElement.value = 'Erro ao carregar dados';
-                }
+                const elPorcentagem = document.getElementById('porcentagem');
+                if (elPorcentagem) elPorcentagem.value = 'Erro ao carregar dados';
+                const elIr = document.getElementById('taxaIr');
+                if (elIr) elIr.value = 'Erro ao carregar dados';
             });
 
         // Configura os botões Editar e Salvar
@@ -133,62 +147,85 @@ function loadEmblemasResults() {
 function setupEventListeners() {
     const editButton = document.getElementById('editButton');
     const saveButton = document.getElementById('saveButton');
-    const valueElement = document.getElementById('porcentagem');
+    const elPorcentagem = document.getElementById('porcentagem');
+    const elIr = document.getElementById('taxaIr');
 
-    if (editButton && saveButton && valueElement) {
+    if (editButton && saveButton && elPorcentagem && elIr) {
         editButton.addEventListener('click', () => {
-            valueElement.removeAttribute('readonly');
+            elPorcentagem.removeAttribute('readonly');
+            elIr.removeAttribute('readonly');
             editButton.style.display = 'none';
             saveButton.style.display = 'block';
-            valueElement.addEventListener('input', () => {
-                const val = parseFloat(valueElement.value.replace('%', ''));
-                if (!isNaN(val)) atualizarPreviewRendimento(val);
-            });
+
+            const recalcular = () => {
+                const taxa = parseFloat(elPorcentagem.value.replace('%', ''));
+                const ir = parseFloat(elIr.value.replace('%', '')) / 100;
+                if (!isNaN(taxa) && !isNaN(ir)) atualizarPreviewRendimento(taxa, ir);
+            };
+            elPorcentagem.addEventListener('input', recalcular);
+            elIr.addEventListener('input', recalcular);
         });
 
         saveButton.addEventListener('click', (event) => {
             event.preventDefault();
-            const novoValor = parseFloat(valueElement.value.replace('%', ''));
-            if (!isNaN(novoValor)) {
-                const porcentagem = novoValor.toFixed(2);
-                valueElement.value = `${porcentagem}%`;
-                
-                fetch('/api/emblemas/atualizar-porcentagem', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ porcentagem_emblemas: porcentagem }),
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Porcentagem atualizada com sucesso!');
-                        window.location.reload();
-                    } else {
-                        return response.json().then(data => Promise.reject(data));
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao atualizar porcentagem:', error);
-                    alert('Erro ao atualizar porcentagem');
-                });
-                
-                valueElement.setAttribute('readonly', true);
+            const novoValorTaxa = parseFloat(elPorcentagem.value.replace('%', ''));
+            const novoValorIr = parseFloat(elIr.value.replace('%', '')) / 100;
+
+            if (isNaN(novoValorTaxa)) {
+                alert('Taxa anual inválida');
+                return;
             }
+            if (isNaN(novoValorIr) || novoValorIr < 0 || novoValorIr > 1) {
+                alert('Alíquota de IR inválida. Informe um valor entre 0% e 100%.');
+                return;
+            }
+
+            elPorcentagem.value = `${novoValorTaxa.toFixed(2)}%`;
+            elIr.value = `${(novoValorIr * 100).toFixed(2)}%`;
+
+            fetch('/api/emblemas/atualizar-porcentagem', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    porcentagem_emblemas: novoValorTaxa.toFixed(2),
+                    taxa_ir: novoValorIr.toFixed(4)
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Configurações atualizadas com sucesso!');
+                    window.location.reload();
+                } else {
+                    return response.json().then(data => Promise.reject(data));
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar configurações:', error);
+                alert('Erro ao atualizar configurações');
+            });
+
+            elPorcentagem.setAttribute('readonly', true);
+            elIr.setAttribute('readonly', true);
         });
 
         saveButton.style.display = 'none';
     }
 }
 
-// Calcula e exibe o rendimento diário líquido (após 15% de IR) por token e por R$1 investido
-function atualizarPreviewRendimento(taxaAnual) {
-    const IR = 0.15;
+// Calcula e exibe o rendimento diário líquido de IR por token e por R$1 investido
+function atualizarPreviewRendimento(taxaAnual, irAliquota = 0.15) {
     const VALOR_TOKEN = 0.01;
-    const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN * (1 - IR);
+    const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN * (1 - irAliquota);
     const rendimentoDiarioPorReal  = rendimentoDiarioPorToken * 100; // 100 tokens = R$ 1,00
+
+    const irPct = `${(irAliquota * 100).toFixed(2)}%`;
+    const elLabelToken = document.getElementById('labelRendimentoDiario');
+    const elLabelReal  = document.getElementById('labelRendimentoPorReal');
+    if (elLabelToken) elLabelToken.textContent = `Rendimento diário por token (R$ 0,01) líq. IR ${irPct}:`;
+    if (elLabelReal)  elLabelReal.textContent  = `Rendimento diário por R$ 1,00 investido líq. IR ${irPct}:`;
 
     const elToken = document.getElementById('previewRendimentoDiario');
     const elReal  = document.getElementById('previewRendimentoPorReal');
-
     if (elToken) elToken.value = `R$ ${rendimentoDiarioPorToken.toFixed(10)}`;
     if (elReal)  elReal.value  = `R$ ${rendimentoDiarioPorReal.toFixed(8)}`;
 }

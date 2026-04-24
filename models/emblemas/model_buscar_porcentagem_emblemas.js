@@ -4,7 +4,7 @@ const logger = require('../../logger');
 
 const PorcentagemEmblemasBuscarModel = {
     async getPorcentagem() {
-        const sqlQuery = 'SELECT porcentagem_emblemas FROM porcentagem_emblemas WHERE id = 1;'
+        const sqlQuery = 'SELECT porcentagem_emblemas, taxa_ir FROM porcentagem_emblemas WHERE id = 1;'
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, (error, results) => {
                 if (error) {

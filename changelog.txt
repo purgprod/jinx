@@ -1,3 +1,86 @@
+#develop-88:
+- Alíquota de IR configurável, painel Admin com modo debug, correções no saque e webhook Efí:
+
+- migrations/adicionar_taxa_ir_emblemas.sql (novo):
+	- Adiciona coluna taxa_ir DECIMAL(5,4) NOT NULL DEFAULT 0.1500 na tabela porcentagem_emblemas;
+
+- models/emblemas/model_buscar_porcentagem_emblemas.js:
+	- SELECT estendido para incluir taxa_ir além de porcentagem_emblemas;
+
+- models/emblemas/model_update_porcentagem_emblemas.js:
+	- Novo método updateTaxaIrTx(novaTaxaIr, conn): atualiza taxa_ir via transação;
+
+- controllers/emblemas/controller_update_porcentagem_emblemas.js:
+	- Aceita taxa_ir no body (validação 0–1); atualiza via updateTaxaIrTx dentro de transação;
+
+- controllers/rotinas/controller_poppy_pagamento_emblemas_diario.js:
+	- Alíquota de IR removida do código-fonte; lida dinamicamente de porcentagem_emblemas.taxa_ir;
+
+- public/js/emblemas/emblemas.js:
+	- Campo "Alíquota de IR" adicionado ao formulário; preview de rendimento usa o valor dinâmico; save envia taxa_ir: novoValorIr.toFixed(4);
+
+- logger.js:
+	- Novo transport DailyRotateFile para debug-*.log (silent: true por padrão);
+	- setDebugMode(enabled): alterna logger.level entre debug/info e ativa/desativa o transport de debug;
+	- isDebugEnabled(): retorna boolean com o estado atual;
+
+- database/database_purg.js:
+	- pool.query (callback-style) instrumentado com logs SQL em modo debug;
+	- pool.promise sobrescrito (não uma instância cacheada) para que toda chamada futura receba PromisePool instrumentada — necessário pois pool.promise() cria nova instância a cada invocação;
+	- Conexões de transação (getConnection) também instrumentadas com tag SQL TX;
+
+- controllers/admin/controller_admin_debug.js (novo):
+	- getStatus: retorna { debug: bool }; toggle: inverte estado e retorna novo valor;
+
+- routes/route_admin.js (novo):
+	- GET /api/admin/debug/status e POST /api/admin/debug/toggle;
+
+- public/js/admin/admin.js (novo):
+	- Painel Admin com toggle switch e badge ATIVO/INATIVO para modo debug;
+
+- server.js:
+	- /admin adicionado às rotas SPA; route_admin registrado;
+	- Middleware de debug: loga body/query de entrada e corpo de resposta JSON quando debug ativo;
+
+- public/index.html:
+	- Botão Admin adicionado à navegação; admin.js carregado via script defer;
+
+- public/script.js:
+	- adminButton referenciado com listener para loadAdminPanel(); /admin adicionado ao tabRouteMap;
+
+- public/style.css:
+	- Estilos para #adminButton, .admin-debug-card, .switch, .slider e .debug-status-badge.ativo;
+
+- services/efi_pix.js:
+	- enviarPix: body corrigido para estrutura exigida pela API pixSend (pagador/favorecido em vez de pagamento); idEnvio gerado com crypto.randomBytes; e2eId lido de resposta.e2eId (era endToEndId);
+
+- controllers/endpoints/controller_saque.js:
+	- Chave celular normalizada com prefixo +55 antes do envio (padrão Bacen);
+	- Fórmula de cálculo do novo saldo corrigida: saldoOriginal + venda_tokensBig - amountBig (era incorreta quando havia liquidação de tokens);
+
+- models/endpoints/model_saque_buscar_saque_pendente.js:
+	- Bloqueio estendido para status IN ('Analisando', 'Processando') — impede novo saque enquanto envio Pix está em andamento;
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- Confirmação de saque via pix[] sem txid: endToEndId presente sem txid é roteado para processarPagamentoEnviado com status REALIZADO;
+	- processarPagamentoEnviado: status NAO_REALIZADO reverte saldo e marca saque como Falhou de forma atômica; liga sincronizada em background após reversão;
+	- Log com payload completo quando pix[] chega sem txid e sem endToEndId;
+
+- models/depositos/model_deposito_atualizar_qr.js:
+	- Novo método atualizarValorUnico(depositoId, valorUnico, pixCopiaECola) adicionado para uso futuro;
+
+- models/depositos/model_deposito_rejeitar.js:
+	- Novo método rejeitarPorId(depositoId, motivo) adicionado;
+
+- migrations/depositos_adicionar_valor_unico.sql (novo):
+	- Adiciona coluna valor_unico DECIMAL(10,2) NULL e índice idx_depositos_valor_unico na tabela depositos; aplicado mas não utilizado no fluxo atual;
+
+- models/depositos/model_deposito_buscar_por_valor.js (novo):
+	- Busca depósito por valor_unico; criado para uso futuro;
+
+- services/pix_estatico.js (novo):
+	- Gerador de string EMV Pix estático e lógica de valor único com centavos aleatórios; criado para uso futuro;
+
 #develop-87:
 - Integração Efí Bank: correções no fluxo de depósito Pix e configuração inicial da integração:
 

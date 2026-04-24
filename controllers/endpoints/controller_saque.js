@@ -266,10 +266,12 @@ const SaqueController = {
                     }
 
                     // ETAPA 8 – Finalização do Saldo da Carteira
+                    // Fórmula: saldoOriginal + pin_proceeds - amount
+                    // Caso simples (amount <= saldo): venda_tokensBig = 0 → saldoOriginal - amount
+                    // Caso tokens: proceeds creditam o saldo, amount deduz → preserva casas decimais
                     const saldoOriginalBig = decimalToBigInt(saldoOriginal);
-                    const saldoTruncBig    = decimalToBigInt(saldoTrunc);
                     const amountBigTx      = decimalToBigInt(amountStr);
-                    const novo_valor_big   = saldoOriginalBig - (saldoTruncBig - amountBigTx);
+                    const novo_valor_big   = saldoOriginalBig + venda_tokensBig - amountBigTx;
                     novo_valor_formatted   = bigIntToDecimalString(novo_valor_big);
                     await AtualizarCarteiraSaqueModel.updateCarteira(novo_valor_formatted, id, conn);
 
@@ -300,10 +302,17 @@ const SaqueController = {
             // Semântica: disparado imediatamente após todas as deduções.
             // Se falhar, o saque permanece "Analisando" e o admin pode reprocessar
             // manualmente via POST /api/saques/executar/:id (retry).
+
+            // Chave celular exige prefixo internacional +55 (padrão Bacen)
+            let chaveParaEnvio = chavePixValue;
+            if (chave_pix === 'pix_celular' && !chaveParaEnvio.startsWith('+')) {
+                chaveParaEnvio = '+55' + chaveParaEnvio.replace(/\D/g, '');
+            }
+
             let endToEndId = null;
             try {
                 const pixEnviado = await enviarPix({
-                    chaveDestino: chavePixValue,
+                    chaveDestino: chaveParaEnvio,
                     valor:        Number(amountStr).toFixed(2),
                     descricao:    `Saque Purg #${saqueId}`
                 });

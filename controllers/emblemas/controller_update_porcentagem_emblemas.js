@@ -5,7 +5,7 @@ const logger = require('../../logger');
 const UpdatePorcentagemEmblemasController = {
     async updatePorcentagem(req, res) {
         try {
-            const { porcentagem_emblemas } = req.body;
+            const { porcentagem_emblemas, taxa_ir } = req.body;
 
             if (!porcentagem_emblemas || isNaN(porcentagem_emblemas)) {
                 logger.error('Valor da porcentagem não foi informado ou é inválido');
@@ -15,12 +15,23 @@ const UpdatePorcentagemEmblemasController = {
                 });
             }
 
+            if (taxa_ir !== undefined && (isNaN(taxa_ir) || Number(taxa_ir) < 0 || Number(taxa_ir) > 1)) {
+                logger.error('Valor da taxa de IR inválido');
+                return res.status(400).json({
+                    error: 'Bad Request',
+                    message: 'Taxa de IR deve ser um número entre 0 e 1 (ex: 0.15 para 15%)'
+                });
+            }
+
             await withTransaction(async (conn) => {
                 await UpdatePorcentagemEmblemasModel.updatePorcentagemTx(porcentagem_emblemas, conn);
                 await UpdatePorcentagemEmblemasModel.updateJurosEMBTx(porcentagem_emblemas, conn);
+                if (taxa_ir !== undefined) {
+                    await UpdatePorcentagemEmblemasModel.updateTaxaIrTx(taxa_ir, conn);
+                }
             });
 
-            logger.info(`Porcentagem de emblemas e juros_a_a EMB atualizados para: ${porcentagem_emblemas}`);
+            logger.info(`Porcentagem de emblemas atualizada para: ${porcentagem_emblemas}${taxa_ir !== undefined ? `, taxa IR: ${taxa_ir}` : ''}`);
             return res.status(200).json({
                 message: 'Porcentagem atualizada com sucesso'
             });

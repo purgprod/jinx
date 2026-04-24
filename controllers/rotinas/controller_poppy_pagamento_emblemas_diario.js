@@ -21,7 +21,6 @@ const AtualizarRendimentoEmbModel = require('../../models/rotinas/model_poppy_at
 const HistoricoPagamentoEmblemasModel = require('../../models/rotinas/model_poppy_historico_pagamento_emblemas');
 
 const VALOR_TOKEN_UNITARIO = 0.01; // R$ por token — mesmo valor usado em toda a plataforma
-const IR_ALIQUOTA = 0.15;          // 15% de IR sobre rendimentos (equivalente a CDB)
 
 const AtualizarRendimentoEmblemasController = {
     async executarPagamentoEmblemas(req, res) {
@@ -31,6 +30,7 @@ const AtualizarRendimentoEmblemasController = {
 
             const response = await axios.get('http://localhost:3000/api/emblemas/buscar-porcentagem');
             const taxaAnual = parseFloat(response.data[0].porcentagem_emblemas);
+            const irAliquota = parseFloat(response.data[0].taxa_ir ?? 0.15);
 
             if (isNaN(taxaAnual) || taxaAnual <= 0) {
                 logger.warn(`[EMB] Taxa anual inválida ou zero (${taxaAnual}). Rotina encerrada sem atualizações.`);
@@ -43,12 +43,12 @@ const AtualizarRendimentoEmblemasController = {
                 });
             }
 
-            logger.info(`[EMB] Taxa anual configurada: ${taxaAnual}% a.a.`);
+            logger.info(`[EMB] Taxa anual configurada: ${taxaAnual}% a.a. | Taxa IR: ${irAliquota * 100}%`);
 
-            // Etapa 2: Calcular o rendimento diário por token líquido de IR (15%)
-            // Fórmula: (taxa_anual / 100 / 365) * valor_token_unitario * (1 - IR_ALIQUOTA)
-            const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN_UNITARIO * (1 - IR_ALIQUOTA);
-            logger.info(`[EMB] Rendimento diário por token líq. IR ${IR_ALIQUOTA * 100}%: R$ ${rendimentoDiarioPorToken.toFixed(10)}`);
+            // Etapa 2: Calcular o rendimento diário por token líquido de IR
+            // Fórmula: (taxa_anual / 100 / 365) * valor_token_unitario * (1 - ir_aliquota)
+            const rendimentoDiarioPorToken = (taxaAnual / 100 / 365) * VALOR_TOKEN_UNITARIO * (1 - irAliquota);
+            logger.info(`[EMB] Rendimento diário por token líq. IR ${irAliquota * 100}%: R$ ${rendimentoDiarioPorToken.toFixed(10)}`);
 
             // Etapa 3: Buscar todos os usuários que possuem tokens EMB
             logger.info('[EMB] Etapa 3: Buscando holders de tokens EMB');

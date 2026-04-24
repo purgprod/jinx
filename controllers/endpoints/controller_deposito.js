@@ -12,15 +12,6 @@ const ObjetivosLeitura            = require('../../models/objetivos/model_objeti
 const { criarCobrancaPix } = require('../../services/efi_pix');
 
 const DepositoController = {
-    /**
-     * Executa a solicitação de depósito.
-     * Semântica:
-     * 1. Validação de integridade do payload.
-     * 2. Checagem de estado (Idempotência/Pendência).
-     * 3. Persistência da intenção de depósito.
-     * 4. Geração da cobrança Pix no Efí Bank (QR Code + copia e cola).
-     * 5. Retorna os dados do Pix para o usuário pagar.
-     */
     async executeDeposito(req, res) {
         const { id } = req.params;
         const { amount } = req.body;
@@ -31,7 +22,6 @@ const DepositoController = {
             return res.status(403).json({ error: 'Acesso negado' });
         }
 
-        // 1. Validação de Schema (Express-validator)
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             logger.warn('Falha de validação no deposito', { userId: id, errors: errors.array() });
@@ -48,7 +38,7 @@ const DepositoController = {
         logger.info('Iniciando processo de solicitação de deposito', { userId: id, amount });
 
         try {
-            // 1.5. Validação de Objetivos — usuário deve ter ao menos um objetivo com metas configuradas
+            // Validação de Objetivos — usuário deve ter ao menos um objetivo com metas configuradas
             const possuiObjetivos = await ObjetivosLeitura.usuarioPossuiObjetivosComMetas(parseInt(id, 10));
             if (!possuiObjetivos) {
                 logger.warn('Depósito bloqueado: usuário sem objetivos configurados', { userId: id });
@@ -58,13 +48,12 @@ const DepositoController = {
                 });
             }
 
-            // 2. Verificação de Idempotência / Estado Pendente
+            // Verificação de Idempotência / Estado Pendente
             const depositosPendentes = await BuscarDepositoPendenteModel.getDepositoPendente(id);
 
             if (depositosPendentes && depositosPendentes.length > 0) {
                 const pendente = depositosPendentes[0];
 
-                // Se já tem QR Code gerado, retorna o existente
                 if (pendente.pix_copia_cola) {
                     logger.info('Retornando cobrança Pix já existente', { userId: id, txid: pendente.txid });
                     return res.status(200).json({
@@ -83,7 +72,7 @@ const DepositoController = {
                 });
             }
 
-            // 3. Busca dados cadastrais (CPF e nome para a cobrança)
+            // Busca dados cadastrais (CPF e nome para a cobrança)
             const dadosUsuario = await DadosCadastroModel.getDadosCadastro(id);
 
             if (!dadosUsuario) {
@@ -95,13 +84,13 @@ const DepositoController = {
                 return res.status(422).json({ error: 'CPF não cadastrado. Atualize seu perfil antes de realizar um depósito.' });
             }
 
-            // 4. Registro da Solicitação no banco
+            // Registro da Solicitação no banco
             const results    = await SolicitacaoDepositoModel.insertSolicitacao(id, amount);
             const depositoId = results.insertId;
 
             logger.info('Solicitação de depósito registrada', { userId: id, depositoId });
 
-            // 5. Geração da cobrança Pix no Efí Bank
+            // Geração da cobrança Pix no Efí Bank
             let pixData;
             try {
                 pixData = await criarCobrancaPix({
@@ -113,7 +102,6 @@ const DepositoController = {
                 });
             } catch (errPix) {
                 logger.error('Falha ao gerar cobrança Pix no Efí Bank', { userId: id, depositoId, erro: errPix.message });
-                // Remove o registro criado no passo 4 para não bloquear futuros depósitos do usuário
                 try {
                     await SolicitacaoDepositoModel.deleteSolicitacao(depositoId);
                     logger.info('Registro de depósito removido após falha no Pix', { depositoId });
@@ -125,7 +113,7 @@ const DepositoController = {
                 });
             }
 
-            // 6. Persiste txid, QR Code e copia e cola no depósito
+            // Persiste txid, QR Code e copia e cola no depósito
             await AtualizarDepositoQrModel.atualizarQr(
                 depositoId,
                 pixData.txid,

@@ -32,6 +32,27 @@ const AtualizarDepositoQrModel = {
                 resolve(results);
             });
         });
+    },
+
+    async atualizarValorUnico(depositoId, valorUnico, pixCopiaECola) {
+        const query = `
+            UPDATE depositos
+            SET
+                valor_unico    = ?,
+                pix_copia_cola = ?
+            WHERE id = ?
+              AND status_deposito = 'Analisando';
+        `;
+
+        return new Promise((resolve, reject) => {
+            connection.query(query, [valorUnico, pixCopiaECola, depositoId], (error, results) => {
+                if (error) {
+                    logger.error(`[Model] Erro ao atualizar valor_unico do depósito ID=${depositoId}:`, error);
+                    return reject(new Error('Erro ao gravar valor único do Pix no depósito.'));
+                }
+                resolve(results);
+            });
+        });
     }
 };
 

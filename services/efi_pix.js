@@ -96,20 +96,25 @@ async function enviarPix({ chaveDestino, valor, descricao = 'Saque Purg' }) {
     try {
         const efi = getEfi();
 
+        const idEnvio = crypto.randomBytes(16).toString('hex'); // 32 chars alfanuméricos
+
         const body = {
             valor,
-            pagamento: {
-                chave:          chaveDestino,
-                infoPagamento:  descricao
+            pagador: {
+                chave:       process.env.EFI_PIX_KEY,
+                infoPagador: descricao
+            },
+            favorecido: {
+                chave: chaveDestino
             }
         };
 
-        const resposta = await efi.pixSend({}, body);
+        const resposta = await efi.pixSend({ idEnvio }, body);
 
-        logger.info(`[EfiPix] Pix enviado. endToEndId=${resposta.endToEndId}, status=${resposta.status}`);
+        logger.info(`[EfiPix] Pix enviado. endToEndId=${resposta.e2eId}, status=${resposta.status}`);
 
         return {
-            endToEndId: resposta.endToEndId,
+            endToEndId: resposta.e2eId,
             status:     resposta.status
         };
 
