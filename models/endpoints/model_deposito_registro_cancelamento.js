@@ -5,7 +5,7 @@ const logger = require('../../logger');
 const SolicitacaoCancelamentoDepositoModel = {
     /**
      * Altera o status do deposito para 'Cancelado' e registra a justificativa.
-     * A cláusula WHERE garante a atomicidade lógica: apenas depositos em estado 'Analisando'
+     * A cláusula WHERE garante a atomicidade lógica: apenas depositos em estado 'Processando'
      * podem sofrer transição para 'Cancelado'.
      * * @param {number|string} depositoId - ID primário do deposito.
      * @param {string} motivo - Texto descrevendo a razão do cancelamento.
@@ -17,7 +17,7 @@ const SolicitacaoCancelamentoDepositoModel = {
                 status_deposito = 'Cancelado',
                 motivo = ?
             WHERE id = ? 
-            AND status_deposito = 'Analisando';
+            AND status_deposito = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {

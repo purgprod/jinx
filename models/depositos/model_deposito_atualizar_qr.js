@@ -20,7 +20,7 @@ const AtualizarDepositoQrModel = {
                 qr_code        = ?,
                 pix_copia_cola = ?
             WHERE id = ?
-              AND status_deposito = 'Analisando';
+              AND status_deposito = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {
@@ -41,7 +41,7 @@ const AtualizarDepositoQrModel = {
                 valor_unico    = ?,
                 pix_copia_cola = ?
             WHERE id = ?
-              AND status_deposito = 'Analisando';
+              AND status_deposito = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {

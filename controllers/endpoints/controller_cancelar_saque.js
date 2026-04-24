@@ -19,7 +19,7 @@ const cancelarSaque = async (req, res) => {
         const result = await SolicitacaoCancelamentoSaqueModel.cancelarSolicitacao(id, motivo.trim());
 
         // 3. Verificação de efeito (State Machine Guard)
-        // Se affectedRows === 0, significa que o ID não existe ou o status_saque != 'Analisando'
+        // Se affectedRows === 0, significa que o ID não existe ou o status_saque != 'Processando'
         if (result.affectedRows === 0) {
             logger.warn(`Falha ao cancelar saque: ID ${id} não encontrado ou já processado.`);
             return res.status(409).json({ 

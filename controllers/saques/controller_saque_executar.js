@@ -3,7 +3,7 @@
 //
 // Usado apenas quando o envio automático do Pix falhou na solicitação
 // do usuário (ETAPA 9 do controller_saque.js). O saque permanece em
-// status "Analisando" e o admin pode reprocessá-lo aqui.
+// status "Processando" e o admin pode reprocessá-lo aqui.
 //
 // Importante: NÃO debita a carteira novamente — isso já foi feito
 // pelo fluxo do usuário. Este controller apenas reenvia o Pix.
@@ -18,11 +18,11 @@ const ExecutarSaqueController = {
         const { id } = req.params; // usuario_id
 
         try {
-            // 1. Busca o saque "Analisando" pendente de envio do Pix
+            // 1. Busca o saque "Processando" pendente de envio do Pix
             const saque = await BuscarSaqueParaEnvioModel.getSaqueParaEnvio(id);
 
             if (!saque) {
-                logger.warn('Nenhum saque "Analisando" encontrado para reprocessamento', { userId: id });
+                logger.warn('Nenhum saque "Processando" encontrado para reprocessamento', { userId: id });
                 return res.status(404).json({
                     error: 'Nenhum saque pendente de reprocessamento encontrado para este usuário.'
                 });

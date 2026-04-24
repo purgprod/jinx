@@ -59,7 +59,7 @@ const DepositoController = {
                     return res.status(200).json({
                         message:        'Você já possui uma solicitação de depósito em análise.',
                         solicitacao_id: pendente.id,
-                        status:         'Analisando',
+                        status:         'Processando',
                         txid:           pendente.txid,
                         pix_copia_cola: pendente.pix_copia_cola,
                         qr_code:        pendente.qr_code
@@ -126,7 +126,7 @@ const DepositoController = {
             return res.status(201).json({
                 message:        'Solicitação de depósito criada. Realize o pagamento Pix abaixo.',
                 solicitacao_id: depositoId,
-                status:         'Analisando',
+                status:         'Processando',
                 txid:           pixData.txid,
                 pix_copia_cola: pixData.pixCopiaECola,
                 qr_code:        pixData.qrCode,

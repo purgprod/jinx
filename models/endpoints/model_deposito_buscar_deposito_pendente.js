@@ -7,7 +7,7 @@ const BuscarDepositoPendenteModel = {
         const sqlQuery = `SELECT *
         FROM depositos
         WHERE usuario_id = ?
-        AND status_deposito = "Analisando"
+        AND status_deposito = "Processando"
         ;`
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, [usuario_id], (error, results) => {

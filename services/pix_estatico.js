@@ -61,7 +61,7 @@ function gerarEMV({ valor, referencia = '***' }) {
 
 // ---------------------------------------------------------------------------
 // Gera um valor único (valorBase + X centavos aleatórios, 1–99) que não
-// esteja em uso por nenhum depósito ativo (status = 'Analisando').
+// esteja em uso por nenhum depósito ativo (status = 'Processando').
 //
 // Importa o model dinamicamente para evitar dependência circular durante boot.
 //

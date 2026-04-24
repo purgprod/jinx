@@ -27,7 +27,7 @@ const SolicitacaoDepositoModel = {
     },
 
     async deleteSolicitacao(depositoId) {
-        const query = `DELETE FROM depositos WHERE id = ? AND status_deposito = 'Analisando';`;
+        const query = `DELETE FROM depositos WHERE id = ? AND status_deposito = 'Processando';`;
 
         return new Promise((resolve, reject) => {
             connection.query(query, [depositoId], (error, results) => {

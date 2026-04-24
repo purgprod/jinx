@@ -5,7 +5,7 @@ const logger = require('../../logger');
 const SolicitacaoExecutarSaqueModel = {
     /**
      * Altera o status do saque para 'Cancelado' e registra a justificativa.
-     * A cláusula WHERE garante a atomicidade lógica: apenas saques em estado 'Analisando'
+     * A cláusula WHERE garante a atomicidade lógica: apenas saques em estado 'Processando'
      * podem sofrer transição para 'Cancelado'.
      * * @param {number|string} usuario_id - ID do usuário.
      */
@@ -16,7 +16,7 @@ const SolicitacaoExecutarSaqueModel = {
                 status_saque = 'Executado',
                 motivo = 'Saque realizado com sucesso.'
             WHERE usuario_id = ? 
-            AND status_saque = 'Analisando';
+            AND status_saque = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {

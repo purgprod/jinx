@@ -15,7 +15,7 @@ const FalharSaqueModel = {
         const query = `
             UPDATE saques
             SET
-                status_saque = 'Falhou',
+                status_saque = 'Cancelado',
                 motivo       = ?
             WHERE e2e_id = ?
               AND status_saque = 'Processando';

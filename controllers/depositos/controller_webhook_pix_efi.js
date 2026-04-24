@@ -96,7 +96,7 @@ async function processarPixRecebido(pix) {
         return;
     }
 
-    if (deposito.status_deposito !== 'Analisando') {
+    if (deposito.status_deposito !== 'Processando') {
         logger.info(`[WebhookPix] Depósito txid=${txid} já processado (${deposito.status_deposito}). Ignorado.`);
         return;
     }
@@ -137,7 +137,7 @@ async function processarPixRecebido(pix) {
         await AtualizarCarteiraModel.updateCarteira(novoSaldo, deposito.usuario_id, conn);
         const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.usuario_id, conn);
         if (resultado.affectedRows === 0) {
-            throw new Error(`Depósito txid=${txid} não estava em 'Analisando' — possível reprocessamento duplicado`);
+            throw new Error(`Depósito txid=${txid} não estava em 'Processando' — possível reprocessamento duplicado`);
         }
         await alocarSaldoEntreObjetivos(conn, deposito.usuario_id, valor);
     });

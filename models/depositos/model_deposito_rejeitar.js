@@ -17,7 +17,7 @@ const RejeitarDepositoModel = {
                 status_deposito = 'Cancelado',
                 motivo          = ?
             WHERE txid = ?
-              AND status_deposito = 'Analisando';
+              AND status_deposito = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ const RejeitarDepositoModel = {
                 status_deposito = 'Cancelado',
                 motivo          = ?
             WHERE id = ?
-              AND status_deposito = 'Analisando';
+              AND status_deposito = 'Processando';
         `;
 
         return new Promise((resolve, reject) => {

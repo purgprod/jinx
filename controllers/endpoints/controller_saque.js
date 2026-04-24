@@ -300,7 +300,7 @@ const SaqueController = {
 
             // ETAPA 9 – Envio automático do Pix via Efí Bank
             // Semântica: disparado imediatamente após todas as deduções.
-            // Se falhar, o saque permanece "Analisando" e o admin pode reprocessar
+            // Se falhar, o saque permanece "Processando" e o admin pode reprocessar
             // manualmente via POST /api/saques/executar/:id (retry).
 
             // Chave celular exige prefixo internacional +55 (padrão Bacen)
@@ -320,7 +320,7 @@ const SaqueController = {
                 await AtualizarSaqueE2eModel.atualizarE2e(saqueId, endToEndId);
                 logger.info('Pix de saque enviado automaticamente', { userId: id, saqueId, endToEndId });
             } catch (errPix) {
-                // Deduções já realizadas — saque fica "Analisando" para reprocessamento pelo admin
+                // Deduções já realizadas — saque fica "Processando" para reprocessamento pelo admin
                 logger.error('Falha no envio automático do Pix — saque requer reprocessamento manual', {
                     userId: id, saqueId, erro: errPix.message
                 });

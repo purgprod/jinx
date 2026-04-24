@@ -8,7 +8,7 @@ const BuscarDepositoPorValorModel = {
             SELECT *
             FROM depositos
             WHERE valor_unico = ?
-              AND status_deposito = 'Analisando'
+              AND status_deposito = 'Processando'
             LIMIT 1;
         `;
         return new Promise((resolve, reject) => {

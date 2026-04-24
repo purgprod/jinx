@@ -16,7 +16,7 @@ const BuscarSaquesModel = {
                 s.status_saque 
             FROM saques s
             INNER JOIN users u ON s.usuario_id = u.usuario_id
-	    AND status_saque = 'Analisando'
+	    AND status_saque = 'Processando'
         `;
         
         return new Promise((resolve, reject) => {

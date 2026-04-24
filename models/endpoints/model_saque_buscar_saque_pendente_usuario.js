@@ -7,7 +7,7 @@ const BuscarSaquePendenteModel = {
         const sqlQuery = `SELECT *
         FROM saques
         WHERE usuario_id = ?
-        AND status_saque = "Analisando"
+        AND status_saque = "Processando"
         ;`
         return new Promise((resolve, reject) => {
             connection.query(sqlQuery, [usuario_id], (error, results) => {

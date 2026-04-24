@@ -1,5 +1,5 @@
 // models/saques/model_saque_buscar_para_envio.js
-// Busca o saque "Analisando" do usuário com os dados necessários para enviar o Pix.
+// Busca o saque "Processando" do usuário com os dados necessários para enviar o Pix.
 const connection = require('../../database/database_purg');
 const logger = require('../../logger');
 
@@ -16,7 +16,7 @@ const BuscarSaqueParaEnvioModel = {
             SELECT id, valor_saque, chave_pix
             FROM saques
             WHERE usuario_id = ?
-              AND status_saque = 'Analisando'
+              AND status_saque = 'Processando'
             ORDER BY data_criacao ASC
             LIMIT 1;
         `;

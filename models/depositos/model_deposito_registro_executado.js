@@ -5,7 +5,7 @@ const logger = require('../../logger');
 const SolicitacaoExecutarDepositoModel = {
     /**
      * Altera o status do deposito para 'Cancelado' e registra a justificativa.
-     * A cláusula WHERE garante a atomicidade lógica: apenas depositos em estado 'Analisando'
+     * A cláusula WHERE garante a atomicidade lógica: apenas depositos em estado 'Processando'
      * podem sofrer transição para 'Cancelado'.
      * * @param {number|string} usuario_id - ID do usuário.
      */
@@ -16,7 +16,7 @@ const SolicitacaoExecutarDepositoModel = {
                 status_deposito = 'Executado',
                 motivo = 'Deposito realizado com sucesso.'
             WHERE usuario_id = ?
-            AND status_deposito = 'Analisando';
+            AND status_deposito = 'Processando';
         `;
 
         if (conn) {
