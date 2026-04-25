@@ -1,3 +1,62 @@
+#develop-91:
+- Senha de Negociação (PIN de 4 dígitos): criação, alteração, recuperação por e-mail e exigência no saque:
+
+- migrations/adicionar_senha_negociacao_users.sql (novo):
+	- Adiciona colunas senha_negociacao VARCHAR(255) NULL, senha_negociacao_tentativas INT NOT NULL DEFAULT 0 e senha_negociacao_bloqueio_ate DATETIME NULL na tabela users; aplicado em prod e dev;
+
+- migrations/criar_tabela_senha_negociacao_recuperacao.sql (novo):
+	- Cria tabela senha_negociacao_recuperacao (id, usuario_id FK → users, token VARCHAR(64) UNIQUE, expira_em, usado, criado_em); aplicado em prod e dev;
+
+- models/senha_negociacao/model_pin_buscar.js (novo):
+	- buscarPinPorId(usuarioId): retorna senha_negociacao, senha_negociacao_tentativas e senha_negociacao_bloqueio_ate da tabela users;
+
+- models/senha_negociacao/model_pin_salvar.js (novo):
+	- salvarPin(usuarioId, pinPlano): gera hash bcrypt (salt 12), atualiza senha_negociacao e zera tentativas + bloqueio na mesma query;
+
+- models/senha_negociacao/model_pin_tentativas.js (novo):
+	- registrarFalha(usuarioId): incrementa senha_negociacao_tentativas e aplica bloqueio de 30 minutos quando tentativas ≥ 5 (SET em uma única query);
+	- zerarTentativas(usuarioId): reseta contagem e remove bloqueio após acerto;
+
+- models/senha_negociacao/model_recuperacao_criar.js (novo):
+	- criarTokenRecuperacao(usuarioId, token): INSERT com expiração de 15 minutos;
+
+- models/senha_negociacao/model_recuperacao_buscar.js (novo):
+	- buscarTokenValido(token): retorna registro apenas se usado = 0 e expira_em > NOW();
+
+- models/senha_negociacao/model_recuperacao_invalidar.js (novo):
+	- invalidarToken(id): marca usado = 1 após confirmação do novo PIN;
+
+- middleware/verificar_senha_negociacao.js (novo):
+	- Valida formato (4 dígitos), verifica bloqueio ativo, compara bcrypt e registra falha/zera tentativas; reutilizável em qualquer rota que exija o PIN;
+
+- controllers/senha_negociacao/controller_status_pin.js (novo):
+	- GET /api/v1/pin-negociacao/status/:id — informa se o usuário já possui PIN cadastrado (pin_cadastrado: bool);
+
+- controllers/senha_negociacao/controller_criar_pin.js (novo):
+	- POST /api/v1/pin-negociacao/criar/:id — criação do PIN pela primeira vez; valida 4 dígitos, rejeita todos iguais (ex: 1111), exige pin + pin_confirmacao coincidentes; bloqueia criação se PIN já existir (409);
+
+- controllers/senha_negociacao/controller_alterar_pin.js (novo):
+	- PUT /api/v1/pin-negociacao/alterar/:id — troca de PIN; exige pin_atual correto + pin_novo + pin_confirmacao; respeita bloqueio por tentativas; registra falha ou zera tentativas conforme resultado;
+
+- controllers/senha_negociacao/controller_recuperar_solicitar.js (novo):
+	- POST /api/v1/pin-negociacao/recuperar/solicitar/:id — requer senha de login para confirmar identidade; gera token hex(32), persiste com expiração de 15 min e envia e-mail via mailer;
+
+- controllers/senha_negociacao/controller_recuperar_confirmar.js (novo):
+	- POST /api/v1/pin-negociacao/recuperar/confirmar — rota pública (sem sessão); valida token hex 64 chars, redefine PIN e invalida token; exige pin_novo + pin_confirmacao;
+
+- templates/template_recuperacao_pin_negociacao.js (novo):
+	- Template HTML de e-mail com link de recuperação válido por 15 minutos;
+
+- routes/route_senha_negociacao.js (novo):
+	- Todas as rotas protegidas por authMiddleware.checkAuthenticated exceto recuperar/confirmar;
+	- Validação centralizada de PIN: regex /^\d{4}$/ + rejeição de dígitos todos iguais via regex /^(\d)\1{3}$/;
+
+- routes/route_endpoints.js:
+	- POST /api/v1/saque/:id: adicionado campo pin obrigatório (4 dígitos) na validação do body e middleware verificarSenhaNegociacao antes do controller — PIN incorreto retorna 401 com tentativas_restantes; bloqueio retorna 423 com bloqueado_ate;
+
+- server.js:
+	- route_senha_negociacao importado e registrado;
+
 #develop-88:
 - Alíquota de IR configurável, painel Admin com modo debug, correções no saque e webhook Efí:
 

@@ -21,6 +21,7 @@ const financeiroLimiter = rateLimit({
 //const EmblemasController  = require('../controllers/endpoints/controller_emblemas');
 const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
 const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
+const verificarSenhaNegociacao = require('../middleware/verificar_senha_negociacao');
 const SaqueController     = require('../controllers/endpoints/controller_saque');
 const CancelarSaqueController = require('../controllers/endpoints/controller_cancelar_saque');
 const DepositoController     = require('../controllers/endpoints/controller_deposito');
@@ -303,7 +304,7 @@ router.put(
   TrocaSenhaController.trocarSenha
 );
 
-//  POST /endpoints/saque/:id   { amount: 100.50 }
+//  POST /endpoints/saque/:id   { amount: 100.50, pin: "1234" }
 router.post(
   '/api/v1/saque/:id',
   authMiddleware.checkAuthenticated,
@@ -313,7 +314,11 @@ router.post(
     body('amount')
       .isFloat({ gt: 0 })
       .withMessage('amount deve ser número > 0'),
+    body('pin')
+      .notEmpty().withMessage('Senha de Negociação é obrigatória.')
+      .matches(/^\d{4}$/).withMessage('Senha de Negociação deve conter exatamente 4 dígitos numéricos.'),
   ],
+  verificarSenhaNegociacao,
   SaqueController.executeSaque
 );
 

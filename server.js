@@ -22,7 +22,8 @@ const route_biometria  = require('./routes/route_biometria');
 const route_objetivos  = require('./routes/route_objetivos');
 const route_ranking    = require('./routes/route_ranking');
 const route_lulu       = require('./routes/route_lulu');
-const route_admin      = require('./routes/route_admin');
+const route_admin            = require('./routes/route_admin');
+const route_senha_negociacao = require('./routes/route_senha_negociacao');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -202,6 +203,7 @@ app.use('/', route_objetivos);
 app.use('/', route_ranking);
 app.use('/', route_lulu);
 app.use('/', route_admin);
+app.use('/', route_senha_negociacao);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {
