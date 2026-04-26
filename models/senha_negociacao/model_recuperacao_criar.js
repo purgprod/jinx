@@ -10,9 +10,9 @@ exports.criarTokenRecuperacao = async (usuarioId, token) => {
     `;
     try {
         await pool.promise().execute(query, [usuarioId, token, EXPIRACAO_MINUTOS]);
-        logger.info(`Token de recuperação de PIN criado para o usuário ID: ${usuarioId}`);
+        logger.info(`Token de recuperação de Senha de Negociação criado para o usuário ID: ${usuarioId}`);
     } catch (error) {
-        logger.error(`Erro ao criar token de recuperação de PIN para o usuário ID ${usuarioId}: ${error.message}`);
+        logger.error(`Erro ao criar token de recuperação de Senha de Negociação para o usuário ID ${usuarioId}: ${error.message}`);
         throw error;
     }
 };

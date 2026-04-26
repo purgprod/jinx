@@ -1,28 +1,28 @@
 const { validationResult } = require('express-validator');
-const pinBuscarModel       = require('../../models/senha_negociacao/model_pin_buscar');
-const pinSalvarModel       = require('../../models/senha_negociacao/model_pin_salvar');
+const senhaBuscarModel     = require('../../models/senha_negociacao/model_senha_buscar');
+const senhaSalvarModel     = require('../../models/senha_negociacao/model_senha_salvar');
 const logger               = require('../../logger');
 
-async function criarPin(req, res) {
+async function criarSenha(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
 
     const usuarioId = parseInt(req.params.id, 10);
-    const { pin, pin_confirmacao } = req.body;
+    const { senha, senha_confirmacao } = req.body;
 
     if (req.session.user.id !== usuarioId) {
-        logger.warn(`Acesso negado à criação de PIN. Sessão: ${req.session.user.id}, alvo: ${usuarioId}`);
+        logger.warn(`Acesso negado à criação de Senha de Negociação. Sessão: ${req.session.user.id}, alvo: ${usuarioId}`);
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
 
-    if (pin !== pin_confirmacao) {
-        return res.status(400).json({ success: false, message: 'Os PINs informados não coincidem.' });
+    if (senha !== senha_confirmacao) {
+        return res.status(400).json({ success: false, message: 'As senhas informadas não coincidem.' });
     }
 
     try {
-        const dados = await pinBuscarModel.buscarPinPorId(usuarioId);
+        const dados = await senhaBuscarModel.buscarSenhaPorId(usuarioId);
         if (!dados) {
             return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
         }
@@ -31,14 +31,14 @@ async function criarPin(req, res) {
             return res.status(409).json({ success: false, message: 'Você já possui uma Senha de Negociação cadastrada. Use a opção de alteração.' });
         }
 
-        await pinSalvarModel.salvarPin(usuarioId, pin);
+        await senhaSalvarModel.salvarSenha(usuarioId, senha);
 
-        logger.info(`PIN de negociação criado para o usuário ID: ${usuarioId}`);
+        logger.info(`Senha de Negociação criada para o usuário ID: ${usuarioId}`);
         return res.status(201).json({ success: true, message: 'Senha de Negociação cadastrada com sucesso.' });
     } catch (error) {
-        logger.error(`Erro ao criar PIN de negociação para o usuário ID ${usuarioId}: ${error.message}`);
+        logger.error(`Erro ao criar Senha de Negociação para o usuário ID ${usuarioId}: ${error.message}`);
         return res.status(500).json({ success: false, message: 'Erro no servidor.' });
     }
 }
 
-module.exports = { criarPin };
+module.exports = { criarSenha };

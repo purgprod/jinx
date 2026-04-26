@@ -13,7 +13,7 @@ exports.buscarTokenValido = async (token) => {
         const [rows] = await pool.promise().execute(query, [token]);
         return rows.length ? rows[0] : null;
     } catch (error) {
-        logger.error(`Erro ao buscar token de recuperação de PIN: ${error.message}`);
+        logger.error(`Erro ao buscar token de recuperação de Senha de Negociação: ${error.message}`);
         throw error;
     }
 };

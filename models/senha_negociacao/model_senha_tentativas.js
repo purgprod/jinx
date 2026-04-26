@@ -17,9 +17,9 @@ exports.registrarFalha = async (usuarioId) => {
     `;
     try {
         await pool.promise().execute(query, [MAX_TENTATIVAS, BLOQUEIO_MINUTOS, usuarioId]);
-        logger.warn(`Falha de PIN de negociação registrada para o usuário ID: ${usuarioId}`);
+        logger.warn(`Falha de Senha de Negociação registrada para o usuário ID: ${usuarioId}`);
     } catch (error) {
-        logger.error(`Erro ao registrar falha de PIN para o usuário ID ${usuarioId}: ${error.message}`);
+        logger.error(`Erro ao registrar falha de Senha de Negociação para o usuário ID ${usuarioId}: ${error.message}`);
         throw error;
     }
 };
@@ -34,7 +34,7 @@ exports.zerarTentativas = async (usuarioId) => {
     try {
         await pool.promise().execute(query, [usuarioId]);
     } catch (error) {
-        logger.error(`Erro ao zerar tentativas de PIN para o usuário ID ${usuarioId}: ${error.message}`);
+        logger.error(`Erro ao zerar tentativas de Senha de Negociação para o usuário ID ${usuarioId}: ${error.message}`);
         throw error;
     }
 };

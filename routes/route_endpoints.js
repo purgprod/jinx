@@ -304,7 +304,7 @@ router.put(
   TrocaSenhaController.trocarSenha
 );
 
-//  POST /endpoints/saque/:id   { amount: 100.50, pin: "1234" }
+//  POST /endpoints/saque/:id   { amount: 100.50, senha: "1234" }
 router.post(
   '/api/v1/saque/:id',
   authMiddleware.checkAuthenticated,
@@ -314,7 +314,7 @@ router.post(
     body('amount')
       .isFloat({ gt: 0 })
       .withMessage('amount deve ser número > 0'),
-    body('pin')
+    body('senha')
       .notEmpty().withMessage('Senha de Negociação é obrigatória.')
       .matches(/^\d{4}$/).withMessage('Senha de Negociação deve conter exatamente 4 dígitos numéricos.'),
   ],

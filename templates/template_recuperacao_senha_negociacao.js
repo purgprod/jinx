@@ -1,5 +1,5 @@
-const gerarTemplateRecuperacaoPin = (token) => {
-    const link = `https://purg.com.br/pin-recuperacao?token=${token}`;
+const gerarTemplateRecuperacaoSenha = (token) => {
+    const link = `https://purg.com.br/senha-negociacao-recuperacao?token=${token}`;
 
     return `
     <style>
@@ -46,4 +46,4 @@ const gerarTemplateRecuperacaoPin = (token) => {
   `;
 };
 
-module.exports = { gerarTemplateRecuperacaoPin };
+module.exports = { gerarTemplateRecuperacaoSenha };

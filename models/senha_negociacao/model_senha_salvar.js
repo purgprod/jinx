@@ -2,8 +2,8 @@ const pool   = require('../../database/database_purg');
 const bcrypt = require('bcrypt');
 const logger = require('../../logger');
 
-exports.salvarPin = async (usuarioId, pinPlano) => {
-    const hash = await bcrypt.hash(pinPlano, 12);
+exports.salvarSenha = async (usuarioId, senhaPlana) => {
+    const hash = await bcrypt.hash(senhaPlana, 12);
     const query = `
         UPDATE users
         SET senha_negociacao = ?,
@@ -14,9 +14,9 @@ exports.salvarPin = async (usuarioId, pinPlano) => {
     try {
         const [result] = await pool.promise().execute(query, [hash, usuarioId]);
         if (result.affectedRows === 0) throw new Error('Usuário não encontrado.');
-        logger.info(`PIN de negociação salvo para o usuário ID: ${usuarioId}`);
+        logger.info(`Senha de Negociação salva para o usuário ID: ${usuarioId}`);
     } catch (error) {
-        logger.error(`Erro ao salvar PIN de negociação do usuário ID ${usuarioId}: ${error.message}`);
+        logger.error(`Erro ao salvar Senha de Negociação do usuário ID ${usuarioId}: ${error.message}`);
         throw error;
     }
 };
