@@ -40,6 +40,7 @@ const TrocaSenhaController = require('../controllers/endpoints/controller_troca_
 const RecuperacaoSenhaController = require('../controllers/mailing/controller_recuperacao_de_senha');
 const CadastroUsuarioController  = require('../controllers/endpoints/controller_cadastro_usuario');
 const AtualizarPerfilController  = require('../controllers/endpoints/controller_atualizar_perfil');
+const AtualizarPixController     = require('../controllers/endpoints/controller_atualizar_pix');
 const HistoricoPatrimonioController = require('../controllers/endpoints/controller_historico_patrimonio');
 const HistoricoRendimentosController = require('../controllers/endpoints/controller_historico_rendimentos');
 const RankingController              = require('../controllers/ranking/controller_ranking');
@@ -268,22 +269,31 @@ router.put(
     body('complemento')
       .optional()
       .isString().withMessage('O complemento deve ser um texto válido.'),
+  ],
+  AtualizarPerfilController.atualizarPerfil
+);
+
+// Rota para atualizar chaves Pix do usuário
+router.put(
+  '/api/v1/edita-pix/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
     body('pix_cpf')
-      .optional()
+      .optional({ checkFalsy: true })
       .matches(/^\d{11}$/).withMessage('O CPF Pix deve conter exatamente 11 dígitos numéricos.'),
     body('pix_celular')
-      .optional()
+      .optional({ checkFalsy: true })
       .matches(/^\d{10,11}$/).withMessage('O celular Pix deve conter 10 ou 11 dígitos numéricos.'),
     body('pix_email')
-      .optional()
+      .optional({ checkFalsy: true })
       .isEmail().withMessage('Informe um e-mail Pix válido.')
       .normalizeEmail(),
     body('pix_chave')
-      .optional()
-      .isString().withMessage('A chave Pix deve ser um texto válido.')
-      .notEmpty().withMessage('A chave Pix não pode ser vazia.'),
+      .optional({ checkFalsy: true })
+      .isString().withMessage('A chave Pix deve ser um texto válido.'),
   ],
-  AtualizarPerfilController.atualizarPerfil
+  AtualizarPixController.atualizarPix
 );
 
 // Rota para troca de senha do usuário

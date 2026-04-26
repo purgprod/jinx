@@ -27,10 +27,6 @@ async function atualizarPerfil(req, res) {
         'logradouro',
         'numero_da_rua',
         'complemento',
-        'pix_cpf',
-        'pix_celular',
-        'pix_email',
-        'pix_chave',
     ];
 
     const campos = {};
