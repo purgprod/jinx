@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const depositosButton = document.getElementById("depositosButton");
     const rankingButton   = document.getElementById("rankingButton");
     const luluButton      = document.getElementById("luluButton");
+    const familiaButton   = document.getElementById("familiaButton");
     const adminButton     = document.getElementById("adminButton");
 
     console.log("Element references initialized");
@@ -48,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '/rotinas':                rotinasButton,
         '/ranking':                rankingButton,
         '/lulu':                   luluButton,
+        '/familia':                familiaButton,
         '/admin':                  adminButton,
     };
 
@@ -167,6 +169,13 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Botão 'Lulu' clicado");
             pushRoute('/lulu');
             loadLuluResults();
+        });
+    }
+
+    if (familiaButton) {
+        familiaButton.addEventListener("click", () => {
+            pushRoute('/familia');
+            loadFamiliaResults();
         });
     }
 

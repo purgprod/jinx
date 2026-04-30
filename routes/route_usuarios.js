@@ -18,13 +18,8 @@ const UsuariosSaldosController = require('../controllers/usuarios/controller_sal
 const UsuariosSaquesController = require('../controllers/usuarios/controller_saques_usuarios');
 const UsuariosDepositosController = require('../controllers/usuarios/controller_depositos_usuarios');
 const UsuariosRendimentosController = require('../controllers/usuarios/controller_rendimentos_usuarios');
-const UsuariosSuitabilityController = require('../controllers/usuarios/controller_suitability_usuarios');
-const UsuariosSuitabilityUpdateController = require('../controllers/usuarios/controller_calculo_suitability_update');
-const UsuariosSuitabilityComplementarUpdateController = require('../controllers/usuarios/controller_calculo_suitability_complementar_update');
-const UsuariosPerfilSuitabilityCompletoController = require('../controllers/usuarios/controller_perfil_suitability_completo_usuario');
 const UsuariosLigaController = require('../controllers/usuarios/controller_liga_usuario');
 const UsuariosSinistroController = require('../controllers/usuarios/controller_sinistro_usuario');
-const UsuariosSuitabilityComplementarController = require('../controllers/usuarios/controller_suitability_complementar_usuarios');
 const UsuariosObjetivosController = require('../controllers/usuarios/controller_objetivos_usuarios');
 
 // Todas as rotas de usuários requerem autenticação
@@ -75,26 +70,11 @@ router.get('/api/usuarios/:id/dados-depositos', UsuariosDepositosController.getD
 // Rota para obter o total de rendimentos do usuário
 router.get('/api/usuarios/:id/dados-rendimentos', UsuariosRendimentosController.getRendimentos);
 
-// Rota para obter o suitability do usuário
-router.get('/api/usuarios/:id/suitability', UsuariosSuitabilityController.getSuitability);
-
-// Rota para fazer o calculo e update do suitability do usuário
-router.put('/api/usuarios/:id/calculo-suitability-update', UsuariosSuitabilityUpdateController.calcularSuitability);
-
-// Rota para fazer o calculo e update do suitability complementar do usuário
-router.put('/api/usuarios/:id/calculo-suitability-complementar-update', UsuariosSuitabilityComplementarUpdateController.calcularSuitabilityComplementar);
-
-// Rota para obter qual o suitability e suitability_complementar de cada usuário
-router.get('/api/usuarios/:id/perfil-suitability-usuario-completo', UsuariosPerfilSuitabilityCompletoController.getSuitability);
-
 // Rota para obter qual a liga de cada usuário
 router.get('/api/usuarios/:id/liga-usuarios', UsuariosLigaController.getLiga);
 
 // Rota para obter qual o sinistro de cada usuário
 router.get('/api/usuarios/:id/sinistro-usuarios', UsuariosSinistroController.getSinistro);
-
-// Rota para obter o suitability complementar do usuário
-router.get('/api/usuarios/:id/suitability-complementar', UsuariosSuitabilityComplementarController.getSuitabilityComplementar);
 
 // Rota para obter os objetivos e metas do usuário (painel admin)
 router.get('/api/usuarios/:id/objetivos', UsuariosObjetivosController.getObjetivos);

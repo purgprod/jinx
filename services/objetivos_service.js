@@ -452,42 +452,77 @@ function _ultimoDiaMes(year, month) {
 
 /**
  * Gera o array de metas a partir dos parâmetros do objetivo.
- * Distribui o valor_alvo igualitariamente entre `prazo` metas.
- * O restante fracional vai para a última meta.
+ *
+ * Sem aporte_inicial: distribui valor_alvo igualitariamente entre `prazo` metas.
+ * Com aporte_inicial: meta 1 = aporte_inicial; metas 2..(prazo+1) = (valor_alvo - aporte_inicial) / prazo.
+ * O restante fracional sempre vai para a última meta.
  * Cada meta recebe data_limite = último dia do mês correspondente.
  *
- * @param {number} valorAlvo   - Valor total do objetivo (ex: 600)
- * @param {number} prazo       - Número de metas/meses (ex: 9)
- * @param {number} pontosTotal - Total de pontos do objetivo (ex: 360)
- * @param {Date}   dataInicio  - Mês de início (padrão: mês atual)
+ * @param {number} valorAlvo      - Valor total do objetivo (ex: 5000)
+ * @param {number} prazo          - Meses igualitários (sem aporte_inicial: total; com: após o inicial)
+ * @param {number} pontosTotal    - Total de pontos do objetivo
+ * @param {number} aporteInicial  - Valor da primeira parcela diferenciada (0 = desativado)
+ * @param {Date}   dataInicio     - Mês de início (padrão: mês atual)
  * @returns {{ numero, valorInvestir, pontos, dataLimite }[]}
  */
-function gerarMetas(valorAlvo, prazo, pontosTotal, dataInicio = new Date()) {
+function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio = new Date()) {
     if (prazo <= 0) throw new Error('Prazo deve ser maior que zero.');
-
-    const valorCentsTotal = Math.round(valorAlvo * 100);
-    const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
-    const restoValor      = valorCentsTotal - valorPorMeta * prazo;
-
-    const pontosPorMeta   = Math.floor(pontosTotal / prazo);
-    const restoPontos     = pontosTotal - pontosPorMeta * prazo;
 
     const anoInicio = dataInicio.getFullYear();
     const mesInicio = dataInicio.getMonth(); // 0-indexed
+    const metas     = [];
 
-    const metas = [];
-    for (let i = 1; i <= prazo; i++) {
-        const isUltima  = i === prazo;
-        const mesOffset = mesInicio + (i - 1);
-        const ano       = anoInicio + Math.floor(mesOffset / 12);
-        const mes       = mesOffset % 12;
+    if (aporteInicial > 0) {
+        // Meta 1 = aporte_inicial; metas 2..(prazo+1) distribuídas igualitariamente
+        const totalMetas           = prazo + 1;
+        const valorRestanteCents   = Math.round((valorAlvo - aporteInicial) * 100);
+        const valorPorMetaRestante = Math.floor(valorRestanteCents / prazo);
+        const restoValorRestante   = valorRestanteCents - valorPorMetaRestante * prazo;
+
+        const pontosPorMeta = Math.floor(pontosTotal / totalMetas);
+        const restoPontos   = pontosTotal - pontosPorMeta * totalMetas;
+
         metas.push({
-            numero:        i,
-            valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
-            pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
-            dataLimite:    _ultimoDiaMes(ano, mes),
+            numero:        1,
+            valorInvestir: aporteInicial.toFixed(2),
+            pontos:        pontosPorMeta,
+            dataLimite:    _ultimoDiaMes(anoInicio, mesInicio),
         });
+
+        for (let i = 2; i <= totalMetas; i++) {
+            const isUltima  = i === totalMetas;
+            const mesOffset = mesInicio + (i - 1);
+            const ano       = anoInicio + Math.floor(mesOffset / 12);
+            const mes       = mesOffset % 12;
+            metas.push({
+                numero:        i,
+                valorInvestir: ((valorPorMetaRestante + (isUltima ? restoValorRestante : 0)) / 100).toFixed(2),
+                pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+                dataLimite:    _ultimoDiaMes(ano, mes),
+            });
+        }
+    } else {
+        const valorCentsTotal = Math.round(valorAlvo * 100);
+        const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
+        const restoValor      = valorCentsTotal - valorPorMeta * prazo;
+
+        const pontosPorMeta = Math.floor(pontosTotal / prazo);
+        const restoPontos   = pontosTotal - pontosPorMeta * prazo;
+
+        for (let i = 1; i <= prazo; i++) {
+            const isUltima  = i === prazo;
+            const mesOffset = mesInicio + (i - 1);
+            const ano       = anoInicio + Math.floor(mesOffset / 12);
+            const mes       = mesOffset % 12;
+            metas.push({
+                numero:        i,
+                valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
+                pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+                dataLimite:    _ultimoDiaMes(ano, mes),
+            });
+        }
     }
+
     return metas;
 }
 

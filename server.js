@@ -24,6 +24,7 @@ const route_ranking    = require('./routes/route_ranking');
 const route_lulu       = require('./routes/route_lulu');
 const route_admin            = require('./routes/route_admin');
 const route_senha_negociacao = require('./routes/route_senha_negociacao');
+const route_familia          = require('./routes/route_familia');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -177,6 +178,7 @@ const rotasSPA = [
     '/rotinas',
     '/ranking',
     '/lulu',
+    '/familia',
     '/admin',
 ];
 
@@ -204,6 +206,7 @@ app.use('/', route_ranking);
 app.use('/', route_lulu);
 app.use('/', route_admin);
 app.use('/', route_senha_negociacao);
+app.use('/', route_familia);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {

@@ -24,14 +24,19 @@ const CriarObjetivoController = {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { descricao, valor_alvo, prazo, pontos_total } = req.body;
+        const { descricao, valor_alvo, prazo, pontos_total, aporte_inicial } = req.body;
 
-        const valorAlvoNum  = Number(valor_alvo);
-        const prazoNum      = parseInt(prazo, 10);
+        const valorAlvoNum   = Number(valor_alvo);
+        const prazoNum       = parseInt(prazo, 10);
         const pontosTotalNum = parseInt(pontos_total, 10);
+        const aporteInicialNum = aporte_inicial ? Number(aporte_inicial) : 0;
 
         if (valorAlvoNum <= 0 || prazoNum <= 0 || prazoNum > 600) {
             return res.status(400).json({ error: 'valor_alvo deve ser > 0 e prazo entre 1 e 600.' });
+        }
+
+        if (aporteInicialNum >= valorAlvoNum) {
+            return res.status(400).json({ error: 'aporte_inicial deve ser menor que valor_alvo.' });
         }
 
         logger.info('[CriarObjetivo] Iniciando criação', { usuarioId, descricao, valorAlvoNum, prazoNum });
@@ -50,7 +55,7 @@ const CriarObjetivoController = {
                 }, conn);
 
                 // Gerar e inserir metas
-                const metas = gerarMetas(valorAlvoNum, prazoNum, pontosTotalNum);
+                const metas = gerarMetas(valorAlvoNum, prazoNum, pontosTotalNum, aporteInicialNum);
                 for (const meta of metas) {
                     await MetasEscrita.criarMeta({
                         usuarioId,

@@ -10,6 +10,7 @@ const express      = require('express');
 const router       = express.Router();
 const { body, param } = require('express-validator');
 const authMiddleware = require('../middleware/auth');
+const { verificarPermissaoFamilia } = require('../middleware/verificar_permissao_familia');
 
 const ListarObjetivosController    = require('../controllers/objetivos/controller_listar_objetivos');
 const DetalharObjetivoController   = require('../controllers/objetivos/controller_detalhar_objetivo');
@@ -61,7 +62,11 @@ router.post(
             .isInt({ min: 1, max: 600 }).withMessage('Prazo entre 1 e 600 meses.'),
         body('pontos_total')
             .isInt({ min: 0 }).withMessage('pontos_total deve ser inteiro >= 0.'),
+        body('aporte_inicial')
+            .optional()
+            .isFloat({ gt: 0 }).withMessage('aporte_inicial deve ser número > 0.'),
     ],
+    verificarPermissaoFamilia('pode_criar_objetivos'),
     CriarObjetivoController.execute
 );
 

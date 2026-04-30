@@ -1,7 +1,3 @@
-import dicionarioRespostas from './dicionario_respostas.js';
-import dicionarioRespostasConservador from './dicionario_respostas_conservador.js';
-import dicionarioRespostasModerado from './dicionario_respostas_moderado.js';
-import dicionarioRespostasAgressivo from './dicionario_respostas_agressivo.js';
 import ligaAcessoInvestimentos from './acesso_investimentos_por_liga.js';
 
 // Variável para armazenar os dados dos pins
@@ -28,7 +24,7 @@ function loadUserDetails(usuario_id) {
                     </div>
                 </form>
                 <h3>Dados Financeiros</h3>
-                <div id="infoContainer" class="suitability-container"></div>
+                <div id="infoContainer" class="info-container"></div>
                 <div id="carteiraContainer" class="carteira-container"></div>
                 <h3>Distribuição da Carteira por Perfil</h3>
                 <div id="chartsContainer">
@@ -47,34 +43,15 @@ function loadUserDetails(usuario_id) {
                 <div id="pinsContainer" class="cards-container"></div>
                 <h3>Objetivos</h3>
                 <div id="objetivosContainer"></div>
-                <h3>Suitability</h3>
-                <div id="suitabilityContainer" class="suitability-container"></div>
-                <h3>Respostas Principais</h3>
-                <form id="suitabilityDetailsForm">
-                    ${generateSuitabilitySection(data)}
-                </form>
-                <h3>Respostas Complementares</h3>
-                <form id="suitabilityComplementarForm"></form>
             `;
 
             setupEventListenersUsuarios(usuario_id);
-          //  generateSuitabilityComplementarSection(usuario_id);
-
-            // Chamada da função com callback para atualizar o formulário
-            generateSuitabilityComplementarSection(usuario_id, (html) => {
-                const form = document.getElementById('suitabilityComplementarForm');
-                if (form) {
-                    form.innerHTML = html;
-                }
-            });
 
             Promise.all([
                 loadUserPins(usuario_id),
                 loadUltimosDadosFinanceiros(usuario_id),
                 loadDadosFinanceirosHistoricos(usuario_id),
                 loadDadosRendimentosHistoricos(usuario_id),
-                loadSuitability(usuario_id),
-                loadSuitabilityCompleto(usuario_id),
                 loadInfo(usuario_id),
                 loadObjetivos(usuario_id)
             ]).then(() => {
@@ -110,174 +87,6 @@ function loadUserDetails(usuario_id) {
     }
 }
 
-function generateSuitabilitySection(data) {
-    return `
-        <label for="qual_objetivo">Qual o seu principal objetivo ao investir seu dinheiro?</label>
-        <input type="text" id="qual_objetivo" name="qual_objetivo" value="${dicionarioRespostas.qual_objetivo[data.qual_objetivo] ?? 'Não especificado'}" readonly>
-        <label for="quanto_tempo">Por quanto tempo pretende deixar seu dinheiro investido?</label>
-        <input type="text" id="quanto_tempo" name="quanto_tempo" value="${dicionarioRespostas.quanto_tempo[data.quanto_tempo] ?? 'Não especificado'}" readonly>
-        <label for="qual_necessidade">Qual é a sua necessidade em relação ao dinheiro que está investindo?</label>
-        <input type="text" id="qual_necessidade" name="qual_necessidade" value="${dicionarioRespostas.qual_necessidade[data.qual_necessidade] ?? 'Não especificado'}" readonly>
-        <label for="qual_percentual">Qual percentual da sua renda você investe regularmente?</label>
-        <input type="text" id="qual_percentual" name="qual_percentual" value="${data.qual_percentual ?? 'Não especificado'}" readonly>
-        <label for="oscilacoes_mercado">Por conta de oscilações do mercado, o que você faria?</label>
-        <input type="text" id="oscilacoes_mercado" name="oscilacoes_mercado" value="${dicionarioRespostas.oscilacoes_mercado[data.oscilacoes_mercado] ?? 'Não especificado'}" readonly>
-        <label for="formacao">Considerando sua formação, é possível afirmar que:</label>
-        <input type="text" id="formacao" name="formacao" value="${dicionarioRespostas.formacao[data.formacao] ?? 'Não especificado'}" readonly>
-        <label for="experiencia">Considerando sua experiência profissional, é possível afirmar que:</label>
-        <input type="text" id="experiencia" name="experiencia" value="${dicionarioRespostas.experiencia[data.experiencia] ?? 'Não especificado'}" readonly>
-        <label for="expectativa_5_anos">Como você descreveria sua expectativa de renda futura para os próximos 5 anos?</label>        
-        <input type="text" id="expectativa_5_anos" name="expectativa_5_anos" value="${dicionarioRespostas.expectativa_5_anos[data.expectativa_5_anos] ?? 'Não especificado'}" readonly>
-        <label for="operacoes_derivativos">Pretende realizar operações com derivativos?</label>
-        <input type="text" id="operacoes_derivativos" name="operacoes_derivativos" value="${dicionarioRespostas.operacoes_derivativos[data.operacoes_derivativos] ?? 'Não especificado'}" readonly>
-        <label for="volume_frequencia_renda_fixa_basica">Volume e frequência de operações em Renda fixa Básica:</label>
-        <input type="text" id="volume_frequencia_renda_fixa_basica" name="volume_frequencia_renda_fixa_basica" value="${dicionarioRespostas.volume_frequencia_renda_fixa_basica[data.volume_frequencia_renda_fixa_basica] ?? 'Não especificado'}" readonly>
-        <label for="volume_frequencia_outros">Volume e frequência de operações em Debêntures e outros fundos:</label>
-        <input type="text" id="volume_frequencia_outros" name="volume_frequencia_outros" value="${dicionarioRespostas.volume_frequencia_outros[data.volume_frequencia_outros] ?? 'Não especificado'}" readonly>
-        <label for="volume_frequencia_renda_variavel_basica">Volume e frequência de operações em Renda variável básica:</label>
-        <input type="text" id="volume_frequencia_renda_variavel_basica" name="volume_frequencia_renda_variavel_basica" value="${dicionarioRespostas.volume_frequencia_renda_variavel_basica[data.volume_frequencia_renda_variavel_basica] ?? 'Não especificado'}" readonly>
-        <label for="volume_frequencia_derivativos">Volume e frequência de operações em Derivativos:</label>
-        <input type="text" id="volume_frequencia_derivativos" name="volume_frequencia_derivativos" value="${dicionarioRespostas.volume_frequencia_derivativos[data.volume_frequencia_derivativos] ?? 'Não especificado'}" readonly>
-        <label for="percentual_aproximado_renda_fixa">Qual o percentual aproximado de seus investimentos em Renda Fixa Básica?</label>
-        <input type="number" id="percentual_aproximado_renda_fixa" name="percentual_aproximado_renda_fixa" value="${data.percentual_aproximado_renda_fixa != null ? parseFloat(data.percentual_aproximado_renda_fixa).toFixed(2) : 'Não especificado'}" readonly>
-        <label for="percentual_aproximado_outros">Qual o percentual aproximado de seus investimentos em Debêntures e outros fundos?</label>
-        <input type="number" id="percentual_aproximado_outros" name="percentual_aproximado_outros" value="${data.percentual_aproximado_outros != null ? parseFloat(data.percentual_aproximado_outros).toFixed(2) : 'Não especificado'}" readonly>
-        <label for="percentual_aproximado_renda_variavel">Qual o percentual aproximado de seus investimentos em Renda Variável Básica?</label>
-        <input type="number" id="percentual_aproximado_renda_variavel" name="percentual_aproximado_renda_variavel" value="${data.percentual_aproximado_renda_variavel != null ? parseFloat(data.percentual_aproximado_renda_variavel).toFixed(2) : 'Não especificado'}" readonly>
-        <label for="percentual_aproximado_derivativos">Qual o percentual aproximado de seus investimentos em Derivativos?</label>
-        <input type="number" id="percentual_aproximado_derivativos" name="percentual_aproximado_derivativos" value="${data.percentual_aproximado_derivativos != null ? parseFloat(data.percentual_aproximado_derivativos).toFixed(2) : 'Não especificado'}" readonly>
-    `;
-}
-
-function loadSuitability(usuario_id) {
-    return fetch(`/api/usuarios/${usuario_id}/suitability`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao buscar dados de suitability');
-            }
-            return response.json();
-        })
-        .then(dadosSuitability => {
-            console.log('Suitability Data:', dadosSuitability);
-            
-            const suitability = dadosSuitability[0];
-            if (!suitability) return;
-
-            const suitabilityInputs = document.querySelectorAll('#suitabilityDetailsForm input:not([id^="percentual_aproximado"])');
-            suitabilityInputs.forEach(input => {
-                const key = input.name;
-                if (suitability[key] !== undefined) {
-                    input.value = dicionarioRespostas[key][suitability[key]] || 'Não especificado';
-                }
-            });
-
-            document.getElementById('percentual_aproximado_renda_fixa').value = suitability.percentual_aproximado_renda_fixa != null ? parseFloat(suitability.percentual_aproximado_renda_fixa).toFixed(2) : 'Não especificado';
-            document.getElementById('percentual_aproximado_outros').value = suitability.percentual_aproximado_outros != null ? parseFloat(suitability.percentual_aproximado_outros).toFixed(2) : 'Não especificado';
-            document.getElementById('percentual_aproximado_renda_variavel').value = suitability.percentual_aproximado_renda_variavel != null ? parseFloat(suitability.percentual_aproximado_renda_variavel).toFixed(2) : 'Não especificado';
-            document.getElementById('percentual_aproximado_derivativos').value = suitability.percentual_aproximado_derivativos != null ? parseFloat(suitability.percentual_aproximado_derivativos).toFixed(2) : 'Não especificado';
-        })
-        .catch(error => {
-            console.error('Erro ao carregar dados de suitability:', error);
-        });
-}
-
-async function generateSuitabilityComplementarSection(usuario_id, callback) {
-    let dicionarioRespostasComplementar;
-    let suitabilityComplementar;
-    let dataComplementar;
-
-    try {
-        // Busca dados do perfil de suitability
-        const suitabilityResponse = await fetch(`/api/usuarios/${usuario_id}/perfil-suitability-usuario-completo`);
-        const suitabilityData = await suitabilityResponse.json();
-
-        suitabilityComplementar = suitabilityData.suitability;
-        console.log('suitabilityComplementar:', suitabilityComplementar);
-
-        // Busca dados complementares
-        const complementarResponse = await fetch(`/api/usuarios/${usuario_id}/suitability-complementar`);
-
-        if (!complementarResponse.ok) {
-            throw new Error('Erro ao buscar dados de suitability complementar');
-        }
-
-        dataComplementar = await complementarResponse.json();
-        console.log('dataComplementar:', dataComplementar);
-
-        // Garante que dataComplementar seja um objeto
-        const dadosComplementar = dataComplementar[0] || {};
-
-        // Verifica se suitabilityComplementar está definida e não é nula
-        if (!suitabilityComplementar) {
-            console.error('suitabilityComplementar não foi definida ou está nula.');
-            suitabilityComplementar = 'Conservador'; // Valor padrão
-        }
-
-        // Carrega o dicionário correto baseado no tipo de suitability
-        switch (suitabilityComplementar) {
-            case 'Conservador':
-                dicionarioRespostasComplementar = await import('./dicionario_respostas_conservador.js');
-                console.log('Dicionário Conservador carregado:', dicionarioRespostasComplementar.default);
-                break;
-            case 'Moderado':
-                dicionarioRespostasComplementar = await import('./dicionario_respostas_moderado.js');
-                console.log('Dicionário Moderado carregado:', dicionarioRespostasComplementar.default);
-                break;
-            case 'Agressivo':
-                dicionarioRespostasComplementar = await import('./dicionario_respostas_agressivo.js');
-                console.log('Dicionário Agressivo carregado:', dicionarioRespostasComplementar.default);
-                break;
-            default:
-                dicionarioRespostasComplementar = { default: {} }; // Fallback
-                console.warn('Tipo de suitability não reconhecido:', suitabilityComplementar);
-        }
-
-        // Gera o HTML da seção usando os dados complementares e o dicionário correto
-        const html = `
-            <label for="tolerancia_risco">Se você tivesse que escolher entre duas opções de investimento, uma com baixo risco e retorno modesto e outra com risco moderado e retorno potencialmente alto, qual você escolheria?</label>
-            <input type="text" id="tolerancia_risco" name="tolerancia_risco" value="${getResposta(dadosComplementar.tolerancia_risco, 'tolerancia_risco', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="expectativa_retorno">Qual é a sua expectativa de retorno anual em seus investimentos?</label>
-            <input type="text" id="expectativa_retorno" name="expectativa_retorno" value="${getResposta(dadosComplementar.expectativa_retorno, 'expectativa_retorno', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="reacao_mudanca_mercado">Quando você ouve notícias sobre quedas significativas no mercado, qual é sua primeira reação?</label>
-            <input type="text" id="reacao_mudanca_mercado" name="reacao_mudanca_mercado" value="${getResposta(dadosComplementar.reacao_mudanca_mercado, 'reacao_mudanca_mercado', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="abordagem_diversificacao">Como você vê a diversificação em seus investimentos?</label>
-            <input type="text" id="abordagem_diversificacao" name="abordagem_diversificacao" value="${getResposta(dadosComplementar.abordagem_diversificacao, 'abordagem_diversificacao', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="influencia_oscilacoes_mercado">Com que frequência você revisa sua carteira de investimentos e considera fazer ajustes?</label>
-            <input type="text" id="influencia_oscilacoes_mercado" name="influencia_oscilacoes_mercado" value="${getResposta(dadosComplementar.influencia_oscilacoes_mercado, 'influencia_oscilacoes_mercado', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="nivel_conforto_renda_variavel">Qual é seu nível de conforto ao investir em produtos de renda variável (ações, ETFs, etc.)?</label>
-            <input type="text" id="nivel_conforto_renda_variavel" name="nivel_conforto_renda_variavel" value="${getResposta(dadosComplementar.nivel_conforto_renda_variavel, 'nivel_conforto_renda_variavel', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="tempo_resiliencia_perdas">Se seus investimentos fossem perdendo valor, como você reagiria?</label>
-            <input type="text" id="tempo_resiliencia_perdas" name="tempo_resiliencia_perdas" value="${getResposta(dadosComplementar.tempo_resiliencia_perdas, 'tempo_resiliencia_perdas', dicionarioRespostasComplementar.default)}" readonly>
-
-            <label for="busca_novas_oportunidades">Com que frequência você busca novas oportunidades de investimento?</label>
-            <input type="text" id="busca_novas_oportunidades" name="busca_novas_oportunidades" value="${getResposta(dadosComplementar.busca_novas_oportunidades, 'busca_novas_oportunidades', dicionarioRespostasComplementar.default)}" readonly>
-        `;
-
-        if (callback) {
-            callback(html);
-        }
-        return html;
-    } catch (error) {
-        console.error('Erro ao gerar seção de complementar:', error);
-        if (callback) {
-            callback('');
-        }
-        return '';
-    }
-}
-
-function getResposta(valor, campo, dicionario) {
-    if (!valor || !dicionario?.[campo]) {
-        return 'Não especificado';
-    }
-    return dicionario[campo][valor] || 'Não especificado';
-}
 
 function loadUserPins(usuario_id) {
     return fetch(`/api/usuarios/${usuario_id}/tokens`)
@@ -634,65 +443,6 @@ function displayUltimosDadosFinanceiros(dados, usuario_id) {
     }
 }
 
-function loadSuitabilityCompleto(usuario_id) {
-    return fetch(`/api/usuarios/${usuario_id}/perfil-suitability-usuario-completo`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao buscar dados de suitability');
-            }
-            return response.json();
-        })
-        .then(dadosSuitability => {
-            console.log('Suitability Data:', dadosSuitability);
-            
-            // Restante do seu código...
-            if (dadosSuitability && typeof dadosSuitability === 'object') {
-                const suitabilityData = {
-                    ...dadosSuitability,
-                    suitability_completo: dadosSuitability.suitability_complementar
-                };
-                displaySuitability(suitabilityData, usuario_id);
-            } else {
-                console.warn('Não foi encontrado dados de Suitability ou os dados não estão no formato esperado.');
-                const defaultSuitability = {
-                    suitability: 'Não especificado',
-                    suitability_completo: 'Não especificado'
-                };
-                displaySuitability(defaultSuitability, usuario_id);
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao carregar dados de suitability:', error);
-            const defaultSuitability = {
-                suitability: 'Não especificado',
-                suitability_completo: 'Não especificado'
-            };
-            displaySuitability(defaultSuitability, usuario_id);
-        });
-}
-
-
-function displaySuitability(dados, usuario_id) {
-    const suitabilityContainer = document.getElementById('suitabilityContainer');
-    if (suitabilityContainer) {
-        const data = dados || {};
-        
-        suitabilityContainer.innerHTML = `
-            <div class="cards-basico">
-                <div class="card">
-                    <div class="card-content">
-                        <p><strong>Perfil:</strong> ${data.suitability || 'Não especificado'}</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-content">
-                        <p><strong>Sub-perfil:</strong> ${data.suitability_completo || 'Não especificado'}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
 
 function loadInfo(usuario_id) {
     return Promise.all([

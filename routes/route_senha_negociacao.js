@@ -1,7 +1,8 @@
 const express      = require('express');
 const router       = express.Router();
 const { body, param } = require('express-validator');
-const authMiddleware  = require('../middleware/auth');
+const authMiddleware          = require('../middleware/auth');
+const verificarSenhaNegociacao = require('../middleware/verificar_senha_negociacao');
 
 const StatusSenhaController        = require('../controllers/senha_negociacao/controller_status_senha');
 const CriarSenhaController         = require('../controllers/senha_negociacao/controller_criar_senha');
@@ -24,6 +25,14 @@ const validarSenha = (campo, label) => [
 
 // Todas as rotas abaixo exigem sessão ativa
 router.use('/api/v1/senha-negociacao/*', authMiddleware.checkAuthenticated);
+
+// POST /api/v1/senha-negociacao/validar/:id — valida a Senha de Negociação sem executar nenhuma ação
+router.post(
+    '/api/v1/senha-negociacao/validar/:id',
+    [param('id').isInt({ gt: 0 }).withMessage('ID inválido.')],
+    verificarSenhaNegociacao,
+    (req, res) => res.status(200).json({ success: true, message: 'Senha de Negociação válida.' })
+);
 
 // GET /api/v1/senha-negociacao/status/:id — verifica se a Senha de Negociação já está cadastrada
 router.get(

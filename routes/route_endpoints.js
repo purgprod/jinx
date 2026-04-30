@@ -22,6 +22,7 @@ const financeiroLimiter = rateLimit({
 const AuthController = require('../controllers/endpoints/controller_autenticacao_purg');
 const authMiddleware = require('../middleware/auth'); // Importa o middleware de autenticação
 const verificarSenhaNegociacao = require('../middleware/verificar_senha_negociacao');
+const { verificarPermissaoFamilia, verificarPermissaoSaqueFamilia } = require('../middleware/verificar_permissao_familia');
 const SaqueController     = require('../controllers/endpoints/controller_saque');
 const CancelarSaqueController = require('../controllers/endpoints/controller_cancelar_saque');
 const DepositoController     = require('../controllers/endpoints/controller_deposito');
@@ -48,6 +49,8 @@ const CartaoController               = require('../controllers/endpoints/control
 const TemaController                 = require('../controllers/endpoints/controller_tema');
 const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
 const LigasController                = require('../controllers/endpoints/controller_ligas');
+const ProjecaoPatrimonioController   = require('../controllers/projecao/controller_projecao_patrimonio');
+const ProjecaoRendimentoController   = require('../controllers/projecao/controller_projecao_rendimento');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -270,6 +273,7 @@ router.put(
       .optional()
       .isString().withMessage('O complemento deve ser um texto válido.'),
   ],
+  verificarPermissaoFamilia('pode_alterar_perfil'),
   AtualizarPerfilController.atualizarPerfil
 );
 
@@ -293,6 +297,7 @@ router.put(
       .optional({ checkFalsy: true })
       .isString().withMessage('A chave Pix deve ser um texto válido.'),
   ],
+  verificarPermissaoFamilia('pode_alterar_pix'),
   AtualizarPixController.atualizarPix
 );
 
@@ -329,6 +334,7 @@ router.post(
       .matches(/^\d{4}$/).withMessage('Senha de Negociação deve conter exatamente 4 dígitos numéricos.'),
   ],
   verificarSenhaNegociacao,
+  verificarPermissaoSaqueFamilia(),
   SaqueController.executeSaque
 );
 
@@ -358,6 +364,7 @@ router.post(
       .isFloat({ gt: 0 })
       .withMessage('amount deve ser número > 0'),
   ],
+  verificarPermissaoFamilia('pode_depositar'),
   DepositoController.executeDeposito
 );
 
@@ -404,6 +411,12 @@ router.delete(
   [param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.')],
   CartaoController.removerCartao
 );
+
+// Projeção de patrimônio: curva mês a mês até a última meta ativa do usuário
+router.get('/api/v1/projecao/patrimonio/:id', authMiddleware.checkAuthenticated, ProjecaoPatrimonioController.getProjecao);
+
+// Projeção de rendimento mensal: curva mês a mês até a última meta ativa do usuário
+router.get('/api/v1/projecao/rendimento/:id', authMiddleware.checkAuthenticated, ProjecaoRendimentoController.getProjecao);
 
 module.exports = router;
 

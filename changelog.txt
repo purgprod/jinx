@@ -1,4 +1,128 @@
+#develop-94:
+- Remoção completa da feature Suitability, implementação do Modo Família e novos endpoints de projeção:
+
+- DB (prod e dev):
+	- Removidas triggers trg_users_after_insert_suitability e trg_users_after_insert_suitability_complementar da tabela users (causavam erro 500 no cadastro de novos usuários após a remoção das tabelas);
+
+- migrations/remover_suitability.sql (novo):
+	- DROP TRIGGER IF EXISTS trg_users_after_insert_suitability e trg_users_after_insert_suitability_complementar;
+	- DROP TABLE IF EXISTS suitability_complementar e suitability;
+	- ALTER TABLE users DROP COLUMN suitability, suitability_complementar, aceite_alteracao_suitability_poppy;
+
+- migrations/criar_tabelas_modo_familia.sql (novo):
+	- Cria familia_relacionamentos (id, guardiao_id FK, tutelado_id FK, token_acesso_hash, status ENUM, criado_em);
+	- Cria familia_convites (id, guardiao_id FK, email_convidado, token_convite UNIQUE, status ENUM, expira_em, criado_em);
+	- Cria familia_permissoes (tutelado_id PK/FK, pode_sacar, pode_depositar, pode_criar_objetivos, pode_alterar_perfil, pode_alterar_pix, chaves_pix_autorizadas JSON, atualizado_em);
+	- Cria familia_acessos_log (id, guardiao_id FK, tutelado_id FK, acessado_em);
+
+- controllers/usuarios/ (removidos):
+	- controller_suitability_usuarios.js, controller_suitability_complementar_usuarios.js;
+	- controller_calculo_suitability_update.js, controller_calculo_suitability_complementar_update.js;
+	- controller_manutencao_suitability.js, controller_perfil_suitability_completo_usuario.js;
+
+- models/usuarios/ (removidos):
+	- model_suitability_usuarios.js, model_suitability_complementar_usuarios.js;
+	- model_calculo_suitability_update.js, model_calculo_suitability_complementar_update.js;
+	- model_coletar_suitability_usuario.js, model_coletar_suitability_complementar_usuario.js;
+	- model_buscar_suitability_completo.js;
+
+- models/assinaturas/model_update_assinatura_aceite_suitability.js (removido);
+
+- routes/route_usuarios.js:
+	- Removidos imports e rotas de suitability: GET /api/usuarios/:id/suitability, PUT /api/usuarios/:id/calculo-suitability-update, PUT /api/usuarios/:id/calculo-suitability-complementar-update, GET /api/usuarios/:id/perfil-suitability-usuario-completo, GET /api/usuarios/:id/suitability-complementar;
+
+- public/js/usuarios/usuarios_detalhes.js:
+	- Classe CSS suitability-container renomeada para info-container;
+
+- controllers/familia/ (novos):
+	- controller_convidar.js: POST /api/v1/familia/convidar — valida e-mail próprio (400), dependente já vinculado (409), convite pendente duplicado (409), vínculo circular — convidado já é responsável do guardião (400), limite de 2 guardiões por tutelado (409); envia e-mail com template;
+	- controller_aceitar_convite.js: POST /api/v1/familia/aceitar-convite — valida token, e-mail do convite vs sessão, limite de 2 guardiões (409), vínculo já existente (409), vínculo circular — guardião do convite já é tutelado do usuário logado (400); cria relacionamento e permissões em transação;
+	- controller_revogar.js: DELETE /api/v1/familia/revogar/:tutelado_id — retorna 403 (não 404) quando vínculo não pertence ao guardião logado; remove permissões se tutelado ficar sem guardião;
+	- controller_trocar_perfil.js: POST /api/v1/familia/trocar-perfil/:tutelado_id — verifica vínculo ativo (403) e status_ativo do tutelado (404); substitui dados de sessão e registra acesso em log;
+	- controller_retornar_perfil.js, controller_listar_tutelados.js, controller_permissoes_buscar.js, controller_permissoes_atualizar.js;
+
+- models/familia/ (novos):
+	- model_relacionamentos.js, model_convites.js, model_permissoes.js, model_acessos_log.js;
+
+- middleware/verificar_permissao_familia.js (novo):
+	- verificarPermissaoFamilia(permissao): bloqueia operação se sessão é guardiao_atuando e permissão está desabilitada;
+	- verificarPermissaoSaqueFamilia(): verifica também se a chave Pix solicitada consta em chaves_pix_autorizadas;
+
+- templates/template_convite_familia.js (novo):
+	- HTML de e-mail de convite com link de aceite (usuário existente) ou cadastro+aceite (usuário novo); validade 7 dias;
+
+- routes/route_familia.js (novo):
+	- GET /api/v1/familia/tutelados, POST /api/v1/familia/convidar, POST /api/v1/familia/aceitar-convite, POST /api/v1/familia/trocar-perfil/:tutelado_id, POST /api/v1/familia/retornar-perfil, GET /api/v1/familia/permissoes/:tutelado_id, PUT /api/v1/familia/permissoes/:tutelado_id, DELETE /api/v1/familia/revogar/:tutelado_id;
+	- Todas as rotas protegidas por authMiddleware.checkAuthenticated;
+
+- controllers/admin/controller_admin_familia.js (novo):
+	- GET /api/admin/familia/vinculos: lista todos os vínculos ativos com dados de guardião e tutelado;
+	- GET /api/admin/familia/convites: lista os últimos 200 convites com dados do guardião;
+	- DELETE /api/admin/familia/vinculos/:guardiao_id/:tutelado_id: revoga vínculo e remove permissões se necessário;
+	- PUT /api/admin/familia/convites/:id/cancelar: cancela convite pendente;
+
+- routes/route_admin.js:
+	- Registradas as 4 rotas admin de família;
+
+- public/js/familia/familia.js (novo):
+	- Módulo do painel Jinx com duas abas: Vínculos Ativos (tabela com ação Revogar) e Convites (tabela com status colorido e ação Cancelar para pendentes);
+
+- public/index.html:
+	- Botão "Família" adicionado ao menu lateral; script familia.js carregado;
+
+- public/script.js:
+	- Referência ao familiaButton, rota /familia mapeada no tabRouteMap e listener que chama loadFamiliaResults();
+
+- server.js:
+	- route_familia importado e registrado; /familia adicionado ao rotasSPA;
+
+- routes/route_endpoints.js:
+	- Adicionados middlewares verificarPermissaoFamilia e verificarPermissaoSaqueFamilia nas rotas protegidas (saque, depósito, editar perfil, editar Pix);
+	- Adicionados endpoints de projeção: GET /api/v1/projecao/patrimonio/:id e GET /api/v1/projecao/rendimento/:id;
+
+- controllers/projecao/ (novos):
+	- controller_projecao_patrimonio.js, controller_projecao_rendimento.js;
+
+- models/projecao/model_projecao_leitura.js (novo);
+
+- services/projecao_service.js (novo):
+	- gerarProjecao(): calcula curva mês a mês de patrimônio/rendimento até a última meta ativa do usuário;
+
+- services/compra_diaria_pins_service.js (novo):
+	- Lógica de compra automática diária de pins extraída do controller para service dedicado;
+
+- services/vender_todos_pins_service.js (novo):
+	- Lógica de venda de todos os pins extraída do controller para service dedicado;
+
+- controllers/rotinas/controller_poppy_compra_diaria_pins.js:
+	- Refatorado para delegar ao compra_diaria_pins_service; redução significativa de código no controller;
+
+- controllers/rotinas/controller_vender_todos_pins.js:
+	- Refatorado para delegar ao vender_todos_pins_service;
+
+- controllers/rotinas/carteiras.js, ratings.js (removidos):
+	- Módulos auxiliares inline substituídos pelos novos services;
+
+- services/compra_pins_usuario_service.js:
+	- Refatorado para eliminar dependências de suitability; lógica de alocação simplificada;
+
+- services/objetivos_service.js:
+	- Ajustes na integração com o novo fluxo de objetivos;
+
+- controllers/objetivos/controller_criar_objetivo.js:
+	- Ajustes no fluxo de criação de objetivos;
+
+- controllers/tokens/controller_ativar_tokens.js:
+	- Ajustes na ativação de tokens;
+
+- controllers/assinaturas/controller_update_assinatura_cliente.js, controllers/endpoints/controller_update_assinatura_cliente.js:
+	- Remoção de referências a suitability no fluxo de atualização de assinatura;
+
+- scripts/corrigir_pontos_usuario2.js (novo):
+	- Script administrativo para correção pontual de saldo de pontos;
+
 #develop-91:
+
 - Senha de Negociação (PIN de 4 dígitos): criação, alteração, recuperação por e-mail e exigência no saque:
 
 - migrations/adicionar_senha_negociacao_users.sql (novo):
