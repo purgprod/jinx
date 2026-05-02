@@ -59,7 +59,8 @@ async function login(req, res) {
         return res.status(200).json({
             success    : true,
             message    : 'Login bem-sucedido',
-            usuario_id : user.usuario_id
+            usuario_id : user.usuario_id,
+            avatar_id  : user.avatar_id ?? null
         });
 
     } catch (err) {

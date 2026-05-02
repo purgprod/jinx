@@ -1,3 +1,29 @@
+#develop-96:
+- Funcionalidade de avatar: campo avatar_id na tabela users, endpoints GET/PUT e retorno no login:
+
+- migrations/adicionar_avatar_id_users.sql (novo):
+	- ALTER TABLE users ADD COLUMN avatar_id INT DEFAULT NULL AFTER tema; aplicado em prod e dev;
+
+- models/endpoints/model_avatar.js (novo):
+	- getAvatar(usuarioId): SELECT avatar_id FROM users;
+	- setAvatar(usuarioId, avatarId): UPDATE users SET avatar_id;
+
+- controllers/endpoints/controller_avatar.js (novo):
+	- GET /api/v1/avatar/:id: retorna avatar_id do usuário; proteção IDOR;
+	- PUT /api/v1/avatar/:id: atualiza avatar_id; validação isInt({ gt: 0 }); proteção IDOR;
+
+- routes/route_endpoints.js:
+	- Registradas rotas GET e PUT /api/v1/avatar/:id com authMiddleware.checkAuthenticated;
+
+- controllers/endpoints/controller_autenticacao_purg.js:
+	- Login: avatar_id adicionado à resposta JSON (lido de users via SELECT * já existente);
+
+- models/endpoints/model_biometria.js:
+	- buscarDadosSessaoPorId: avatar_id adicionado ao SELECT;
+
+- controllers/endpoints/controller_biometria.js:
+	- loginConcluir: avatar_id adicionado à resposta JSON;
+
 #develop-95:
 - Sincronização de apelido users→ranking, novos endpoints de Família, correções no Patrimônio, validação de CPF no depósito e fix de normalização de e-mail Gmail:
 

@@ -47,6 +47,7 @@ const HistoricoRendimentosController = require('../controllers/endpoints/control
 const RankingController              = require('../controllers/ranking/controller_ranking');
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
 const TemaController                 = require('../controllers/endpoints/controller_tema');
+const AvatarController               = require('../controllers/endpoints/controller_avatar');
 const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
 const LigasController                = require('../controllers/endpoints/controller_ligas');
 const ProjecaoPatrimonioController   = require('../controllers/projecao/controller_projecao_patrimonio');
@@ -223,6 +224,20 @@ router.put(
     body('tema').isIn(['claro', 'escuro']).withMessage('O tema deve ser "claro" ou "escuro".'),
   ],
   TemaController.setTema
+);
+
+// Rota para consultar o avatar do usuário
+router.get('/api/v1/avatar/:id', authMiddleware.checkAuthenticated, AvatarController.getAvatar);
+
+// Rota para atualizar o avatar do usuário
+router.put(
+  '/api/v1/avatar/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('avatar_id').isInt({ gt: 0 }).withMessage('O avatar_id deve ser um inteiro positivo.'),
+  ],
+  AvatarController.setAvatar
 );
 
 // Rota para carregar os saques pendentes do usuário

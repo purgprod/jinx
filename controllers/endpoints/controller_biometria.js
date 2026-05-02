@@ -210,7 +210,8 @@ const BiometriaController = {
                 success:    true,
                 usuario_id: usuario.usuario_id,
                 nome:       usuario.nome_completo,
-                email:      usuario.email
+                email:      usuario.email,
+                avatar_id:  usuario.avatar_id ?? null
             });
 
         } catch (error) {
