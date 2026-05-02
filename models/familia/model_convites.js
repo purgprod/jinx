@@ -39,6 +39,17 @@ class ConvitesModel {
         );
     }
 
+    static async listarPendentesPorGuardiao(guardiao_id) {
+        const [rows] = await pool.promise().execute(
+            `SELECT id, email_convidado, expira_em, criado_em
+             FROM familia_convites
+             WHERE guardiao_id = ? AND status = 'pendente' AND expira_em > NOW()
+             ORDER BY criado_em DESC`,
+            [guardiao_id]
+        );
+        return rows;
+    }
+
     static async expirarConvitesVencidos() {
         const [result] = await pool.promise().execute(
             `UPDATE familia_convites SET status = 'expirado'

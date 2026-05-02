@@ -24,7 +24,7 @@ async function convidar(req, res) {
     }
 
     const guardiaoId   = req.session.user.id;
-    const nomeGuardiao = req.session.user.nome;
+    const nomeGuardiao = req.session.user.nome_completo;
     const { email }    = req.body;
 
     if (email.toLowerCase() === req.session.user.email.toLowerCase()) {

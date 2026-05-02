@@ -102,7 +102,7 @@ router.post(
     body('email')
       .notEmpty().withMessage('O e-mail é obrigatório.')
       .isEmail().withMessage('Informe um e-mail válido.')
-      .normalizeEmail(),
+      .normalizeEmail({ gmail_remove_dots: false }),
     body('password')
       .notEmpty().withMessage('A senha é obrigatória.')
       .isLength({ min: 8 }).withMessage('A senha deve ter no mínimo 8 caracteres.')
@@ -125,7 +125,7 @@ router.post(
     body('email')
       .notEmpty().withMessage('O e-mail é obrigatório.')
       .isEmail().withMessage('Informe um e-mail válido.')
-      .normalizeEmail(),
+      .normalizeEmail({ gmail_remove_dots: false }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -292,7 +292,7 @@ router.put(
     body('pix_email')
       .optional({ checkFalsy: true })
       .isEmail().withMessage('Informe um e-mail Pix válido.')
-      .normalizeEmail(),
+      .normalizeEmail({ gmail_remove_dots: false }),
     body('pix_chave')
       .optional({ checkFalsy: true })
       .isString().withMessage('A chave Pix deve ser um texto válido.'),

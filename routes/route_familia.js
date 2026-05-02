@@ -11,12 +11,20 @@ const RetornarPerfilController      = require('../controllers/familia/controller
 const PermissoesBuscarController    = require('../controllers/familia/controller_permissoes_buscar');
 const PermissoesAtualizarController = require('../controllers/familia/controller_permissoes_atualizar');
 const RevogarController             = require('../controllers/familia/controller_revogar');
+const ConvitesPendentesController   = require('../controllers/familia/controller_convites_pendentes');
+const ListarGuardioesController     = require('../controllers/familia/controller_listar_guardioes');
 
 // Todas as rotas de família requerem autenticação
 router.use('/api/v1/familia/*', authMiddleware.checkAuthenticated);
 
 // GET /api/v1/familia/tutelados — lista os tutelados vinculados ao guardião logado
 router.get('/api/v1/familia/tutelados', ListarTuteladosController.listarTutelados);
+
+// GET /api/v1/familia/convites-pendentes — lista convites enviados pelo guardião ainda não aceitos
+router.get('/api/v1/familia/convites-pendentes', ConvitesPendentesController.listarConvitesPendentes);
+
+// GET /api/v1/familia/guardioes — lista os guardiões vinculados ao tutelado logado
+router.get('/api/v1/familia/guardioes', ListarGuardioesController.listarGuardioes);
 
 // POST /api/v1/familia/convidar — guardião envia convite por e-mail
 router.post(
@@ -25,7 +33,7 @@ router.post(
         body('email')
             .notEmpty().withMessage('O e-mail é obrigatório.')
             .isEmail().withMessage('Informe um e-mail válido.')
-            .normalizeEmail(),
+            .normalizeEmail({ gmail_remove_dots: false }),
     ],
     ConvidarController.convidar
 );

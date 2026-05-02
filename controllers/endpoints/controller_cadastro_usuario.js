@@ -3,7 +3,6 @@
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 const cadastroModel    = require('../../models/endpoints/model_criar_novo_usuario');
-const ObjetivosEscrita = require('../../models/objetivos/model_objetivos_escrita');
 const { withTransaction } = require('../../database/transaction');
 const logger = require('../../logger');
 
@@ -46,9 +45,6 @@ async function cadastrarUsuario(req, res) {
             }, conn);
 
             await cadastroModel.createCarteira(novoId, conn);
-
-            // Criar objetivo Patrimônio automaticamente (sem metas ainda)
-            await ObjetivosEscrita.criarPatrimonio(novoId, conn);
         });
 
         logger.info(`Cadastro de novo usuário realizado com sucesso. ID: ${novoId}`);

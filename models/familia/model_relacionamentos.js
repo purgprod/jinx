@@ -39,8 +39,7 @@ class RelacionamentosModel {
 
     static async listarGuardioesPorTutelado(tutelado_id) {
         const [rows] = await pool.promise().execute(
-            `SELECT fr.id, fr.guardiao_id, fr.criado_em,
-                    u.apelido AS guardiao_nome, u.email AS guardiao_email
+            `SELECT u.usuario_id AS id, u.nome_completo
              FROM familia_relacionamentos fr
              JOIN users u ON u.usuario_id = fr.guardiao_id
              WHERE fr.tutelado_id = ? AND fr.status = 'ativo'

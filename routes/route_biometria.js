@@ -32,7 +32,7 @@ router.post(
     [
         body('email')
             .isEmail().withMessage('E-mail inválido')
-            .normalizeEmail()
+            .normalizeEmail({ gmail_remove_dots: false })
     ],
     BiometriaController.loginIniciar
 );

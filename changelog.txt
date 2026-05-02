@@ -1,3 +1,43 @@
+#develop-95:
+- Sincronização de apelido users→ranking, novos endpoints de Família, correções no Patrimônio, validação de CPF no depósito e fix de normalização de e-mail Gmail:
+
+- migrations/sincronizar_apelido_users_ranking.sql (novo):
+	- Trigger trg_users_after_update_apelido (AFTER UPDATE ON users): atualiza ranking.apelido quando users.apelido é alterado; usa operador NULL-safe <=> para comparar corretamente mesmo quando apelido é NULL; aplicado em prod e dev;
+
+- controllers/familia/controller_convites_pendentes.js (novo):
+	- GET /api/v1/familia/convites-pendentes: lista convites enviados pelo guardião logado que ainda estão pendentes e não expirados;
+
+- controllers/familia/controller_listar_guardioes.js (novo):
+	- GET /api/v1/familia/guardioes: lista os guardiões vinculados ao tutelado logado;
+
+- models/familia/model_convites.js:
+	- Novo método listarPendentesPorGuardiao(guardiao_id): SELECT em familia_convites filtrando status = 'pendente' e expira_em > NOW(), ordenado por criado_em DESC;
+
+- models/familia/model_relacionamentos.js:
+	- listarGuardioesPorTutelado: query ajustada para retornar usuario_id AS id e nome_completo (era id, apelido, email); simplifica estrutura da resposta para o app;
+
+- routes/route_familia.js:
+	- Registradas rotas GET /api/v1/familia/convites-pendentes e GET /api/v1/familia/guardioes;
+	- normalizeEmail substituído por normalizeEmail({ gmail_remove_dots: false }) na validação do e-mail de convite;
+
+- controllers/familia/controller_convidar.js:
+	- req.session.user.nome → req.session.user.nome_completo para nome do guardião no template de e-mail de convite;
+
+- controllers/objetivos/controller_criar_objetivo.js:
+	- configurarPatrimonio: corrigido para criar o objetivo Patrimônio quando não existe ainda (antes retornava 404); na primeira configuração usa ObjetivosEscrita.criarObjetivo; objetivoId passado corretamente na resposta em ambos os fluxos (criação e reconfiguração);
+
+- controllers/endpoints/controller_cadastro_usuario.js:
+	- Removida criação automática de objetivo Patrimônio no cadastro (criarPatrimonio); Patrimônio passa a ser configurado pelo app via POST /api/v1/objetivos/:id/patrimônio;
+
+- models/endpoints/model_criar_novo_usuario.js:
+	- createCarteira: refatorado para const db = conn || pool.promise(), eliminando duplicação de lógica; adicionado tratamento de ER_DUP_ENTRY — remove carteira órfã e recria dentro da mesma transação com log de aviso;
+
+- controllers/endpoints/controller_deposito.js:
+	- Adicionada função cpfValido() com validação matemática dos dígitos verificadores antes de gerar cobrança Pix; retorna 422 com codigo: 'CPF_INVALIDO' se o CPF cadastrado for inválido;
+
+- routes/route_endpoints.js e routes/route_biometria.js:
+	- normalizeEmail() substituído por normalizeEmail({ gmail_remove_dots: false }) em todas as rotas de login, cadastro, edita-perfil e biometria; impede que o express-validator remova pontos de endereços Gmail antes da busca no banco;
+
 #develop-94:
 - Remoção completa da feature Suitability, implementação do Modo Família e novos endpoints de projeção:
 

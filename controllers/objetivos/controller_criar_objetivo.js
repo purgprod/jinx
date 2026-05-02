@@ -112,49 +112,58 @@ const CriarObjetivoController = {
 
         try {
             const patrimonio = await ObjetivosLeitura.buscarPatrimonio(usuarioId);
-            if (!patrimonio) {
-                return res.status(404).json({ error: 'Objetivo Patrimônio não encontrado para este usuário.' });
-            }
 
             // Bloquear reconfiguração se já houver saldo alocado
-            if (Number(patrimonio.saldo_alocado_total) > 0) {
+            if (patrimonio && Number(patrimonio.saldo_alocado_total) > 0) {
                 return res.status(409).json({
                     error: 'O Patrimônio já possui saldo alocado. Use a edição (PUT) para recalcular com redistribuição.',
                 });
             }
 
+            let objetivoId;
             await withTransaction(async (conn) => {
-                // Cancelar metas antigas (se houver)
-                await MetasEscrita.cancelarMetasObjetivo(patrimonio.objetivo_id, conn);
-
-                // Atualizar cabeçalho
-                await ObjetivosEscrita.editarObjetivo({
-                    objetivoId:  patrimonio.objetivo_id,
-                    descricao:   'Patrimônio',
-                    valorTotal:  valorAlvoNum,
-                    numeroTotal: prazoNum,
-                    pontosTotal: pontosTotalNum,
-                }, conn);
+                if (patrimonio) {
+                    // Cancelar metas antigas (se houver) e atualizar cabeçalho
+                    objetivoId = patrimonio.objetivo_id;
+                    await MetasEscrita.cancelarMetasObjetivo(objetivoId, conn);
+                    await ObjetivosEscrita.editarObjetivo({
+                        objetivoId,
+                        descricao:   'Patrimônio',
+                        valorTotal:  valorAlvoNum,
+                        numeroTotal: prazoNum,
+                        pontosTotal: pontosTotalNum,
+                    }, conn);
+                } else {
+                    // Primeira configuração — cria o registro do Patrimônio
+                    objetivoId = await ObjetivosEscrita.criarObjetivo({
+                        usuarioId,
+                        descricao:    'Patrimônio',
+                        numeroTotal:  prazoNum,
+                        valorTotal:   valorAlvoNum,
+                        pontosTotal:  pontosTotalNum,
+                        isPatrimonio: true,
+                    }, conn);
+                }
 
                 // Criar novas metas
                 const metas = gerarMetas(valorAlvoNum, prazoNum, pontosTotalNum);
                 for (const meta of metas) {
                     await MetasEscrita.criarMeta({
                         usuarioId,
-                        objetivoId: patrimonio.objetivo_id,
-                        numero:     meta.numero,
+                        objetivoId,
+                        numero:        meta.numero,
                         valorInvestir: meta.valorInvestir,
-                        pontos:     meta.pontos,
-                        dataLimite: meta.dataLimite,
+                        pontos:        meta.pontos,
+                        dataLimite:    meta.dataLimite,
                     }, conn);
                 }
             });
 
-            logger.info('[CriarObjetivo] Patrimônio configurado', { usuarioId, valorAlvoNum, prazoNum });
+            logger.info('[CriarObjetivo] Patrimônio configurado', { usuarioId, objetivoId, valorAlvoNum, prazoNum });
             return res.status(200).json({
                 success: true,
                 message: 'Patrimônio configurado com sucesso.',
-                objetivo_id: patrimonio.objetivo_id,
+                objetivo_id: objetivoId,
             });
 
         } catch (err) {

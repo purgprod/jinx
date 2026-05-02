@@ -11,6 +11,21 @@ const ObjetivosLeitura            = require('../../models/objetivos/model_objeti
 // Serviço Efí Bank Pix
 const { criarCobrancaPix } = require('../../services/efi_pix');
 
+function cpfValido(cpf) {
+    const d = String(cpf).replace(/\D/g, '');
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(d[i]) * (10 - i);
+    let r = (soma * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    if (r !== parseInt(d[9])) return false;
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(d[i]) * (11 - i);
+    r = (soma * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    return r === parseInt(d[10]);
+}
+
 const DepositoController = {
     async executeDeposito(req, res) {
         const { id } = req.params;
@@ -82,6 +97,14 @@ const DepositoController = {
 
             if (!dadosUsuario.cpf) {
                 return res.status(422).json({ error: 'CPF não cadastrado. Atualize seu perfil antes de realizar um depósito.' });
+            }
+
+            if (!cpfValido(dadosUsuario.cpf)) {
+                logger.warn('Depósito bloqueado: CPF inválido', { userId: id });
+                return res.status(422).json({
+                    error:  'O CPF cadastrado é inválido. Atualize seu perfil antes de realizar um depósito.',
+                    codigo: 'CPF_INVALIDO',
+                });
             }
 
             // Registro da Solicitação no banco

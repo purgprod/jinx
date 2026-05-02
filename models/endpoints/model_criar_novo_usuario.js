@@ -3,13 +3,24 @@ const pool = require('../../database/database_purg');
 const logger = require('../../logger');
 
 exports.createCarteira = async (usuarioId, conn = null) => {
-    const query = `INSERT INTO carteiras (usuario_id) VALUES (?)`;
+    const db = conn || pool.promise();
     try {
-        const [result] = conn
-            ? await conn.execute(query, [usuarioId])
-            : await pool.promise().execute(query, [usuarioId]);
+        const [result] = await db.execute(
+            `INSERT INTO carteiras (usuario_id) VALUES (?)`,
+            [usuarioId]
+        );
         return result;
     } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            // Carteira órfã (sem usuário vinculado) — remove e recria dentro da mesma transação
+            await db.execute(`DELETE FROM carteiras WHERE usuario_id = ?`, [usuarioId]);
+            const [result] = await db.execute(
+                `INSERT INTO carteiras (usuario_id) VALUES (?)`,
+                [usuarioId]
+            );
+            logger.warn(`Carteira órfã removida e recriada para usuário ID ${usuarioId}`);
+            return result;
+        }
         logger.error(`Erro ao criar carteira para usuário ID ${usuarioId}: ${error.message}`);
         throw error;
     }
