@@ -10,7 +10,7 @@ const RankingModel = {
      */
     async getRanking() {
         const [rows] = await pool.promise().execute(
-            'SELECT posicao, usuario_id, apelido, pontos, liga FROM ranking ORDER BY posicao ASC'
+            'SELECT posicao, usuario_id, apelido, pontos, liga, avatar_id FROM ranking ORDER BY posicao ASC'
         );
         return rows;
     },

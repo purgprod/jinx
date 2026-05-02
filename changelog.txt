@@ -1,3 +1,14 @@
+#develop-99:
+- avatar_id adicionado à tabela ranking com sincronização automática por triggers:
+
+- migrations/adicionar_avatar_id_ranking.sql (novo):
+	- ALTER TABLE ranking ADD COLUMN avatar_id INT DEFAULT NULL AFTER liga; aplicado em prod e dev;
+	- trg_ranking_atualizar recriado: INSERT agora inclui u.avatar_id vindo do JOIN com users;
+	- trg_users_after_update_avatar_id (novo): AFTER UPDATE ON users — atualiza ranking.avatar_id quando users.avatar_id é alterado; usa operador NULL-safe <=>;
+
+- models/ranking/model_ranking.js:
+	- SELECT estendido para incluir avatar_id;
+
 #develop-98:
 - Correção de dois bugs no Modo Família: tarja laranja persistia após logout e botão "sair" travava em carregamento eterno:
 
