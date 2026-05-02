@@ -47,14 +47,20 @@ async function trocarPerfil(req, res) {
 
         await AcessosLogModel.registrar({ guardiao_id: guardiaoId, tutelado_id: tuteladoId });
 
-        logger.info(`Guardião ${guardiaoId} trocou para perfil do tutelado ${tuteladoId}`);
-        return res.status(200).json({
-            success: true,
-            message: 'Perfil trocado com sucesso.',
-            tutelado: {
-                id:   dadosTutelado.usuario_id,
-                nome: dadosTutelado.apelido,
+        req.session.save((err) => {
+            if (err) {
+                logger.error(`Erro ao salvar sessão ao trocar perfil: ${err.message}`);
+                return res.status(500).json({ success: false, message: 'Erro ao salvar sessão.' });
             }
+            logger.info(`Guardião ${guardiaoId} trocou para perfil do tutelado ${tuteladoId}`);
+            return res.status(200).json({
+                success: true,
+                message: 'Perfil trocado com sucesso.',
+                tutelado: {
+                    id:   dadosTutelado.usuario_id,
+                    nome: dadosTutelado.apelido,
+                }
+            });
         });
 
     } catch (err) {

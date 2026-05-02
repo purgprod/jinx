@@ -8,15 +8,21 @@ async function retornarPerfil(req, res) {
     const tuteladoId = req.session.user.id;
     const guardiao   = req.session.guardiao_original;
 
-    req.session.user              = guardiao;
-    req.session.tipo              = undefined;
-    req.session.guardiao_original = undefined;
+    req.session.user = guardiao;
+    delete req.session.tipo;
+    delete req.session.guardiao_original;
 
-    logger.info(`Guardião ${guardiao.id} retornou ao próprio perfil (saiu do tutelado ${tuteladoId})`);
-    return res.status(200).json({
-        success: true,
-        message: 'Retorno ao próprio perfil realizado com sucesso.',
-        guardiao: { id: guardiao.id, nome: guardiao.nome }
+    req.session.save((err) => {
+        if (err) {
+            logger.error(`Erro ao salvar sessão ao retornar perfil: ${err.message}`);
+            return res.status(500).json({ success: false, message: 'Erro ao restaurar sessão.' });
+        }
+        logger.info(`Guardião ${guardiao.id} retornou ao próprio perfil (saiu do tutelado ${tuteladoId})`);
+        return res.status(200).json({
+            success: true,
+            message: 'Retorno ao próprio perfil realizado com sucesso.',
+            guardiao: { id: guardiao.id, nome: guardiao.nome }
+        });
     });
 }
 

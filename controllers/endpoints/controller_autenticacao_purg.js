@@ -155,7 +155,8 @@ function checkSession(req, res) {
                 id    : req.session.user.id,
                 email : req.session.user.email,
                 nome  : req.session.user.nome
-            }
+            },
+            tipo : req.session.tipo || null
         });
     }
     logger.info('Nenhuma sessão encontrada ou sessão expirada');

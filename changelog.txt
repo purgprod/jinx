@@ -1,3 +1,16 @@
+#develop-98:
+- Correção de dois bugs no Modo Família: tarja laranja persistia após logout e botão "sair" travava em carregamento eterno:
+
+- controllers/endpoints/controller_autenticacao_purg.js:
+	- checkSession: adicionado campo tipo (req.session.tipo ou null) na resposta; frontend usa o backend como fonte da verdade para exibir ou ocultar a tarja, eliminando dependência de estado local desatualizado após logout;
+
+- controllers/familia/controller_retornar_perfil.js:
+	- req.session.tipo e req.session.guardiao_original alterados de = undefined para delete: evita serialização como null no Redis;
+	- Adicionado req.session.save() antes de responder: garante que a sessão foi persistida no Redis antes do 200 ser enviado; corrige race condition que deixava o botão "sair" em carregamento eterno quando o Redis ainda não havia gravado a sessão atualizada;
+
+- controllers/familia/controller_trocar_perfil.js:
+	- Mesmo fix de race condition: req.session.save() antes de responder ao trocar para o perfil do tutelado;
+
 #develop-97:
 - Preferência de visualização de valores financeiros: campo visualizacao_valores na tabela users e endpoints GET/PUT:
 
