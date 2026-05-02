@@ -1,3 +1,20 @@
+#develop-97:
+- Preferência de visualização de valores financeiros: campo visualizacao_valores na tabela users e endpoints GET/PUT:
+
+- migrations/adicionar_visualizacao_valores_users.sql (novo):
+	- ALTER TABLE users ADD COLUMN visualizacao_valores TINYINT(1) NOT NULL DEFAULT 1 AFTER avatar_id; aplicado em prod e dev;
+
+- models/endpoints/model_visualizacao_valores.js (novo):
+	- get(usuarioId): SELECT visualizacao_valores FROM users;
+	- set(usuarioId, valor): UPDATE users SET visualizacao_valores;
+
+- controllers/endpoints/controller_visualizacao_valores.js (novo):
+	- GET /api/v1/visualizacao-valores/:id: retorna preferência atual; proteção IDOR;
+	- PUT /api/v1/visualizacao-valores/:id: atualiza para 0 ou 1; validação isIn([0, 1]); proteção IDOR;
+
+- routes/route_endpoints.js:
+	- Registradas rotas GET e PUT /api/v1/visualizacao-valores/:id com authMiddleware.checkAuthenticated;
+
 #develop-96:
 - Funcionalidade de avatar: campo avatar_id na tabela users, endpoints GET/PUT e retorno no login:
 

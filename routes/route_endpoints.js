@@ -48,6 +48,7 @@ const RankingController              = require('../controllers/ranking/controlle
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
 const TemaController                 = require('../controllers/endpoints/controller_tema');
 const AvatarController               = require('../controllers/endpoints/controller_avatar');
+const VisualizacaoValoresController  = require('../controllers/endpoints/controller_visualizacao_valores');
 const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
 const LigasController                = require('../controllers/endpoints/controller_ligas');
 const ProjecaoPatrimonioController   = require('../controllers/projecao/controller_projecao_patrimonio');
@@ -238,6 +239,20 @@ router.put(
     body('avatar_id').isInt({ gt: 0 }).withMessage('O avatar_id deve ser um inteiro positivo.'),
   ],
   AvatarController.setAvatar
+);
+
+// Rota para consultar a preferência de visualização de valores do usuário
+router.get('/api/v1/visualizacao-valores/:id', authMiddleware.checkAuthenticated, VisualizacaoValoresController.get);
+
+// Rota para atualizar a preferência de visualização de valores do usuário
+router.put(
+  '/api/v1/visualizacao-valores/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('visualizacao_valores').isIn([0, 1]).withMessage('O valor deve ser 0 ou 1.'),
+  ],
+  VisualizacaoValoresController.set
 );
 
 // Rota para carregar os saques pendentes do usuário
