@@ -1,3 +1,84 @@
+#develop-100:
+- Novo endpoint para o tutelado desvincular um guardião da própria conta:
+
+- controllers/familia/controller_desvincular_guardiao.js (novo):
+	- DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id: tutelado logado revoga o vínculo com o guardião informado; reutiliza RelacionamentosModel.buscarPorPar e RelacionamentosModel.revogar; remove permissões se não restar nenhum guardião; retorna 403 se o vínculo não existir ou não pertencer ao tutelado;
+
+- routes/route_familia.js:
+	- Registrada rota DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id;
+
+#develop-100:
+- Dois novos endpoints do Modo Família: tutelado desvincula guardião e lista guardiões elegíveis:
+
+- controllers/familia/controller_desvincular_guardiao.js (novo):
+	- DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id: tutelado logado revoga o vínculo com o guardião informado; retorna 403 se o vínculo não existir ou não pertencer ao tutelado; remove permissões se não restar nenhum guardião;
+
+- controllers/familia/controller_listar_guardioes_elegiveis.js (novo):
+	- GET /api/v1/familia/guardioes-elegiveis: retorna usuários elegíveis para ser guardião do tutelado logado; critérios: status_ativo = 1, data_nascimento preenchida, idade >= 18, menos de 2 dependentes ativos, ainda não vinculados a este tutelado; retorna usuario_id, apelido, nome_completo e avatar_id;
+
+- models/familia/model_relacionamentos.js:
+	- Novo método listarGuardioesElegiveis(tutelado_id): aplica todos os filtros de elegibilidade via subqueries;
+
+- routes/route_familia.js:
+	- Registradas rotas DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id e GET /api/v1/familia/guardioes-elegiveis;
+
+#develop-102:
+- Fluxo de convite por e-mail para guardião (tutelado convida) e atualização dos templates de ambos os convites:
+
+- migrations/criar_tabela_convites_guardiao.sql (novo):
+	- Tabela familia_convites_guardiao (id, tutelado_id, email_convidado, token_convite UNIQUE, status ENUM, expira_em, criado_em); aplicado em prod e dev;
+
+- models/familia/model_convites_guardiao.js (novo):
+	- criar, buscarPorToken, buscarPendentePorTuteladoEEmail, marcarAceito;
+
+- controllers/familia/controller_convidar_guardiao.js (novo):
+	- POST /api/v1/familia/convidar-guardiao: tutelado envia convite por e-mail para potencial guardião; valida que o convidado é adulto (adulto = 1), que não possui 2 dependentes, que não há vínculo ou convite duplicado e que não há vínculo circular;
+
+- controllers/familia/controller_aceitar_convite_guardiao.js (novo):
+	- POST /api/v1/familia/aceitar-convite-guardiao: guardião logado aceita o convite; valida adulto, limites de dependentes/guardiões, circularidade; cria relacionamento e permissões em transação;
+
+- models/familia/model_relacionamentos.js:
+	- Novo método contarTuteladosPorGuardiao(guardiao_id);
+
+- templates/template_convite_familia.js (atualizado):
+	- Sempre exibe dois botões: "JÁ TENHO UMA CONTA" (link para login?convite=TOKEN) e "CRIAR UMA CONTA" (link para cadastro?convite=TOKEN); parâmetro temConta removido; ao fazer login pelo link o frontend chama POST /api/v1/familia/aceitar-convite automaticamente;
+
+- templates/template_convite_guardiao.js (atualizado):
+	- Mesma estrutura de dois botões: "JÁ TENHO UMA CONTA" (link para login?convite_guardiao=TOKEN) e "CRIAR UMA CONTA" (link para cadastro?convite_guardiao=TOKEN);
+
+- controllers/familia/controller_convidar.js:
+	- linkAceitar substituído por linkLogin (login?convite=TOKEN); temConta removido da chamada ao template;
+
+- controllers/familia/controller_convidar_guardiao.js:
+	- linkAceitar substituído por linkLogin (login?convite_guardiao=TOKEN); temConta removido da chamada ao template;
+
+- routes/route_familia.js:
+	- Registradas rotas POST /api/v1/familia/convidar-guardiao e POST /api/v1/familia/aceitar-convite-guardiao;
+
+#develop-101:
+- Campo adulto na tabela users calculado automaticamente por triggers com base em data_nascimento:
+
+- migrations/adicionar_adulto_users.sql (novo):
+	- ALTER TABLE users ADD COLUMN adulto TINYINT(1) NOT NULL DEFAULT 0 AFTER data_nascimento; aplicado em prod e dev;
+	- UPDATE inicial para popular o campo em todos os usuários existentes;
+	- trg_users_before_insert_adulto (BEFORE INSERT): define adulto com base em TIMESTAMPDIFF(YEAR, data_nascimento, CURDATE()) >= 18;
+	- trg_users_before_update_adulto (BEFORE UPDATE): recalcula adulto quando data_nascimento for alterada;
+
+#develop-100:
+- Dois novos endpoints do Modo Família: tutelado desvincula guardião e lista guardiões elegíveis:
+
+- controllers/familia/controller_desvincular_guardiao.js (novo):
+	- DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id: tutelado logado revoga o vínculo com o guardião informado; retorna 403 se o vínculo não existir; remove permissões se não restar nenhum guardião;
+
+- controllers/familia/controller_listar_guardioes_elegiveis.js (novo):
+	- GET /api/v1/familia/guardioes-elegiveis: retorna usuários com adulto = 1, menos de 2 dependentes ativos e ainda não vinculados ao tutelado; retorna usuario_id, apelido, nome_completo e avatar_id;
+
+- models/familia/model_relacionamentos.js:
+	- Novo método listarGuardioesElegiveis(tutelado_id);
+
+- routes/route_familia.js:
+	- Registradas rotas DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id e GET /api/v1/familia/guardioes-elegiveis;
+
 #develop-99:
 - avatar_id adicionado à tabela ranking com sincronização automática por triggers:
 

@@ -49,6 +49,15 @@ class RelacionamentosModel {
         return rows;
     }
 
+    static async contarTuteladosPorGuardiao(guardiao_id) {
+        const [rows] = await pool.promise().execute(
+            `SELECT COUNT(*) AS total FROM familia_relacionamentos
+             WHERE guardiao_id = ? AND status = 'ativo'`,
+            [guardiao_id]
+        );
+        return rows[0].total;
+    }
+
     static async contarGuardioesPorTutelado(tutelado_id) {
         const [rows] = await pool.promise().execute(
             `SELECT COUNT(*) AS total FROM familia_relacionamentos
@@ -56,6 +65,30 @@ class RelacionamentosModel {
             [tutelado_id]
         );
         return rows[0].total;
+    }
+
+    static async listarGuardioesElegiveis(tutelado_id) {
+        const [rows] = await pool.promise().execute(
+            `SELECT u.usuario_id, u.apelido, u.nome_completo, u.avatar_id
+             FROM users u
+             WHERE u.status_ativo = 1
+               AND u.usuario_id <> 1
+               AND u.usuario_id <> ?
+               AND u.adulto = 1
+               AND NOT EXISTS (
+                   SELECT 1 FROM familia_relacionamentos fr
+                   WHERE fr.guardiao_id = u.usuario_id
+                     AND fr.tutelado_id = ?
+                     AND fr.status = 'ativo'
+               )
+               AND (
+                   SELECT COUNT(*) FROM familia_relacionamentos fr2
+                   WHERE fr2.guardiao_id = u.usuario_id AND fr2.status = 'ativo'
+               ) < 2
+             ORDER BY u.apelido ASC`,
+            [tutelado_id, tutelado_id]
+        );
+        return rows;
     }
 
     static async revogar(guardiao_id, tutelado_id) {
