@@ -1,7 +1,7 @@
-// templates/template_convite_familia.js
-// E-mail enviado pelo guardião convidando um dependente.
+// templates/template_convite_guardiao.js
+// E-mail enviado pelo dependente convidando alguém para ser seu guardião.
 
-const gerarTemplateConviteFamilia = ({ nomeGuardiao, linkLogin, linkCadastro }) => {
+const gerarTemplateConviteGuardiao = ({ nomeTutelado, linkLogin, linkCadastro }) => {
     return `
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;900&display=swap');
@@ -22,7 +22,7 @@ const gerarTemplateConviteFamilia = ({ nomeGuardiao, linkLogin, linkCadastro }) 
         </h2>
 
         <p style="color: #666666; font-size: 14px; line-height: 1.6; margin-bottom: 30px; font-weight: 400; font-family: 'Poppins', sans-serif;">
-          <strong>${nomeGuardiao}</strong> quer ser seu responsável na plataforma Purg e acompanhar sua jornada financeira.<br><br>
+          <strong>${nomeTutelado}</strong> te convidou para ser seu responsável na plataforma Purg e acompanhar sua jornada financeira.<br><br>
           Este convite é válido por <strong>7 dias</strong>.
         </p>
 
@@ -58,4 +58,4 @@ const gerarTemplateConviteFamilia = ({ nomeGuardiao, linkLogin, linkCadastro }) 
   `;
 };
 
-module.exports = { gerarTemplateConviteFamilia };
+module.exports = { gerarTemplateConviteGuardiao };

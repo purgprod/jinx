@@ -69,11 +69,10 @@ async function convidar(req, res) {
             expira_em:       expiraEm,
         });
 
-        const temConta     = !!tutelado;
-        const linkAceitar  = `https://purg.com.br/familia/aceitar-convite?token=${token}`;
+        const linkLogin    = `https://purg.com.br/login?convite=${token}`;
         const linkCadastro = `https://purg.com.br/cadastro?convite=${token}`;
 
-        const html = gerarTemplateConviteFamilia({ nomeGuardiao, linkAceitar, linkCadastro, temConta });
+        const html = gerarTemplateConviteFamilia({ nomeGuardiao, linkLogin, linkCadastro });
         const enviado = await enviarEmail(email, 'Convite Modo Família - Purg', html);
 
         if (!enviado) {
