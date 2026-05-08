@@ -2,11 +2,10 @@ const PermissoesModel = require('../models/familia/model_permissoes');
 const logger          = require('../logger');
 
 const MENSAGENS = {
-    pode_sacar:            'Saque não autorizado pelo seu responsável.',
-    pode_depositar:        'Depósito não autorizado pelo seu responsável.',
-    pode_criar_objetivos:  'Criação de objetivos não autorizada pelo seu responsável.',
-    pode_alterar_perfil:   'Alteração de perfil não autorizada pelo seu responsável.',
-    pode_alterar_pix:      'Alteração de chaves Pix não autorizada pelo seu responsável.',
+    pode_sacar:          'Saque não autorizado pelo seu responsável.',
+    pode_depositar:      'Depósito não autorizado pelo seu responsável.',
+    pode_alterar_perfil: 'Alteração de perfil não autorizada pelo seu responsável.',
+    pode_alterar_pix:    'Alteração de chaves Pix não autorizada pelo seu responsável.',
 };
 
 /**
@@ -17,22 +16,15 @@ const MENSAGENS = {
  */
 function verificarPermissaoFamilia(permissao) {
     return async (req, res, next) => {
-        if (req.session.tipo !== 'guardiao_atuando') {
-            return next();
-        }
-
-        const tuteladoId = req.session.user.id;
+        const userId = req.session.user.id;
 
         try {
-            const permissoes = await PermissoesModel.buscarPorTutelado(tuteladoId);
+            const permissoes = await PermissoesModel.buscarPorTutelado(userId);
 
-            if (!permissoes) {
-                logger.warn(`Permissões não encontradas para tutelado ${tuteladoId}`);
-                return res.status(403).json({ error: 'Operação não autorizada pelo responsável.' });
-            }
+            if (!permissoes) return next();
 
             if (!permissoes[permissao]) {
-                logger.warn(`Tutelado ${tuteladoId} bloqueado por permissão '${permissao}'`);
+                logger.warn(`Tutelado ${userId} bloqueado por permissão '${permissao}'`);
                 return res.status(403).json({ error: MENSAGENS[permissao] || 'Operação não autorizada pelo responsável.' });
             }
 
@@ -50,18 +42,12 @@ function verificarPermissaoFamilia(permissao) {
  */
 function verificarPermissaoSaqueFamilia() {
     return async (req, res, next) => {
-        if (req.session.tipo !== 'guardiao_atuando') {
-            return next();
-        }
-
-        const tuteladoId = req.session.user.id;
+        const userId = req.session.user.id;
 
         try {
-            const permissoes = await PermissoesModel.buscarPorTutelado(tuteladoId);
+            const permissoes = await PermissoesModel.buscarPorTutelado(userId);
 
-            if (!permissoes) {
-                return res.status(403).json({ error: 'Operação não autorizada pelo responsável.' });
-            }
+            if (!permissoes) return next();
 
             if (!permissoes.pode_sacar) {
                 return res.status(403).json({ error: MENSAGENS.pode_sacar });
@@ -71,7 +57,7 @@ function verificarPermissaoSaqueFamilia() {
             const chavesAutorizadas = permissoes.chaves_pix_autorizadas || [];
 
             if (!chavesAutorizadas.includes(chaveSolicitada)) {
-                logger.warn(`Tutelado ${tuteladoId} tentou sacar para chave não autorizada: ${chaveSolicitada}`);
+                logger.warn(`Tutelado ${userId} tentou sacar para chave não autorizada: ${chaveSolicitada}`);
                 return res.status(403).json({ error: 'A chave Pix selecionada não foi autorizada pelo seu responsável.' });
             }
 

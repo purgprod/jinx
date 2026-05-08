@@ -4,6 +4,16 @@ const logger = require('../../logger');
 
 const UpdateAssinaturaClienteModel = {
 
+    async promoverParaPro(usuario_id, conn) {
+        const db  = conn || require('../../database/database_purg').promise();
+        const sql = `UPDATE users SET assinatura = 'Poppy Pro' WHERE usuario_id = ? AND assinatura <> 'Poppy Pro'`;
+        const [result] = await db.execute(sql, [usuario_id]);
+        if (result.affectedRows > 0) {
+            logger.info(`Assinatura do usuário ${usuario_id} promovida para Poppy Pro`);
+        }
+        return result;
+    },
+
     async updateAssinatura(novaAssinatura, usuario_id) {
         const sqlQuery = `UPDATE users SET assinatura = ? WHERE usuario_id = ?`;
         logger.info(`Iniciando alteração da assinatura para ${novaAssinatura} do usuário ${usuario_id}`);

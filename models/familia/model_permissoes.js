@@ -34,7 +34,6 @@ class PermissoesModel {
             pode_sacar:             !!p.pode_sacar,
             chaves_pix_autorizadas: chaves,
             pode_depositar:         !!p.pode_depositar,
-            pode_criar_objetivos:   !!p.pode_criar_objetivos,
             pode_alterar_perfil:    !!p.pode_alterar_perfil,
             pode_alterar_pix:       !!p.pode_alterar_pix,
             atualizado_em:          p.atualizado_em,
@@ -44,7 +43,7 @@ class PermissoesModel {
     static async atualizar(tutelado_id, campos) {
         const camposPermitidos = [
             'pode_sacar', 'chaves_pix_autorizadas', 'pode_depositar',
-            'pode_criar_objetivos', 'pode_alterar_perfil', 'pode_alterar_pix',
+            'pode_alterar_perfil', 'pode_alterar_pix',
         ];
 
         const sets  = [];

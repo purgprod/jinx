@@ -10,6 +10,7 @@ const TrocarPerfilController        = require('../controllers/familia/controller
 const RetornarPerfilController      = require('../controllers/familia/controller_retornar_perfil');
 const PermissoesBuscarController    = require('../controllers/familia/controller_permissoes_buscar');
 const PermissoesAtualizarController = require('../controllers/familia/controller_permissoes_atualizar');
+const PermissoesPropriasController  = require('../controllers/familia/controller_permissoes_proprias');
 const RevogarController             = require('../controllers/familia/controller_revogar');
 const ConvitesPendentesController   = require('../controllers/familia/controller_convites_pendentes');
 const ListarGuardioesController     = require('../controllers/familia/controller_listar_guardioes');
@@ -17,6 +18,8 @@ const DesvincularGuardiaoController        = require('../controllers/familia/con
 const ListarGuardioesElegiveisController   = require('../controllers/familia/controller_listar_guardioes_elegiveis');
 const ConvidarGuardiaoController           = require('../controllers/familia/controller_convidar_guardiao');
 const AceitarConviteGuardiaoController     = require('../controllers/familia/controller_aceitar_convite_guardiao');
+const RejeitarConviteController            = require('../controllers/familia/controller_rejeitar_convite');
+const RejeitarConviteGuardiaoController    = require('../controllers/familia/controller_rejeitar_convite_guardiao');
 
 // Todas as rotas de família requerem autenticação
 router.use('/api/v1/familia/*', authMiddleware.checkAuthenticated);
@@ -24,8 +27,11 @@ router.use('/api/v1/familia/*', authMiddleware.checkAuthenticated);
 // GET /api/v1/familia/tutelados — lista os tutelados vinculados ao guardião logado
 router.get('/api/v1/familia/tutelados', ListarTuteladosController.listarTutelados);
 
-// GET /api/v1/familia/convites-pendentes — lista convites enviados pelo guardião ainda não aceitos
+// GET /api/v1/familia/convites-pendentes — guardião lista convites que enviou a tutelados
 router.get('/api/v1/familia/convites-pendentes', ConvitesPendentesController.listarConvitesPendentes);
+
+// GET /api/v1/familia/convites-guardiao-pendentes — tutelado lista convites que enviou a guardiões
+router.get('/api/v1/familia/convites-guardiao-pendentes', ConvitesPendentesController.listarConvitesGuardiaoPendentes);
 
 // GET /api/v1/familia/guardioes — lista os guardiões vinculados ao tutelado logado
 router.get('/api/v1/familia/guardioes', ListarGuardioesController.listarGuardioes);
@@ -67,6 +73,13 @@ router.post(
 // POST /api/v1/familia/retornar-perfil — guardião retorna ao próprio perfil
 router.post('/api/v1/familia/retornar-perfil', RetornarPerfilController.retornarPerfil);
 
+// GET /api/v1/familia/permissoes-proprias/:userId — usuário consulta as próprias permissões
+router.get(
+    '/api/v1/familia/permissoes-proprias/:userId',
+    [param('userId').isInt({ gt: 0 }).withMessage('ID inválido.')],
+    PermissoesPropriasController.buscarPermissoesProprias
+);
+
 // GET /api/v1/familia/permissoes/:tutelado_id — guardião consulta as permissões do tutelado
 router.get(
     '/api/v1/familia/permissoes/:tutelado_id',
@@ -81,8 +94,7 @@ router.put(
         param('tutelado_id').isInt({ gt: 0 }).withMessage('ID inválido.'),
         body('pode_sacar').optional().isBoolean().withMessage('pode_sacar deve ser booleano.'),
         body('pode_depositar').optional().isBoolean().withMessage('pode_depositar deve ser booleano.'),
-        body('pode_criar_objetivos').optional().isBoolean().withMessage('pode_criar_objetivos deve ser booleano.'),
-        body('pode_alterar_perfil').optional().isBoolean().withMessage('pode_alterar_perfil deve ser booleano.'),
+body('pode_alterar_perfil').optional().isBoolean().withMessage('pode_alterar_perfil deve ser booleano.'),
         body('pode_alterar_pix').optional().isBoolean().withMessage('pode_alterar_pix deve ser booleano.'),
         body('chaves_pix_autorizadas').optional().isArray().withMessage('chaves_pix_autorizadas deve ser um array.'),
     ],
@@ -125,6 +137,30 @@ router.delete(
     '/api/v1/familia/desvincular-guardiao/:guardiao_id',
     [param('guardiao_id').isInt({ gt: 0 }).withMessage('ID inválido.')],
     DesvincularGuardiaoController.desvincularGuardiao
+);
+
+// POST /api/v1/familia/rejeitar-convite — tutelado rejeita o convite enviado por um guardião
+router.post(
+    '/api/v1/familia/rejeitar-convite',
+    [
+        body('token')
+            .notEmpty().withMessage('Token é obrigatório.')
+            .isHexadecimal().withMessage('Token inválido.')
+            .isLength({ min: 64, max: 64 }).withMessage('Token inválido.'),
+    ],
+    RejeitarConviteController.rejeitarConvite
+);
+
+// POST /api/v1/familia/rejeitar-convite-guardiao — guardião rejeita o convite enviado por um tutelado
+router.post(
+    '/api/v1/familia/rejeitar-convite-guardiao',
+    [
+        body('token')
+            .notEmpty().withMessage('Token é obrigatório.')
+            .isHexadecimal().withMessage('Token inválido.')
+            .isLength({ min: 64, max: 64 }).withMessage('Token inválido.'),
+    ],
+    RejeitarConviteGuardiaoController.rejeitarConviteGuardiao
 );
 
 module.exports = router;

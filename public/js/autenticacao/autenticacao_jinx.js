@@ -58,11 +58,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ email, password }),
             })
             .then(response => response.json())
-            .then(data => {
+            .then(async data => {
                 if (data.success) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tokenConvite = urlParams.get('convite_guardiao');
+
+                    if (tokenConvite) {
+                        try {
+                            const conviteRes = await fetch('/api/v1/familia/aceitar-convite-guardiao', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: tokenConvite }),
+                            });
+                            const conviteData = await conviteRes.json();
+                            if (!conviteData.success) {
+                                errorMessage.textContent = conviteData.message || 'Não foi possível aceitar o convite.';
+                                errorMessage.style.display = 'block';
+                            }
+                        } catch (err) {
+                            console.error('Erro ao aceitar convite de guardião:', err);
+                        }
+                    }
+
                     document.body.classList.add("fade-out");
                     setTimeout(() => {
-                        window.location.href = '/home'; // Redireciona após o login.
+                        window.location.href = '/home';
                     }, 1000);
                 } else {
                     errorMessage.style.display = 'block'; // Mensagem de erro ao fazer login.

@@ -2,6 +2,7 @@ const crypto                      = require('crypto');
 const { validationResult }        = require('express-validator');
 const ConvitesModel               = require('../../models/familia/model_convites');
 const RelacionamentosModel        = require('../../models/familia/model_relacionamentos');
+const EventosModel                = require('../../models/eventos/model_eventos');
 const { enviarEmail }             = require('../../mailer');
 const { gerarTemplateConviteFamilia } = require('../../templates/template_convite_familia');
 const logger                      = require('../../logger');
@@ -69,15 +70,34 @@ async function convidar(req, res) {
             expira_em:       expiraEm,
         });
 
-        const linkLogin    = `https://purg.com.br/login?convite=${token}`;
-        const linkCadastro = `https://purg.com.br/cadastro?convite=${token}`;
+        const jaTemConta = !!tutelado;
+        const link = jaTemConta
+            ? 'https://purg.com.br/login'
+            : `https://purg.com.br/cadastro?convite=${token}`;
 
-        const html = gerarTemplateConviteFamilia({ nomeGuardiao, linkLogin, linkCadastro });
+        const html = gerarTemplateConviteFamilia({ nomeGuardiao, link, jaTemConta });
         const enviado = await enviarEmail(email, 'Convite Modo Família - Purg', html);
 
         if (!enviado) {
             logger.error(`Falha ao enviar convite familiar para ${email}`);
             return res.status(500).json({ success: false, message: 'Erro ao enviar e-mail de convite. Tente novamente.' });
+        }
+
+        // Cria evento interativo para o tutelado, se ele já tiver conta na plataforma
+        if (tutelado) {
+            try {
+                await EventosModel.criar({
+                    tipo:       'interativo',
+                    titulo:     'Convite de Responsável',
+                    mensagem:   `${nomeGuardiao} quer ser seu responsável na plataforma.`,
+                    acao:       'convite_tutelado',
+                    payload:    { token, nome_guardiao: nomeGuardiao },
+                    usuario_id: tutelado.usuario_id,
+                    expira_em:  expiraEm,
+                });
+            } catch (errEvento) {
+                logger.error(`Falha ao criar evento de convite para tutelado ${tutelado.usuario_id}: ${errEvento.message}`);
+            }
         }
 
         logger.info(`Convite familiar enviado por guardião ${guardiaoId} para ${email}`);

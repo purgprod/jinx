@@ -361,31 +361,140 @@ async function _verificarViabilidade(usuarioId, conn) {
 // ===========================================================================
 // PÚBLICO 3: Recalcular metas de um objetivo (edição de valor_alvo ou prazo)
 // ===========================================================================
+
 /**
- * Cancela as metas antigas, gera novas metas com os parâmetros atualizados
- * e redistribui o saldo_alocado_total atual nas novas metas (FIFO).
+ * Gera metas para o RESTANTE de um objetivo em edição.
+ * Diferente de gerarMetas(), parte de um numeroInicio e distribui apenas
+ * o valor restante (não o valor_alvo total).
+ */
+function gerarMetasRestantes(restante, prazo, pontosTotal, numeroInicio, dataInicio = new Date()) {
+    if (prazo <= 0) throw new Error('Prazo deve ser maior que zero.');
+
+    const anoInicio = dataInicio.getFullYear();
+    const mesInicio = dataInicio.getMonth();
+    const metas     = [];
+
+    const valorCentsTotal = Math.round(restante * 100);
+    const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
+    const restoValor      = valorCentsTotal - valorPorMeta * prazo;
+
+    const pontosPorMeta = Math.floor(pontosTotal / prazo);
+    const restoPontos   = pontosTotal - pontosPorMeta * prazo;
+
+    for (let i = 0; i < prazo; i++) {
+        const isUltima  = i === prazo - 1;
+        const mesOffset = mesInicio + i;
+        const ano       = anoInicio + Math.floor(mesOffset / 12);
+        const mes       = mesOffset % 12;
+        metas.push({
+            numero:        numeroInicio + i,
+            valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
+            pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+            dataLimite:    _ultimoDiaMes(ano, mes),
+        });
+    }
+
+    return metas;
+}
+
+/**
+ * Recalcula as metas de um objetivo preservando as já concluídas.
+ *
+ * Lógica:
+ *   - Metas concluídas → intocáveis (pontuação já garantida)
+ *   - Metas incompletas → canceladas e recriadas com base no RESTANTE
+ *   - Restante = novoValorAlvo - saldo_alocado_total
+ *   - Saldo pendente (das metas incompletas canceladas) → realocado FIFO
+ *     nas novas metas com concessão de pontos (cascata silenciosa)
+ *   - saldo_alocado_total não é alterado (dinheiro já estava lá)
  *
  * @param {import('mysql2/promise').PoolConnection} conn
  * @param {number} usuarioId
- * @param {object} objetivo - Registro atual do objetivo_descricao
+ * @param {object} objetivo   - Registro atual de objetivos_descricao
  * @param {number} novoValorAlvo
- * @param {number} novoPrazo
+ * @param {number} novoPrazo  - Número de NOVAS metas a criar (meses restantes)
  * @param {number} novosPontosTotal
- * @param {string} motivo - 'alteracao_alvo' | 'alteracao_prazo'
+ * @param {string} motivo     - 'alteracao_alvo' | 'alteracao_prazo'
  */
 async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo, novoPrazo, novosPontosTotal, motivo) {
-    const saldoAtualStr = String(objetivo.saldo_alocado_total);
+    const saldoAtualBig = decimalToBigInt(String(objetivo.saldo_alocado_total));
+    const novoValorBig  = decimalToBigInt(String(novoValorAlvo));
+    const PARCELA_MIN   = decimalToBigInt('5');
+
+    // Ler metas ativas em ordem crescente
+    const metas       = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+    const completadas = metas.filter(m => Number(m.objetivo_completo) === 1);
+    const incompletas = metas.filter(m => Number(m.objetivo_completo) !== 1);
+
+    // ---------------------------------------------------------------------------
+    // Determinar baseline e estratégia de cancelamento
+    //
+    // Caso A — saldo > 0: dinheiro foi investido.
+    //   baseline = saldo_alocado_total (o que o usuário realmente já colocou)
+    //   cancela todas as metas incompletas e recomeça a partir daí
+    //
+    // Caso B — saldo = 0: nenhum depósito feito ainda.
+    //   baseline = objetivo_investir da primeira meta (o aporte comprometido)
+    //   preserva a primeira meta intacta; cancela e recria apenas as seguintes
+    // ---------------------------------------------------------------------------
+    let baselineBig;
+    let saldoPendenteBig = 0n;
+    let numeroInicio;
+
+    if (saldoAtualBig > 0n) {
+        baselineBig = saldoAtualBig;
+
+        for (const meta of incompletas) {
+            saldoPendenteBig += decimalToBigInt(String(meta.saldo_alocado));
+        }
+
+        const maxNumero = completadas.length > 0
+            ? Math.max(...completadas.map(m => Number(m.objetivo_numero)))
+            : 0;
+        numeroInicio = maxNumero + 1;
+
+        await MetasEscrita.cancelarMetasIncompletas(objetivo.objetivo_id, conn);
+
+    } else {
+        const primeiraMeta = metas[0];
+
+        if (primeiraMeta) {
+            baselineBig  = decimalToBigInt(String(primeiraMeta.objetivo_investir));
+            numeroInicio = 2;
+            await MetasEscrita.cancelarMetasAPartirDeNumero(objetivo.objetivo_id, 1, conn);
+        } else {
+            baselineBig  = 0n;
+            numeroInicio = 1;
+            await MetasEscrita.cancelarMetasIncompletas(objetivo.objetivo_id, conn);
+        }
+    }
+
+    const restanteBig = novoValorBig - baselineBig;
+
+    // Validações (lançam erro marcado para o controller devolver 400)
+    if (restanteBig <= 0n) {
+        const err = new Error(`O valor alvo deve ser maior que o valor base já comprometido (R$ ${bigIntToDecimalString(baselineBig)}).`);
+        err.validationError = true;
+        throw err;
+    }
+    const parcelaBig = restanteBig / BigInt(novoPrazo);
+    if (parcelaBig < PARCELA_MIN) {
+        const err = new Error(`A parcela mínima é de R$ 5,00. Com ${novoPrazo} meses restantes, cada parcela seria R$ ${bigIntToDecimalString(parcelaBig)}.`);
+        err.validationError = true;
+        throw err;
+    }
+
+    // Pontos já ganhos nas concluídas → restantes distribuídos nas novas metas
+    const pontosJaGanhos  = completadas.reduce((sum, m) => sum + Number(m.objetivo_pontos), 0);
+    const pontosRestantes = Math.max(0, novosPontosTotal - pontosJaGanhos);
 
     // Registrar recálculo
     await ObjetivosEscrita.registrarRecalculo({
         usuarioId,
         objetivoId:  objetivo.objetivo_id,
         motivo,
-        saldoNaData: saldoAtualStr,
+        saldoNaData: String(objetivo.saldo_alocado_total),
     }, conn);
-
-    // Cancelar metas antigas
-    await MetasEscrita.cancelarMetasObjetivo(objetivo.objetivo_id, conn);
 
     // Atualizar cabeçalho do objetivo
     await ObjetivosEscrita.editarObjetivo({
@@ -396,8 +505,9 @@ async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo,
         pontosTotal:  novosPontosTotal,
     }, conn);
 
-    // Gerar e inserir novas metas (datas a partir do mês atual do recálculo)
-    const novasMetas = gerarMetas(novoValorAlvo, novoPrazo, novosPontosTotal);
+    // Gerar e inserir novas metas para o restante
+    const restanteNum = Number(bigIntToDecimalString(restanteBig));
+    const novasMetas  = gerarMetasRestantes(restanteNum, novoPrazo, pontosRestantes, numeroInicio);
     for (const meta of novasMetas) {
         await MetasEscrita.criarMeta({
             usuarioId,
@@ -409,33 +519,26 @@ async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo,
         }, conn);
     }
 
-    // Resetar saldo total no cabeçalho antes de redistribuir
-    await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, '0', conn);
-
-    // Redistribuir saldo atual nas novas metas (FIFO)
-    const saldoBig = decimalToBigInt(saldoAtualStr);
-    if (saldoBig > 0n) {
-        const novasMetasDb = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
-        const sobra        = await _alocarNasMetas(conn, novasMetasDb, saldoBig, usuarioId, false);
-        const realocado    = saldoBig - sobra;
-        const novoTotal    = bigIntToDecimalString(realocado);
-        await ObjetivosEscrita.atualizarSaldoTotal(objetivo.objetivo_id, novoTotal, conn);
-
-        // Verificar conclusão após redistribuição
+    // Realocar saldo pendente nas novas metas (FIFO, com pontos — cascata silenciosa)
+    if (saldoPendenteBig > 0n) {
         const metasAtualizadas = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
-        const todasCompletas   = metasAtualizadas.length > 0
-            && metasAtualizadas.every(m => Number(m.objetivo_completo) === 1);
-        if (todasCompletas) {
-            await _concluirObjetivo(conn, usuarioId, { ...objetivo, objetivo_pontos_total: novosPontosTotal });
-        }
+        const novasIncompletas = metasAtualizadas.filter(m => Number(m.objetivo_completo) !== 1);
+        await _alocarNasMetas(conn, novasIncompletas, saldoPendenteBig, usuarioId, true);
     }
 
-    // Resetar primeiro_aporte_feito para que a trava seja reavaliada no próximo ciclo
-    await ObjetivosEscrita.marcarPrimeiroAporte(objetivo.objetivo_id, conn); // mantém como "feito" para não re-triggar trava imediatamente
+    // Verificar conclusão total (cascata pode ter completado tudo)
+    const metasFinais    = await MetasLeitura.buscarMetasAtivas(objetivo.objetivo_id, 'ASC', conn);
+    const todasCompletas = metasFinais.length > 0 && metasFinais.every(m => Number(m.objetivo_completo) === 1);
+    if (todasCompletas) {
+        await _concluirObjetivo(conn, usuarioId, { ...objetivo, objetivo_pontos_total: novosPontosTotal });
+    }
+
+    // Garantir que trava_inicial não re-dispara no próximo depósito
+    await ObjetivosEscrita.marcarPrimeiroAporte(objetivo.objetivo_id, conn);
 
     await _atualizarPontosVolateis(conn, usuarioId);
 
-    logger.info(`[ObjetivosService] Recálculo de objetivo ${objetivo.objetivo_id} concluído. Motivo: ${motivo}.`);
+    logger.info(`[ObjetivosService] Recálculo concluído. objetivo=${objetivo.objetivo_id}, motivo=${motivo}, baseline=${bigIntToDecimalString(baselineBig)}, restante=${bigIntToDecimalString(restanteBig)}, novoPrazo=${novoPrazo}.`);
 }
 
 // ===========================================================================
@@ -541,9 +644,10 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio
  * @returns {Promise<number>} Total de pontos atualizados (pontos_permanentes + pontos_volateis)
  */
 async function sincronizarPontosUsuario(usuarioId) {
-    // Lê pontos_permanentes antes de atualizar (não muda nesta função)
+    // Lê pontos_permanentes e pontos_indicacao antes de atualizar (não mudam nesta função)
     const rowAntes = await ObjetivosLeitura.buscarPontosCarteira(usuarioId);
     const permanentes = rowAntes ? Number(rowAntes.pontos_permanentes) : 0;
+    const indicacao   = rowAntes ? Number(rowAntes.pontos_indicacao)   : 0;
 
     // Recalcula pontos_volateis com base no progresso atual das metas
     const objetivos = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId);
@@ -560,10 +664,10 @@ async function sincronizarPontosUsuario(usuarioId) {
         }
     }
 
-    // Persiste os valores recalculados
+    // Persiste os valores recalculados (atualizarPontosVolateis já inclui pontos_indicacao no total)
     await ObjetivosEscrita.atualizarPontosVolateis(usuarioId, pontosVolateis);
 
-    return permanentes + pontosVolateis;
+    return permanentes + pontosVolateis + indicacao;
 }
 
 module.exports = {

@@ -45,6 +45,25 @@ const EditarObjetivoController = {
                 return res.status(400).json({ error: 'valor_alvo deve ser > 0 e prazo entre 1 e 600.' });
             }
 
+            const saldoAtual = Number(objetivo.saldo_alocado_total ?? 0);
+
+            // Quando há saldo investido, o controller pode validar rapidamente.
+            // Quando saldo = 0, a baseline é a primeira meta (aporte), que só o
+            // serviço conhece — a validação fina acontece lá e sobe como validationError.
+            if (saldoAtual > 0) {
+                if (novoValorAlvo <= saldoAtual) {
+                    return res.status(400).json({
+                        error: `O valor alvo deve ser maior que o total já investido (R$ ${saldoAtual.toFixed(2)}).`,
+                    });
+                }
+                const parcelaBruta = (novoValorAlvo - saldoAtual) / novoPrazo;
+                if (parcelaBruta < 5) {
+                    return res.status(400).json({
+                        error: `A parcela mínima é de R$ 5,00. Com ${novoPrazo} meses restantes, cada parcela seria R$ ${parcelaBruta.toFixed(2)}.`,
+                    });
+                }
+            }
+
             const mudouValor = novoValorAlvo !== Number(objetivo.objetivo_valor_total);
             const mudouPrazo = novoPrazo     !== objetivo.objetivo_numero_total;
 
@@ -81,6 +100,9 @@ const EditarObjetivoController = {
             });
 
         } catch (err) {
+            if (err.validationError) {
+                return res.status(400).json({ error: err.message });
+            }
             logger.error('[EditarObjetivo] Erro', { usuarioId, objetivoId, erro: err.message });
             return res.status(500).json({ error: 'Erro interno ao editar objetivo.' });
         }

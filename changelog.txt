@@ -1,3 +1,138 @@
+#develop-103:
+- Sistema de Indicações, Sistema de Eventos, edição de objetivos, rejeição de convites no Modo Família, promoção automática para Poppy Pro e correção de pontos_indicacao no ranking:
+
+- migrations/criar_sistema_indicacoes.sql (novo):
+	- Tabela indicacoes (id, indicador_id, indicado_id, criado_em); FK para users; índice único em indicado_id (cada usuário só pode ter um indicador);
+
+- migrations/adicionar_pontos_indicacao_carteiras.sql (novo):
+	- ALTER TABLE carteiras ADD COLUMN IF NOT EXISTS pontos_indicacao INT NOT NULL DEFAULT 0; acumula pontos recebidos via bônus de indicação (10% dos pontos do indicado), separado para analytics;
+
+- models/indicacoes/model_indicacoes.js (novo):
+	- buscarPorIndicado(indicadoId): retorna indicador_id se o usuário foi indicado por alguém;
+	- buscarIndicadorPorCodigo(codigo): localiza usuário ativo pelo codigo_indicacao;
+	- criar({ indicadorId, indicadoId }): registra o vínculo de indicação;
+	- contarIndicadosPorIndicador(indicadorId): total de usuários indicados;
+
+- controllers/indicacoes/controller_indicacoes.js (novo):
+	- GET /api/v1/indicacoes/meu-codigo: retorna codigo_indicacao da sessão, link público de cadastro (purg.com.br/cadastro?ref=CODIGO) e total de indicados;
+
+- controllers/indicacoes/controller_dados_indicacao.js (novo):
+	- GET /api/v1/indicacoes/:usuario_id: retorna codigo_indicacao, pontos_indicacao e lista de indicados (indicado_id + nome_completo) para um usuário;
+
+- routes/route_indicacoes.js (novo):
+	- Registradas rotas GET /api/v1/indicacoes/meu-codigo e GET /api/v1/indicacoes/:usuario_id, todas autenticadas;
+
+- models/endpoints/model_criar_novo_usuario.js:
+	- Gera codigo_indicacao (8 chars hexadecimais via crypto.randomBytes(4)) no INSERT de cada novo usuário;
+
+- controllers/endpoints/controller_cadastro_usuario.js:
+	- Aceita campo opcional codigo_ref no body; busca o indicador pelo código e registra a indicação via IndicacoesModel.criar dentro da mesma transação do cadastro;
+
+- routes/route_endpoints.js:
+	- Validação opcional de codigo_ref: alfanumérico, exatamente 8 caracteres;
+
+- controllers/endpoints/controller_autenticacao_purg.js:
+	- codigo_indicacao incluído no objeto de sessão no login bem-sucedido;
+	- Logs com corpo da requisição removidos (dados sensíveis não são mais expostos);
+
+- migrations/criar_tabelas_eventos.sql (novo):
+	- Tabela eventos (id, tipo ENUM 'informativo'/'interativo', titulo, mensagem, acao, payload JSON, usuario_id, ativo, expira_em, criado_em);
+	- Tabela eventos_usuarios (id, evento_id, usuario_id, interagiu, interagido_em); índice único em (evento_id, usuario_id);
+
+- models/eventos/model_eventos.js (novo):
+	- criar: insere evento com payload JSON;
+	- buscarPorId: retorna evento com payload deserializado;
+	- buscarPendentesParaUsuario: eventos globais ou do próprio usuário ainda não interagidos e não expirados;
+	- buscarPorTokenNoPayload: localiza evento cujo payload.token corresponde ao token informado (usado na aceitação de convites);
+
+- models/eventos/model_eventos_usuarios.js (novo):
+	- marcarInteragido: INSERT ... ON DUPLICATE KEY UPDATE para registrar que o usuário interagiu com o evento;
+
+- controllers/eventos/controller_eventos_pendentes.js (novo):
+	- GET /api/v1/eventos/pendentes: retorna todos os eventos pendentes do usuário logado;
+
+- controllers/eventos/controller_marcar_visto.js (novo):
+	- POST /api/v1/eventos/:id/marcar-visto: marca evento do tipo 'informativo' como visto; valida tipo, ativo e ownership;
+
+- routes/route_eventos.js (novo):
+	- Registradas rotas GET /api/v1/eventos/pendentes e POST /api/v1/eventos/:id/marcar-visto, todas autenticadas;
+
+- controllers/familia/controller_aceitar_convite.js e controller_aceitar_convite_guardiao.js:
+	- Ao aceitar um convite, busca o evento associado pelo token no payload e o marca como interagido dentro da mesma transação;
+
+- controllers/familia/controller_convidar.js e controller_convidar_guardiao.js:
+	- Emite evento interativo associado ao tutelado/guardião convidado para que o convite apareça na interface antes mesmo do aceite;
+
+- controllers/familia/controller_rejeitar_convite.js (novo):
+	- POST /api/v1/familia/rejeitar-convite: tutelado rejeita o convite enviado por um guardião via token; marca convite como rejeitado e o evento como interagido;
+
+- controllers/familia/controller_rejeitar_convite_guardiao.js (novo):
+	- POST /api/v1/familia/rejeitar-convite-guardiao: guardião rejeita o convite enviado por um tutelado via token;
+
+- controllers/familia/controller_permissoes_proprias.js (novo):
+	- GET /api/v1/familia/permissoes-proprias/:userId: usuário consulta as próprias permissões de família (proteção IDOR: valida que userId = sessão);
+
+- routes/route_familia.js:
+	- Registradas rotas POST /api/v1/familia/rejeitar-convite, POST /api/v1/familia/rejeitar-convite-guardiao e GET /api/v1/familia/permissoes-proprias/:userId;
+
+- middleware/verificar_permissao_familia.js:
+	- Simplificado: removida verificação de req.session.tipo === 'guardiao_atuando'; as permissões agora são consultadas para qualquer usuário que possua um registro na tabela familia_permissoes;
+	- Removida a permissão pode_criar_objetivos (criação de objetivos não é mais restrita pelo Modo Família);
+	- buscarPorTutelado retornando null agora chama next() em vez de retornar 403;
+
+- routes/route_objetivos.js:
+	- Removida a aplicação do middleware verificarPermissaoFamilia('pode_criar_objetivos') na rota de criação de objetivos;
+
+- controllers/objetivos/controller_editar_objetivo.js (novo):
+	- PUT /api/v1/objetivos/:id/:objetivo_id: edita descrição, valor_alvo, prazo e pontos_total de um objetivo; proteção IDOR via sessão; ao alterar valor_alvo ou prazo, chama recalcularMetasObjetivo para recriar as metas preservando as concluídas e redistribuindo o saldo pendente;
+
+- services/objetivos_service.js:
+	- recalcularMetasObjetivo reescrito com nova lógica de dois casos:
+		- Caso A (saldo > 0): baseline = saldo_alocado_total; cancela apenas metas incompletas; redistribui saldo pendente das metas canceladas nas novas metas com concessão de pontos (cascata silenciosa);
+		- Caso B (saldo = 0): baseline = valor da primeira meta (aporte comprometido); preserva a primeira meta; cancela metas a partir do número 2; validações de parcela mínima (R$ 5,00) e valor alvo via BigInt;
+	- gerarMetasRestantes: nova função que gera metas apenas para o valor restante (diferente de gerarMetas que distribui o total), com numeroInicio configurável;
+	- sincronizarPontosUsuario: passa a retornar permanentes + volateis + indicacao (correção do bug de ranking);
+
+- models/objetivos/model_metas_escrita.js:
+	- cancelarMetasIncompletas: soft-delete apenas das metas com objetivo_completo IS NULL OR = 0, preservando as concluídas;
+	- cancelarMetasAPartirDeNumero: soft-delete das metas com número > fromNumero (para Caso B do recálculo);
+
+- models/objetivos/model_objetivos_escrita.js:
+	- adicionarPontosPermanentes: fórmula corrigida para incluir pontos_indicacao no cálculo de carteiras.pontos; bônus de indicação (10%) passa a ser creditado apenas em pontos_indicacao (não mais em pontos_permanentes), evitando dupla contagem;
+	- atualizarPontosVolateis: fórmula corrigida — pontos = pontos_permanentes + pontos_volateis + pontos_indicacao;
+
+- models/objetivos/model_objetivos_leitura.js:
+	- buscarPontosCarteira: adiciona pontos_indicacao ao SELECT para que sincronizarPontosUsuario inclua o campo no total;
+
+- migrations/corrigir_pontos_indicacao_carteiras.sql (novo):
+	- UPDATE carteiras SET pontos = pontos_permanentes + pontos_volateis + pontos_indicacao para todos os usuários com pontos_indicacao > 0 cujo total estava incorreto; aplicado em prod;
+
+- models/assinaturas/model_update_assinatura_cliente.js:
+	- promoverParaPro(usuario_id, conn): UPDATE users SET assinatura = 'Poppy Pro' WHERE assinatura <> 'Poppy Pro'; chamado no primeiro depósito executado;
+
+- controllers/depositos/controller_deposito_executar.js:
+	- Chama promoverParaPro após alocarSaldoEntreObjetivos, promovendo o usuário para Poppy Pro no primeiro aporte;
+
+- controllers/depositos/controller_webhook_pix_efi.js:
+	- Chama promoverParaPro após alocarSaldoEntreObjetivos no fluxo de webhook PIX;
+
+- models/depositos/model_buscar_depositos.js:
+	- Inclui qr_code no retorno dos depósitos com status 'Processando';
+
+- logger.js:
+	- debug ativado por padrão (_debugEnabled = true, level = 'debug', silent = false);
+	- Retenção de logs aumentada de 7/14 dias para 60 dias em todos os transportes;
+
+- controllers/rotinas/cron.js:
+	- Nova rotina diária às 03:00: limpeza automática de arquivos de log com mais de 60 dias em ~/dados/logs;
+
+- server.js:
+	- Registradas rotas route_eventos e route_indicacoes;
+	- Middleware de debug de requisições agora sanitiza campos sensíveis (password, senha, token, etc.) usando sanitizarLog antes de logar o body;
+
+- public/js/autenticacao/autenticacao_jinx.js:
+	- Ao fazer login com query string ?convite_guardiao=TOKEN, o frontend chama automaticamente POST /api/v1/familia/aceitar-convite-guardiao antes de redirecionar para /home;
+
 #develop-100:
 - Novo endpoint para o tutelado desvincular um guardião da própria conta:
 

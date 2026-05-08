@@ -4,7 +4,7 @@ const PermissoesModel      = require('../../models/familia/model_permissoes');
 const logger               = require('../../logger');
 
 const CAMPOS_BOOLEANOS = [
-    'pode_sacar', 'pode_depositar', 'pode_criar_objetivos',
+    'pode_sacar', 'pode_depositar',
     'pode_alterar_perfil', 'pode_alterar_pix',
 ];
 

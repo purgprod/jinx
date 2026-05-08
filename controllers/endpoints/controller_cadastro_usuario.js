@@ -1,10 +1,11 @@
 // controllers/endpoints/controller_cadastro_usuario.js
 
-const bcrypt = require('bcrypt');
+const bcrypt          = require('bcrypt');
 const { validationResult } = require('express-validator');
-const cadastroModel    = require('../../models/endpoints/model_criar_novo_usuario');
+const cadastroModel   = require('../../models/endpoints/model_criar_novo_usuario');
+const IndicacoesModel = require('../../models/indicacoes/model_indicacoes');
 const { withTransaction } = require('../../database/transaction');
-const logger = require('../../logger');
+const logger          = require('../../logger');
 
 async function cadastrarUsuario(req, res) {
     const errors = validationResult(req);
@@ -13,7 +14,7 @@ async function cadastrarUsuario(req, res) {
     }
 
     const { nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, password,
-            termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma } = req.body;
+            termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma, codigo_ref } = req.body;
 
     try {
         const emailExistente = await cadastroModel.findByEmail(email.trim().toLowerCase());
@@ -45,6 +46,14 @@ async function cadastrarUsuario(req, res) {
             }, conn);
 
             await cadastroModel.createCarteira(novoId, conn);
+
+            if (codigo_ref) {
+                const indicador = await IndicacoesModel.buscarIndicadorPorCodigo(codigo_ref);
+                if (indicador && indicador.usuario_id !== novoId) {
+                    await IndicacoesModel.criar({ indicadorId: indicador.usuario_id, indicadoId: novoId }, conn);
+                    logger.info(`Indicação registrada: indicador=${indicador.usuario_id} → indicado=${novoId}`);
+                }
+            }
         });
 
         logger.info(`Cadastro de novo usuário realizado com sucesso. ID: ${novoId}`);

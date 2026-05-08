@@ -1,7 +1,17 @@
 // templates/template_convite_familia.js
 // E-mail enviado pelo guardião convidando um dependente.
 
-const gerarTemplateConviteFamilia = ({ nomeGuardiao, linkLogin, linkCadastro }) => {
+const gerarTemplateConviteFamilia = ({ nomeGuardiao, link, jaTemConta }) => {
+    const botao = jaTemConta
+        ? `<a href="${link}" style="display: inline-block; background-color: #32d957; color: #ffffff; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 13px; letter-spacing: 1px; font-family: 'Poppins', sans-serif;">
+          JÁ TENHO UMA CONTA
+        </a>`
+        : `<a href="${link}" style="display: inline-block; background-color: #32d957; color: #ffffff; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 13px; letter-spacing: 1px; font-family: 'Poppins', sans-serif;">
+          CRIAR UMA CONTA
+        </a>`;
+
+    const labelFallback = jaTemConta ? 'Já tenho conta:' : 'Criar conta:';
+
     return `
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;900&display=swap');
@@ -26,26 +36,14 @@ const gerarTemplateConviteFamilia = ({ nomeGuardiao, linkLogin, linkCadastro }) 
           Este convite é válido por <strong>7 dias</strong>.
         </p>
 
-        <a href="${linkLogin}" style="display: inline-block; background-color: #32d957; color: #ffffff; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 13px; letter-spacing: 1px; font-family: 'Poppins', sans-serif;">
-          JÁ TENHO UMA CONTA
-        </a>
-
-        <br><br>
-
-        <a href="${linkCadastro}" style="display: inline-block; background-color: #ffffff; color: #32d957; padding: 14px 40px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 13px; letter-spacing: 1px; font-family: 'Poppins', sans-serif; border: 2px solid #32d957;">
-          CRIAR UMA CONTA
-        </a>
+        ${botao}
 
         <p style="color: #999999; font-size: 12px; margin-top: 30px; line-height: 1.5; font-family: 'Poppins', sans-serif;">
-          Se os botões não funcionarem, copie e cole os links abaixo no seu navegador:
+          Se o botão não funcionar, copie e cole o link abaixo no seu navegador:
         </p>
-        <p style="color: #555555; font-size: 11px; margin: 4px 0; font-family: 'Poppins', sans-serif;">Já tenho conta:</p>
-        <p style="color: #32d957; font-size: 11px; word-break: break-all; font-family: 'Courier New', monospace; margin-bottom: 12px;">
-          ${linkLogin}
-        </p>
-        <p style="color: #555555; font-size: 11px; margin: 4px 0; font-family: 'Poppins', sans-serif;">Criar conta:</p>
+        <p style="color: #555555; font-size: 11px; margin: 4px 0; font-family: 'Poppins', sans-serif;">${labelFallback}</p>
         <p style="color: #32d957; font-size: 11px; word-break: break-all; font-family: 'Courier New', monospace;">
-          ${linkCadastro}
+          ${link}
         </p>
 
         <p style="color: #999999; font-size: 11px; margin-top: 30px; border-top: 1px solid #f0f0f0; padding-top: 20px; line-height: 1.4; font-weight: 300; font-family: 'Poppins', sans-serif;">

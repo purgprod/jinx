@@ -11,8 +11,9 @@ const BuscarDepositosModel = {
                 d.usuario_id, 
                 u.nome_completo, 
                 u.email, 
-                d.valor_deposito, 
-                d.status_deposito 
+                d.valor_deposito,
+                d.status_deposito,
+                d.qr_code
             FROM depositos d
             INNER JOIN users u ON d.usuario_id = u.usuario_id
 	    AND d.status_deposito = 'Processando'

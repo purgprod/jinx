@@ -1,5 +1,6 @@
 // models/endpoints/model_criar_novo_usuario.js
-const pool = require('../../database/database_purg');
+const crypto = require('crypto');
+const pool   = require('../../database/database_purg');
 const logger = require('../../logger');
 
 exports.createCarteira = async (usuarioId, conn = null) => {
@@ -44,12 +45,13 @@ exports.findByCpf = async (cpf) => {
 
 exports.createUser = async ({ nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, hashedPassword,
                                termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma }, conn = null) => {
+    const codigo_indicacao = crypto.randomBytes(4).toString('hex');
     const query = `
-        INSERT INTO users (nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, password, termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, password, termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma, codigo_indicacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [nome_completo, nome_da_mae, data_nascimento, genero, cpf, celular, email, hashedPassword,
-                    termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma];
+                    termos_de_uso, termos_de_privacidade, termos_de_riscos_da_plataforma, codigo_indicacao];
     try {
         const [result] = conn
             ? await conn.execute(query, params)

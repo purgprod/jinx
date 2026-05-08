@@ -42,21 +42,21 @@ const debugTransport = new winston.transports.DailyRotateFile({
     filename: path.join(logDirectory, 'debug-%DATE%.log'),
     datePattern: 'YYYY-MM-DD',
     maxSize: '50m',
-    maxFiles: '7d',
+    maxFiles: '60d',
     zippedArchive: true,
     level: 'debug',
-    silent: true
+    silent: false
 });
 
 const logger = winston.createLogger({
-    level: 'info',
+    level: 'debug',
     format: logFormat,
     transports: [
         new winston.transports.DailyRotateFile({
             filename: path.join(logDirectory, 'server-%DATE%.log'),
             datePattern: 'YYYY-MM-DD',
             maxSize: '20m',
-            maxFiles: '14d',
+            maxFiles: '60d',
             zippedArchive: true,
             level: 'info'
         }),
@@ -65,7 +65,7 @@ const logger = winston.createLogger({
     ]
 });
 
-let _debugEnabled = false;
+let _debugEnabled = true;
 
 logger.setDebugMode = function (enabled) {
     _debugEnabled = enabled;

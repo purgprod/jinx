@@ -40,6 +40,9 @@ const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service'
 // --- Liga ---
 const { sincronizarLigaUsuario } = require('../../services/liga_service');
 
+// --- Assinatura ---
+const UpdateAssinaturaClienteModel = require('../../models/assinaturas/model_update_assinatura_cliente');
+
 // --- Compra automática de pins pós-depósito ---
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
 const { processarUsuario } = require('../../services/compra_pins_usuario_service');
@@ -140,6 +143,7 @@ async function processarPixRecebido(pix) {
             throw new Error(`Depósito txid=${txid} não estava em 'Processando' — possível reprocessamento duplicado`);
         }
         await alocarSaldoEntreObjetivos(conn, deposito.usuario_id, valor);
+        await UpdateAssinaturaClienteModel.promoverParaPro(deposito.usuario_id, conn);
     });
 
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);

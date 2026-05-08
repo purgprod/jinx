@@ -1,5 +1,8 @@
 const cron = require('node-cron');
 const axios = require('axios');
+const fs = require('fs').promises;
+const path = require('path');
+const os = require('os');
 const logger = require('../../logger');
 
 const BASE_URL = 'http://localhost:3000';
@@ -94,6 +97,32 @@ cron.schedule('00 07 25 * *', async () => {
         logger.info(`Rotina mensal concluída. Resposta: ${r.data.message}`);
     } catch (error) {
         logger.error('[Poppy] Erro na rotina mensal de cobrança de cartão:', { message: error.message });
+    }
+});
+
+//----------------------------------------------
+// LIMPEZA DE LOGS — diariamente às 03:00, remove arquivos com mais de 60 dias
+//----------------------------------------------
+cron.schedule('00 03 * * *', async () => {
+    const logDir = path.join(os.homedir(), 'dados', 'logs');
+    const RETENTION_MS = 60 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - RETENTION_MS;
+    let removidos = 0;
+
+    logger.info('[Manutenção] Iniciando limpeza de logs antigos');
+    try {
+        const arquivos = await fs.readdir(logDir);
+        for (const arquivo of arquivos) {
+            const fullPath = path.join(logDir, arquivo);
+            const stat = await fs.stat(fullPath);
+            if (stat.isFile() && stat.mtimeMs < cutoff) {
+                await fs.unlink(fullPath);
+                removidos++;
+            }
+        }
+        logger.info(`[Manutenção] Limpeza de logs concluída — ${removidos} arquivo(s) removido(s)`);
+    } catch (error) {
+        logger.error('[Manutenção] Erro na limpeza de logs:', { message: error.message });
     }
 });
 

@@ -92,7 +92,7 @@ const ObjetivosLeitura = {
      */
     async buscarPontosCarteira(usuarioId, conn = null) {
         const sql = `
-            SELECT pontos, pontos_permanentes, pontos_volateis
+            SELECT pontos, pontos_permanentes, pontos_volateis, pontos_indicacao
             FROM carteiras
             WHERE usuario_id = ?
             LIMIT 1

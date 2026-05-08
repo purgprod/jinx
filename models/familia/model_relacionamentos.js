@@ -7,10 +7,11 @@ class RelacionamentosModel {
         const db = conn ? conn : pool.promise();
         const [result] = await db.execute(
             `INSERT INTO familia_relacionamentos (guardiao_id, tutelado_id, token_acesso_hash)
-             VALUES (?, ?, ?)`,
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE status = 'ativo', token_acesso_hash = VALUES(token_acesso_hash)`,
             [guardiao_id, tutelado_id, token_acesso_hash]
         );
-        logger.info(`Relacionamento familiar criado: guardião ${guardiao_id} → tutelado ${tutelado_id}`);
+        logger.info(`Relacionamento familiar criado/reativado: guardião ${guardiao_id} → tutelado ${tutelado_id}`);
         return result;
     }
 
@@ -69,7 +70,7 @@ class RelacionamentosModel {
 
     static async listarGuardioesElegiveis(tutelado_id) {
         const [rows] = await pool.promise().execute(
-            `SELECT u.usuario_id, u.apelido, u.nome_completo, u.avatar_id
+            `SELECT u.usuario_id, u.apelido, u.nome_completo, u.avatar_id, u.email
              FROM users u
              WHERE u.status_ativo = 1
                AND u.usuario_id <> 1

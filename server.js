@@ -25,6 +25,8 @@ const route_lulu       = require('./routes/route_lulu');
 const route_admin            = require('./routes/route_admin');
 const route_senha_negociacao = require('./routes/route_senha_negociacao');
 const route_familia          = require('./routes/route_familia');
+const route_eventos          = require('./routes/route_eventos');
+const route_indicacoes       = require('./routes/route_indicacoes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -119,11 +121,23 @@ app.use((req, res, next) => {
     next();
 });
 
+const CAMPOS_SENSIVEIS = ['password', 'senha', 'nova_senha', 'senha_atual',
+    'senha_negociacao', 'nova_senha_negociacao', 'token', 'token_convite'];
+
+function sanitizarLog(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    return Object.fromEntries(
+        Object.entries(obj).map(([k, v]) =>
+            CAMPOS_SENSIVEIS.includes(k) ? [k, '***'] : [k, v]
+        )
+    );
+}
+
 // Debug: loga body/query de entrada e o corpo de cada resposta JSON
 app.use((req, res, next) => {
     if (!logger.isDebugEnabled()) return next();
 
-    const body  = req.body  && Object.keys(req.body).length  ? JSON.stringify(req.body)  : '—';
+    const body  = req.body  && Object.keys(req.body).length  ? JSON.stringify(sanitizarLog(req.body))  : '—';
     const query = req.query && Object.keys(req.query).length ? JSON.stringify(req.query) : '—';
     logger.debug(`[REQ] ${req.method} ${req.url} | body: ${body} | query: ${query}`);
 
@@ -207,6 +221,8 @@ app.use('/', route_lulu);
 app.use('/', route_admin);
 app.use('/', route_senha_negociacao);
 app.use('/', route_familia);
+app.use('/', route_eventos);
+app.use('/', route_indicacoes);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {

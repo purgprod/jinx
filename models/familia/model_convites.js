@@ -39,15 +39,38 @@ class ConvitesModel {
         );
     }
 
+    static async marcarRecusado(token_convite, conn) {
+        const db = conn ? conn : pool.promise();
+        await db.execute(
+            `UPDATE familia_convites SET status = 'cancelado' WHERE token_convite = ?`,
+            [token_convite]
+        );
+    }
+
     static async listarPendentesPorGuardiao(guardiao_id) {
         const [rows] = await pool.promise().execute(
-            `SELECT id, email_convidado, expira_em, criado_em
-             FROM familia_convites
-             WHERE guardiao_id = ? AND status = 'pendente' AND expira_em > NOW()
-             ORDER BY criado_em DESC`,
+            `SELECT
+                fc.id,
+                fc.status,
+                fc.expira_em,
+                fc.criado_em,
+                fc.guardiao_id,
+                g.nome_completo          AS nome_guardiao,
+                t.usuario_id             AS tutelado_id,
+                t.nome_completo          AS nome_tutelado,
+                fc.email_convidado       AS email_tutelado
+             FROM familia_convites fc
+             JOIN  users g ON g.usuario_id = fc.guardiao_id
+             LEFT JOIN users t ON LOWER(t.email) = LOWER(fc.email_convidado)
+             WHERE fc.guardiao_id = ? AND fc.status = 'pendente' AND fc.expira_em > NOW()
+             ORDER BY fc.criado_em DESC`,
             [guardiao_id]
         );
-        return rows;
+        return rows.map(r => ({
+            ...r,
+            tutelado_id:   r.tutelado_id   ?? 'Sem conta criada',
+            nome_tutelado: r.nome_tutelado  ?? 'Sem conta criada',
+        }));
     }
 
     static async expirarConvitesVencidos() {

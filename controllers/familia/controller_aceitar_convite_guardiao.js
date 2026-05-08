@@ -6,6 +6,8 @@ const { validationResult }    = require('express-validator');
 const ConvitesGuardiaoModel   = require('../../models/familia/model_convites_guardiao');
 const RelacionamentosModel    = require('../../models/familia/model_relacionamentos');
 const PermissoesModel         = require('../../models/familia/model_permissoes');
+const EventosModel            = require('../../models/eventos/model_eventos');
+const EventosUsuariosModel    = require('../../models/eventos/model_eventos_usuarios');
 const { withTransaction }     = require('../../database/transaction');
 const logger                  = require('../../logger');
 
@@ -86,6 +88,8 @@ async function aceitarConviteGuardiao(req, res) {
         const tokenAcesso     = crypto.randomBytes(32).toString('hex');
         const tokenAcessoHash = crypto.createHash('sha256').update(tokenAcesso).digest('hex');
 
+        const evento = await EventosModel.buscarPorTokenNoPayload(token, guardiaoId);
+
         await withTransaction(async (conn) => {
             await RelacionamentosModel.criar({
                 guardiao_id:       guardiaoId,
@@ -95,6 +99,10 @@ async function aceitarConviteGuardiao(req, res) {
 
             await PermissoesModel.criar(tuteladoId, conn);
             await ConvitesGuardiaoModel.marcarAceito(token, conn);
+
+            if (evento) {
+                await EventosUsuariosModel.marcarInteragido({ evento_id: evento.id, usuario_id: guardiaoId }, conn);
+            }
         });
 
         logger.info(`Convite de guardião aceito: guardião ${guardiaoId} → tutelado ${tuteladoId}`);

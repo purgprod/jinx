@@ -61,12 +61,37 @@ const MetasEscrita = {
 
     /**
      * Cancela (soft-delete) todas as metas de um objetivo.
-     * Usado no recálculo estrutural e ao cancelar o objetivo.
+     * Usado ao cancelar o objetivo inteiro.
      */
     async cancelarMetasObjetivo(objetivoId, conn) {
         return execute(
             'UPDATE objetivos SET status_ativo = 0 WHERE objetivo_id = ?',
             [objetivoId],
+            conn
+        );
+    },
+
+    /**
+     * Cancela (soft-delete) apenas as metas incompletas de um objetivo.
+     * Metas já concluídas (objetivo_completo = 1) são preservadas.
+     * Usa IS NULL OR = 0 porque o campo pode ser NULL em metas recém-criadas.
+     */
+    async cancelarMetasIncompletas(objetivoId, conn) {
+        return execute(
+            'UPDATE objetivos SET status_ativo = 0 WHERE objetivo_id = ? AND (objetivo_completo IS NULL OR objetivo_completo = 0) AND status_ativo = 1',
+            [objetivoId],
+            conn
+        );
+    },
+
+    /**
+     * Cancela (soft-delete) todas as metas com número > fromNumero.
+     * Usado para preservar a primeira meta (aporte) quando nada foi investido ainda.
+     */
+    async cancelarMetasAPartirDeNumero(objetivoId, fromNumero, conn) {
+        return execute(
+            'UPDATE objetivos SET status_ativo = 0 WHERE objetivo_id = ? AND objetivo_numero > ? AND status_ativo = 1',
+            [objetivoId, fromNumero],
             conn
         );
     },

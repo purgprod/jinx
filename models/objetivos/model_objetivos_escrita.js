@@ -1,8 +1,9 @@
 // models/objetivos/model_objetivos_escrita.js
 // Queries de escrita para objetivos_descricao (cabeçalho dos objetivos).
 
-const pool = require('../../database/database_purg');
-const logger = require('../../logger');
+const pool            = require('../../database/database_purg');
+const logger          = require('../../logger');
+const IndicacoesModel = require('../indicacoes/model_indicacoes');
 
 async function execute(sql, params, conn) {
     if (conn) {
@@ -117,8 +118,8 @@ const ObjetivosEscrita = {
     async adicionarPontosPermanentes(usuarioId, delta, conn) {
         // Leitura dos valores atuais para calcular o novo total com segurança
         const [rows] = await (conn
-            ? conn.execute('SELECT pontos_permanentes, pontos_volateis FROM carteiras WHERE usuario_id = ? FOR UPDATE', [usuarioId])
-            : pool.promise().execute('SELECT pontos_permanentes, pontos_volateis FROM carteiras WHERE usuario_id = ?', [usuarioId]));
+            ? conn.execute('SELECT pontos_permanentes, pontos_volateis, pontos_indicacao FROM carteiras WHERE usuario_id = ? FOR UPDATE', [usuarioId])
+            : pool.promise().execute('SELECT pontos_permanentes, pontos_volateis, pontos_indicacao FROM carteiras WHERE usuario_id = ?', [usuarioId]));
 
         if (!rows.length) {
             logger.warn(`[ObjetivosEscrita] Carteira não encontrada para usuário ${usuarioId}`);
@@ -126,13 +127,37 @@ const ObjetivosEscrita = {
         }
 
         const novoPermanentes = Number(rows[0].pontos_permanentes) + delta;
-        const novoTotal = novoPermanentes + Number(rows[0].pontos_volateis);
+        const novoTotal = novoPermanentes + Number(rows[0].pontos_volateis) + Number(rows[0].pontos_indicacao);
 
-        return execute(
+        await execute(
             'UPDATE carteiras SET pontos_permanentes = ?, pontos = ? WHERE usuario_id = ?',
             [novoPermanentes, novoTotal, usuarioId],
             conn
         );
+
+        // Crédito de 10% ao indicador — vai apenas para pontos_indicacao (não para pontos_permanentes)
+        if (delta > 0) {
+            const indicacao = await IndicacoesModel.buscarPorIndicado(usuarioId, conn);
+            if (indicacao) {
+                const bonus = Math.floor(delta * 0.10);
+                if (bonus > 0) {
+                    const [rowsInd] = await (conn
+                        ? conn.execute('SELECT pontos_permanentes, pontos_volateis, pontos_indicacao FROM carteiras WHERE usuario_id = ? FOR UPDATE', [indicacao.indicador_id])
+                        : pool.promise().execute('SELECT pontos_permanentes, pontos_volateis, pontos_indicacao FROM carteiras WHERE usuario_id = ?', [indicacao.indicador_id]));
+
+                    if (rowsInd.length) {
+                        const novoIndicInd = Number(rowsInd[0].pontos_indicacao) + bonus;
+                        const novoTotInd   = Number(rowsInd[0].pontos_permanentes) + Number(rowsInd[0].pontos_volateis) + novoIndicInd;
+                        await execute(
+                            'UPDATE carteiras SET pontos_indicacao = ?, pontos = ? WHERE usuario_id = ?',
+                            [novoIndicInd, novoTotInd, indicacao.indicador_id],
+                            conn
+                        );
+                        logger.info(`[Indicacao] +${bonus} pts ao indicador ${indicacao.indicador_id} por meta do indicado ${usuarioId}`);
+                    }
+                }
+            }
+        }
     },
 
     /**
@@ -140,12 +165,12 @@ const ObjetivosEscrita = {
      */
     async atualizarPontosVolateis(usuarioId, novoPontosVolateis, conn) {
         const [rows] = await (conn
-            ? conn.execute('SELECT pontos_permanentes FROM carteiras WHERE usuario_id = ?', [usuarioId])
-            : pool.promise().execute('SELECT pontos_permanentes FROM carteiras WHERE usuario_id = ?', [usuarioId]));
+            ? conn.execute('SELECT pontos_permanentes, pontos_indicacao FROM carteiras WHERE usuario_id = ?', [usuarioId])
+            : pool.promise().execute('SELECT pontos_permanentes, pontos_indicacao FROM carteiras WHERE usuario_id = ?', [usuarioId]));
 
         if (!rows.length) return;
 
-        const novoTotal = Number(rows[0].pontos_permanentes) + novoPontosVolateis;
+        const novoTotal = Number(rows[0].pontos_permanentes) + novoPontosVolateis + Number(rows[0].pontos_indicacao);
 
         return execute(
             'UPDATE carteiras SET pontos_volateis = ?, pontos = ? WHERE usuario_id = ?',

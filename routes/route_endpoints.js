@@ -116,6 +116,10 @@ router.post(
       .equals('1').withMessage('É necessário aceitar a política de privacidade.'),
     body('termos_de_riscos_da_plataforma')
       .equals('1').withMessage('É necessário aceitar os termos de riscos da plataforma.'),
+    body('codigo_ref')
+      .optional()
+      .isAlphanumeric().withMessage('Código de indicação inválido.')
+      .isLength({ min: 8, max: 8 }).withMessage('Código de indicação inválido.'),
   ],
   CadastroUsuarioController.cadastrarUsuario
 );

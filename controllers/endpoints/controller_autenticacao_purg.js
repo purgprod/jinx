@@ -8,7 +8,7 @@ const logger    = require('../../logger');
  * body: { email, password }
  */
 async function login(req, res) {
-    logger.info('Requisição de login recebida para Purg:', req.body);
+    logger.info('Requisição de login recebida para Purg');
 
     /* ---------- Validação do corpo ---------- */
     const { email, password } = req.body || {};
@@ -34,8 +34,6 @@ async function login(req, res) {
             });
         }
 
-        logger.info('Usuário encontrado:', user);
-
         /* ---------- Compara senha ---------- */
         const isMatch = await bcrypt.compare(password, user.password);
         logger.info(`Resultado da comparação de senhas: ${isMatch}`);
@@ -49,10 +47,11 @@ async function login(req, res) {
 
         /* ---------- Cria sessão ---------- */
         req.session.user = {
-            id           : user.usuario_id,
-            email        : user.email,
-            nome         : user.apelido,
-            nome_completo: user.nome_completo
+            id                : user.usuario_id,
+            email             : user.email,
+            nome              : user.apelido,
+            nome_completo     : user.nome_completo,
+            codigo_indicacao  : user.codigo_indicacao ?? null,
         };
 
         logger.info(`Login bem-sucedido na Purg: ${user.email}`);
@@ -78,7 +77,7 @@ async function login(req, res) {
  * body: { email, password }
  */
 async function register(req, res) {
-    logger.info('Tentativa de registro na Purg:', req.body);
+    logger.info('Tentativa de registro na Purg');
 
     const { email, password } = req.body || {};
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {

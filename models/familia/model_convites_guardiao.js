@@ -33,10 +33,44 @@ class ConvitesGuardiaoModel {
         return rows[0] || null;
     }
 
+    static async listarPendentesPorTutelado(tutelado_id) {
+        const [rows] = await pool.promise().execute(
+            `SELECT
+                fcg.id,
+                fcg.status,
+                fcg.expira_em,
+                fcg.criado_em,
+                fcg.tutelado_id,
+                t.nome_completo          AS nome_tutelado,
+                g.usuario_id             AS guardiao_id,
+                g.nome_completo          AS nome_guardiao,
+                fcg.email_convidado      AS email_guardiao
+             FROM familia_convites_guardiao fcg
+             JOIN  users t ON t.usuario_id = fcg.tutelado_id
+             LEFT JOIN users g ON LOWER(g.email) = LOWER(fcg.email_convidado)
+             WHERE fcg.tutelado_id = ? AND fcg.status = 'pendente' AND fcg.expira_em > NOW()
+             ORDER BY fcg.criado_em DESC`,
+            [tutelado_id]
+        );
+        return rows.map(r => ({
+            ...r,
+            guardiao_id:   r.guardiao_id   ?? 'Sem conta criada',
+            nome_guardiao: r.nome_guardiao  ?? 'Sem conta criada',
+        }));
+    }
+
     static async marcarAceito(token_convite, conn) {
         const db = conn ? conn : pool.promise();
         await db.execute(
             `UPDATE familia_convites_guardiao SET status = 'aceito' WHERE token_convite = ?`,
+            [token_convite]
+        );
+    }
+
+    static async marcarRecusado(token_convite, conn) {
+        const db = conn ? conn : pool.promise();
+        await db.execute(
+            `UPDATE familia_convites_guardiao SET status = 'cancelado' WHERE token_convite = ?`,
             [token_convite]
         );
     }

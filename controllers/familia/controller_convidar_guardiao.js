@@ -5,6 +5,7 @@ const crypto                           = require('crypto');
 const { validationResult }             = require('express-validator');
 const ConvitesGuardiaoModel            = require('../../models/familia/model_convites_guardiao');
 const RelacionamentosModel             = require('../../models/familia/model_relacionamentos');
+const EventosModel                     = require('../../models/eventos/model_eventos');
 const { enviarEmail }                  = require('../../mailer');
 const { gerarTemplateConviteGuardiao } = require('../../templates/template_convite_guardiao');
 const logger                           = require('../../logger');
@@ -94,15 +95,34 @@ async function convidarGuardiao(req, res) {
             expira_em:       expiraEm,
         });
 
-        const linkLogin    = `https://purg.com.br/login?convite_guardiao=${token}`;
-        const linkCadastro = `https://purg.com.br/cadastro?convite_guardiao=${token}`;
+        const jaTemConta = !!guardiao;
+        const link = jaTemConta
+            ? 'https://purg.com.br/login'
+            : `https://purg.com.br/cadastro?convite_guardiao=${token}`;
 
-        const html    = gerarTemplateConviteGuardiao({ nomeTutelado, linkLogin, linkCadastro });
+        const html    = gerarTemplateConviteGuardiao({ nomeTutelado, link, jaTemConta });
         const enviado = await enviarEmail(email, 'Convite Modo Família - Purg', html);
 
         if (!enviado) {
             logger.error(`Falha ao enviar convite de guardião para ${email}`);
             return res.status(500).json({ success: false, message: 'Erro ao enviar e-mail de convite. Tente novamente.' });
+        }
+
+        // Cria evento interativo para o guardião, se ele já tiver conta na plataforma
+        if (guardiao) {
+            try {
+                await EventosModel.criar({
+                    tipo:       'interativo',
+                    titulo:     'Convite para ser Responsável',
+                    mensagem:   `${nomeTutelado} quer que você seja o responsável dele na plataforma.`,
+                    acao:       'convite_guardiao',
+                    payload:    { token, nome_tutelado: nomeTutelado },
+                    usuario_id: guardiao.usuario_id,
+                    expira_em:  expiraEm,
+                });
+            } catch (errEvento) {
+                logger.error(`Falha ao criar evento de convite para guardião ${guardiao.usuario_id}: ${errEvento.message}`);
+            }
         }
 
         logger.info(`Convite de guardião enviado pelo tutelado ${tuteladoId} para ${email}`);

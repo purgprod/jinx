@@ -5,6 +5,7 @@ const logger = require('../../logger');
 const BuscarCarteiraModel = require('../../models/endpoints/model_buscar_saldo_carteira');
 const AtualizarCarteiraModel = require('../../models/endpoints/model_atualizar_saldo_carteira');
 const SolicitacaoExecutarDepositoModel = require('../../models/depositos/model_deposito_registro_executado');
+const UpdateAssinaturaClienteModel = require('../../models/assinaturas/model_update_assinatura_cliente');
 const { withTransaction } = require('../../database/transaction');
 
 // Engine de Objetivos
@@ -71,6 +72,9 @@ const ExecutarDepositoController = {
 
                 // 4. Alocar saldo nos objetivos do usuário
                 await alocarSaldoEntreObjetivos(conn, parseInt(id, 10), amount);
+
+                // 5. Promover para Poppy Pro no primeiro aporte
+                await UpdateAssinaturaClienteModel.promoverParaPro(id, conn);
             });
 
             logger.info('Fluxo de deposito finalizado', { userId: id, montante: amount, status: 'Executado' });
