@@ -23,15 +23,29 @@ const UpdatePorcentagemEmblemasController = {
                 });
             }
 
+            const taxaAnual  = Number(porcentagem_emblemas);
+            const aliquotaIr = taxa_ir !== undefined ? Number(taxa_ir) : null;
+
+            // Campos visuais derivados (não afetam o pagamento)
+            // juros_a_a líquido = taxa_anual × (1 − IR)
+            // rendimento_token  = (taxa_anual / 100 / 365) × 0,01 × (1 − IR)
+            // ir (%)            = aliquota × 100
+            const aliquotaEfetiva  = aliquotaIr !== null ? aliquotaIr : 0;
+            const jurosLiquido     = taxaAnual * (1 - aliquotaEfetiva);
+            const rendimentoDiario = (taxaAnual / 100 / 365) * 0.01 * (1 - aliquotaEfetiva);
+            const irPercentual     = aliquotaEfetiva * 100;
+
             await withTransaction(async (conn) => {
-                await UpdatePorcentagemEmblemasModel.updatePorcentagemTx(porcentagem_emblemas, conn);
-                await UpdatePorcentagemEmblemasModel.updateJurosEMBTx(porcentagem_emblemas, conn);
-                if (taxa_ir !== undefined) {
-                    await UpdatePorcentagemEmblemasModel.updateTaxaIrTx(taxa_ir, conn);
+                await UpdatePorcentagemEmblemasModel.updatePorcentagemTx(taxaAnual, conn);
+                await UpdatePorcentagemEmblemasModel.updateJurosEMBTx(jurosLiquido, conn);
+                await UpdatePorcentagemEmblemasModel.updateRendimentoTokenEMBTx(rendimentoDiario, conn);
+                await UpdatePorcentagemEmblemasModel.updateIrRFEMBTx(irPercentual, conn);
+                if (aliquotaIr !== null) {
+                    await UpdatePorcentagemEmblemasModel.updateTaxaIrTx(aliquotaIr, conn);
                 }
             });
 
-            logger.info(`Porcentagem de emblemas atualizada para: ${porcentagem_emblemas}${taxa_ir !== undefined ? `, taxa IR: ${taxa_ir}` : ''}`);
+            logger.info(`Emblemas atualizados — taxa bruta: ${taxaAnual}% a.a. | IR: ${irPercentual}% | juros líquido: ${jurosLiquido.toFixed(4)}% | rendimento/token/dia: ${rendimentoDiario.toFixed(10)}`);
             return res.status(200).json({
                 message: 'Porcentagem atualizada com sucesso'
             });

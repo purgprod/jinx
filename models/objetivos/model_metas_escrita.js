@@ -78,7 +78,7 @@ const MetasEscrita = {
      */
     async cancelarMetasIncompletas(objetivoId, conn) {
         return execute(
-            'UPDATE objetivos SET status_ativo = 0 WHERE objetivo_id = ? AND (objetivo_completo IS NULL OR objetivo_completo = 0) AND status_ativo = 1',
+            'UPDATE objetivos SET status_ativo = 0, saldo_alocado = 0 WHERE objetivo_id = ? AND (objetivo_completo IS NULL OR objetivo_completo = 0) AND status_ativo = 1',
             [objetivoId],
             conn
         );
@@ -90,7 +90,7 @@ const MetasEscrita = {
      */
     async cancelarMetasAPartirDeNumero(objetivoId, fromNumero, conn) {
         return execute(
-            'UPDATE objetivos SET status_ativo = 0 WHERE objetivo_id = ? AND objetivo_numero > ? AND status_ativo = 1',
+            'UPDATE objetivos SET status_ativo = 0, saldo_alocado = 0 WHERE objetivo_id = ? AND objetivo_numero > ? AND status_ativo = 1',
             [objetivoId, fromNumero],
             conn
         );

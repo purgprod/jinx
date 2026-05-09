@@ -46,6 +46,24 @@ const UpdatePorcentagemEmblemasModel = {
             [novaTaxaIr]
         );
         return result;
+    },
+
+    // Atualiza tokens.rendimento_token para todos os EMB (campo visual — não usado no pagamento)
+    async updateRendimentoTokenEMBTx(rendimentoDiario, conn) {
+        const [result] = await conn.execute(
+            "UPDATE tokens SET rendimento_token = ? WHERE risco = 'EMB'",
+            [rendimentoDiario]
+        );
+        return result;
+    },
+
+    // Atualiza resultados_financeiros.ir para todos os EMB (campo visual)
+    async updateIrRFEMBTx(irPercentual, conn) {
+        const [result] = await conn.execute(
+            "UPDATE resultados_financeiros SET ir = ? WHERE risco = 'EMB'",
+            [irPercentual]
+        );
+        return result;
     }
 };
 

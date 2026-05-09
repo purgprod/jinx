@@ -155,9 +155,7 @@ async function processarPixRecebido(pix) {
         } catch (errLiga) {
             logger.error(`[WebhookPix] Erro ao sincronizar liga pós-depósito. userId=${deposito.usuario_id}`, { erro: errLiga.message });
         }
-    });
 
-    setImmediate(async () => {
         try {
             const usuario = await BuscarUsuariosCarteirasModel.getUsuarioCarteiraPorId(deposito.usuario_id);
             if (usuario) {

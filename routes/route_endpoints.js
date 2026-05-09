@@ -306,6 +306,18 @@ router.put(
     body('complemento')
       .optional()
       .isString().withMessage('O complemento deve ser um texto válido.'),
+    body('bairro')
+      .optional()
+      .isString().withMessage('O bairro deve ser um texto válido.')
+      .notEmpty().withMessage('O bairro não pode ser vazio.'),
+    body('cidade')
+      .optional()
+      .isString().withMessage('A cidade deve ser um texto válido.')
+      .notEmpty().withMessage('A cidade não pode ser vazia.'),
+    body('estado')
+      .optional()
+      .isLength({ min: 2, max: 2 }).withMessage('O estado deve ser a sigla com 2 letras.')
+      .matches(/^[A-Z]{2}$/).withMessage('O estado deve ser uma sigla válida (ex: SP, RJ).'),
   ],
   verificarPermissaoFamilia('pode_alterar_perfil'),
   AtualizarPerfilController.atualizarPerfil

@@ -441,6 +441,16 @@ async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo,
     let saldoPendenteBig = 0n;
     let numeroInicio;
 
+    // Resgatar saldo de metas já inativas (resíduo de recálculos anteriores) e zerá-las
+    const todasAsMetas = await MetasLeitura.buscarTodasMetas(objetivo.objetivo_id, conn);
+    for (const meta of todasAsMetas) {
+        const saldoInativoBig = decimalToBigInt(String(meta.saldo_alocado));
+        if (Number(meta.status_ativo) === 0 && saldoInativoBig > 0n) {
+            saldoPendenteBig += saldoInativoBig;
+            await MetasEscrita.atualizarSaldoMeta(meta.id, '0', conn);
+        }
+    }
+
     if (saldoAtualBig > 0n) {
         baselineBig = saldoAtualBig;
 

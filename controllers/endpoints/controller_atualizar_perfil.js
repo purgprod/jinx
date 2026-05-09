@@ -27,6 +27,9 @@ async function atualizarPerfil(req, res) {
         'logradouro',
         'numero_da_rua',
         'complemento',
+        'bairro',
+        'cidade',
+        'estado',
     ];
 
     const campos = {};

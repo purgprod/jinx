@@ -1,3 +1,49 @@
+#develop-104:
+- Ranking por usuário, correção de campos no edita-perfil, atualização de emblemas com campos visuais derivados e correção de saldo alocado em metas inativas:
+
+- migrations/corrigir_triggers_carteiras_ranking.sql (novo):
+	- Trigger trg_carteiras_before_update corrigida: incluído pontos_indicacao na fórmula de pontos e removido GREATEST(1,...) que garantia pelo menos 1 ponto para qualquer usuário com depósito;
+	- Trigger trg_ranking_atualizar corrigida: substituído operador = por <=> (NULL-safe) na comparação de liga, resolvendo caso em que NULL → valor não disparava o rebuild do ranking;
+	- Rebuild imediato do ranking ao final do script;
+
+- migrations/criar_view_ranking_dados.sql (novo):
+	- View ranking_dados: expõe posicao, usuario_id, apelido, pontos, liga, avatar_id, created_at e estado para consultas autenticadas sem expor dados sensíveis;
+
+- models/ranking/model_ranking_dados.js (novo):
+	- getByUsuarioId(usuarioId): retorna os campos da view ranking_dados mais total_indicacoes (COUNT de indicado_id na tabela indicacoes onde indicador_id = usuarioId);
+
+- controllers/ranking/controller_ranking_dados.js (novo):
+	- GET /api/v1/ranking/dados/:usuario_id: retorna dados públicos não sensíveis de um usuário no ranking; 404 se não encontrado;
+
+- routes/route_ranking.js (modificado):
+	- Adicionada rota GET /api/v1/ranking/dados/:usuario_id;
+
+- controllers/endpoints/controller_atualizar_perfil.js (modificado):
+	- Adicionados bairro, cidade e estado ao array CAMPOS_PERMITIDOS; o UPDATE agora persiste o endereço completo do usuário;
+
+- models/endpoints/model_atualizar_perfil.js (modificado):
+	- Adicionados bairro, cidade e estado ao CAMPOS_PERMITIDOS do model, permitindo que a query dinâmica os inclua no SET;
+
+- routes/route_endpoints.js (modificado):
+	- Adicionados validators de bairro (isString/notEmpty), cidade (isString/notEmpty) e estado (sigla 2 letras maiúsculas) na rota PUT /api/v1/edita-perfil/:id;
+
+- controllers/depositos/controller_webhook_pix_efi.js (modificado):
+	- Removido setImmediate redundante que envolvia o bloco de atualização de emblemas pós-depósito; os dois blocos assíncronos agora correm dentro do mesmo setImmediate;
+
+- controllers/emblemas/controller_update_porcentagem_emblemas.js (modificado):
+	- Cálculo dos campos visuais derivados: juros_liquido = taxa_bruta × (1 − IR), rendimento_token = (taxa / 100 / 365) × 0,01 × (1 − IR), ir_percentual = aliquota × 100;
+	- A transação agora também grava rendimento_token (tokens) e ir (resultados_financeiros) para todos os EMB no mesmo atomic block;
+
+- models/emblemas/model_update_porcentagem_emblemas.js (modificado):
+	- Adicionado updateRendimentoTokenEMBTx: UPDATE tokens SET rendimento_token = ? WHERE risco = 'EMB';
+	- Adicionado updateIrRFEMBTx: UPDATE resultados_financeiros SET ir = ? WHERE risco = 'EMB';
+
+- services/objetivos_service.js (modificado):
+	- recalcularMetasObjetivo: antes de qualquer cancelamento, varre todas as metas do objetivo (incluindo inativas) via buscarTodasMetas, coleta o saldo de metas inativas com saldo_alocado > 0, zera cada uma no banco e soma o valor ao saldoPendenteBig que será redistribuído nas novas metas ativas;
+
+- models/objetivos/model_metas_escrita.js (modificado):
+	- cancelarMetasIncompletas e cancelarMetasAPartirDeNumero: adicionado saldo_alocado = 0 no UPDATE de inativação, impedindo que saldo fique preso em metas inativas em recálculos futuros;
+
 #develop-103:
 - Sistema de Indicações, Sistema de Eventos, edição de objetivos, rejeição de convites no Modo Família, promoção automática para Poppy Pro e correção de pontos_indicacao no ranking:
 

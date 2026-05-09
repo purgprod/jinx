@@ -12,6 +12,9 @@ const CAMPOS_PERMITIDOS = [
     'logradouro',
     'numero_da_rua',
     'complemento',
+    'bairro',
+    'cidade',
+    'estado',
 ];
 
 exports.apelidoEmUso = async (apelido, usuarioId) => {
