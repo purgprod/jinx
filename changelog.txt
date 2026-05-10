@@ -1,4 +1,4 @@
-#develop-105:
+#jinx-develop-105:
 - Pontuação fixa de 40 pts por meta nos objetivos e baixa manual de saques sem integração Efí:
 
 - services/objetivos_service.js (modificado):
@@ -14,7 +14,7 @@
 	- Removida chamada à Efí Bank (enviarPix) e dependência de AtualizarSaqueE2eModel;
 	- Baixa manual agora marca o saque diretamente como "Executado" via model_saque_registro_executado, sem aguardar webhook externo;
 
-#develop-104:
+#jinx-develop-104:
 - Ranking por usuário, correção de campos no edita-perfil, atualização de emblemas com campos visuais derivados e correção de saldo alocado em metas inativas:
 
 - migrations/corrigir_triggers_carteiras_ranking.sql (novo):
@@ -60,7 +60,7 @@
 - models/objetivos/model_metas_escrita.js (modificado):
 	- cancelarMetasIncompletas e cancelarMetasAPartirDeNumero: adicionado saldo_alocado = 0 no UPDATE de inativação, impedindo que saldo fique preso em metas inativas em recálculos futuros;
 
-#develop-103:
+#jinx-develop-103:
 - Sistema de Indicações, Sistema de Eventos, edição de objetivos, rejeição de convites no Modo Família, promoção automática para Poppy Pro e correção de pontos_indicacao no ranking:
 
 - migrations/criar_sistema_indicacoes.sql (novo):
@@ -195,7 +195,7 @@
 - public/js/autenticacao/autenticacao_jinx.js:
 	- Ao fazer login com query string ?convite_guardiao=TOKEN, o frontend chama automaticamente POST /api/v1/familia/aceitar-convite-guardiao antes de redirecionar para /home;
 
-#develop-100:
+#jinx-develop-100:
 - Novo endpoint para o tutelado desvincular um guardião da própria conta:
 
 - controllers/familia/controller_desvincular_guardiao.js (novo):
@@ -204,7 +204,7 @@
 - routes/route_familia.js:
 	- Registrada rota DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id;
 
-#develop-100:
+#jinx-develop-100:
 - Dois novos endpoints do Modo Família: tutelado desvincula guardião e lista guardiões elegíveis:
 
 - controllers/familia/controller_desvincular_guardiao.js (novo):
@@ -219,7 +219,7 @@
 - routes/route_familia.js:
 	- Registradas rotas DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id e GET /api/v1/familia/guardioes-elegiveis;
 
-#develop-102:
+#jinx-develop-102:
 - Fluxo de convite por e-mail para guardião (tutelado convida) e atualização dos templates de ambos os convites:
 
 - migrations/criar_tabela_convites_guardiao.sql (novo):
@@ -252,7 +252,7 @@
 - routes/route_familia.js:
 	- Registradas rotas POST /api/v1/familia/convidar-guardiao e POST /api/v1/familia/aceitar-convite-guardiao;
 
-#develop-101:
+#jinx-develop-101:
 - Campo adulto na tabela users calculado automaticamente por triggers com base em data_nascimento:
 
 - migrations/adicionar_adulto_users.sql (novo):
@@ -261,7 +261,7 @@
 	- trg_users_before_insert_adulto (BEFORE INSERT): define adulto com base em TIMESTAMPDIFF(YEAR, data_nascimento, CURDATE()) >= 18;
 	- trg_users_before_update_adulto (BEFORE UPDATE): recalcula adulto quando data_nascimento for alterada;
 
-#develop-100:
+#jinx-develop-100:
 - Dois novos endpoints do Modo Família: tutelado desvincula guardião e lista guardiões elegíveis:
 
 - controllers/familia/controller_desvincular_guardiao.js (novo):
@@ -276,7 +276,7 @@
 - routes/route_familia.js:
 	- Registradas rotas DELETE /api/v1/familia/desvincular-guardiao/:guardiao_id e GET /api/v1/familia/guardioes-elegiveis;
 
-#develop-99:
+#jinx-develop-99:
 - avatar_id adicionado à tabela ranking com sincronização automática por triggers:
 
 - migrations/adicionar_avatar_id_ranking.sql (novo):
@@ -287,7 +287,7 @@
 - models/ranking/model_ranking.js:
 	- SELECT estendido para incluir avatar_id;
 
-#develop-98:
+#jinx-develop-98:
 - Correção de dois bugs no Modo Família: tarja laranja persistia após logout e botão "sair" travava em carregamento eterno:
 
 - controllers/endpoints/controller_autenticacao_purg.js:
@@ -300,7 +300,7 @@
 - controllers/familia/controller_trocar_perfil.js:
 	- Mesmo fix de race condition: req.session.save() antes de responder ao trocar para o perfil do tutelado;
 
-#develop-97:
+#jinx-develop-97:
 - Preferência de visualização de valores financeiros: campo visualizacao_valores na tabela users e endpoints GET/PUT:
 
 - migrations/adicionar_visualizacao_valores_users.sql (novo):
@@ -317,7 +317,7 @@
 - routes/route_endpoints.js:
 	- Registradas rotas GET e PUT /api/v1/visualizacao-valores/:id com authMiddleware.checkAuthenticated;
 
-#develop-96:
+#jinx-develop-96:
 - Funcionalidade de avatar: campo avatar_id na tabela users, endpoints GET/PUT e retorno no login:
 
 - migrations/adicionar_avatar_id_users.sql (novo):
@@ -343,7 +343,7 @@
 - controllers/endpoints/controller_biometria.js:
 	- loginConcluir: avatar_id adicionado à resposta JSON;
 
-#develop-95:
+#jinx-develop-95:
 - Sincronização de apelido users→ranking, novos endpoints de Família, correções no Patrimônio, validação de CPF no depósito e fix de normalização de e-mail Gmail:
 
 - migrations/sincronizar_apelido_users_ranking.sql (novo):
@@ -383,7 +383,7 @@
 - routes/route_endpoints.js e routes/route_biometria.js:
 	- normalizeEmail() substituído por normalizeEmail({ gmail_remove_dots: false }) em todas as rotas de login, cadastro, edita-perfil e biometria; impede que o express-validator remova pontos de endereços Gmail antes da busca no banco;
 
-#develop-94:
+#jinx-develop-94:
 - Remoção completa da feature Suitability, implementação do Modo Família e novos endpoints de projeção:
 
 - DB (prod e dev):
@@ -506,7 +506,7 @@
 - scripts/corrigir_pontos_usuario2.js (novo):
 	- Script administrativo para correção pontual de saldo de pontos;
 
-#develop-91:
+#jinx-develop-91:
 
 - Senha de Negociação (PIN de 4 dígitos): criação, alteração, recuperação por e-mail e exigência no saque:
 
@@ -566,7 +566,7 @@
 - server.js:
 	- route_senha_negociacao importado e registrado;
 
-#develop-88:
+#jinx-develop-88:
 - Alíquota de IR configurável, painel Admin com modo debug, correções no saque e webhook Efí:
 
 - migrations/adicionar_taxa_ir_emblemas.sql (novo):
@@ -649,7 +649,7 @@
 - services/pix_estatico.js (novo):
 	- Gerador de string EMV Pix estático e lógica de valor único com centavos aleatórios; criado para uso futuro;
 
-#develop-87:
+#jinx-develop-87:
 - Integração Efí Bank: correções no fluxo de depósito Pix e configuração inicial da integração:
 
 - .gitignore:
@@ -671,7 +671,7 @@
 - models/depositos/model_deposito_rejeitar.js:
 	- status_deposito alterado de 'Rejeitado' para 'Cancelado' para consistência com os demais status do sistema;
 
-#develop-86:
+#jinx-develop-86:
 - Novo endpoint de ligas, campo nome_da_mae no cadastro, data_limite nas metas e objetivo_descricao na listagem de objetivos:
 
 - controllers/endpoints/controller_ligas.js (novo):
@@ -696,7 +696,7 @@
 - controllers/objetivos/controller_detalhar_objetivo.js:
 	- GET /api/v1/objetivos/:id/:objetivo_id: campo data_limite adicionado ao mapeamento de cada meta (null quando ausente);
 
-#develop-85:
+#jinx-develop-85:
 - Adicionado suporte ao campo genero no endpoint de edição de perfil:
 
 - controllers/endpoints/controller_atualizar_perfil.js:
@@ -708,7 +708,7 @@
 - routes/route_endpoints.js:
 	- PUT /api/v1/edita-perfil/:id: adicionada validação opcional para genero (string não vazia);
 
-#develop-84:
+#jinx-develop-84:
 - Novos endpoints de tipo de acesso e preferência de login + correções no fluxo biométrico:
 
 - migrations/adicionar_preferencia_login_users.sql (novo):
@@ -735,7 +735,7 @@
 	- cadastroConcluir: log do origin recebido pelo dispositivo vs origin esperado para diagnóstico de falhas;
 	- loginIniciar: removido allowCredentials da chamada generateAuthenticationOptions (era passado com IDs específicos, forçando busca local no dispositivo); com allowCredentials: [] o autenticador descobre automaticamente as passkeys disponíveis (Google Password Manager, iCloud Keychain, Samsung Pass);
 
-#develop-83:
+#jinx-develop-83:
 - Correções de bugs, melhorias de segurança e novas funcionalidades no cadastro e perfil de usuário:
 
 - migrations/corrigir_trigger_pontos_volateis.sql (novo):
@@ -782,7 +782,7 @@
 	- users.usuario_id: adicionado AUTO_INCREMENT (coluna existia como PK sem auto-increment, causando insertId = 0);
 	- Migrations adicionar_tema_users, adicionar_termos_users e corrigir_trigger_pontos_volateis aplicadas em prod e dev;
 
-#develop-82:
+#jinx-develop-82:
 - Correções e melhorias na aba Lulu e nas rotas SPA:
 
 - server.js:
@@ -796,7 +796,7 @@
 - public/style.css:
 	- Adicionado bloco #luluConfigForm com estilos de layout flex, label, input e ações;
 
-#develop-81:
+#jinx-develop-81:
 - Implementação da Lulu — engine de amortização diária da taxa de cartão de crédito:
 
 - migrations/criar_tabelas_lulu.sql (novo):
@@ -833,7 +833,7 @@
 - public/style.css: #luluButton adicionado ao seletor de estilo e hover dos botões do menu;
 - public/js/lulu/lulu.js (novo): painel com cards de resumo, 2 gráficos Chart.js (pendente + usuários), tabela top 10 e formulário de configuração editável;
 
-#develop-80:
+#jinx-develop-80:
 - Implementação de cobrança mensal automática no cartão de crédito para as metas do usuário (Efí Bank):
 
 - migrations/criar_tabela_cartoes_usuario.sql (novo):
@@ -870,7 +870,7 @@
 - controllers/rotinas/cron.js:
 	- Cron mensal: dia 1 de cada mês às 07:00 chama poppy-cobranca-metas-cartao;
 
-#develop-79:
+#jinx-develop-79:
 - Sincronização imediata de pontos, liga e ranking após confirmação de depósito ou saque:
 
 - services/liga_service.js (novo):
@@ -883,13 +883,13 @@
 - controllers/endpoints/controller_saque.js:
 	- Após commit da transação de débito: setImmediate chama sincronizarLigaUsuario;
 
-#develop-78:
+#jinx-develop-78:
 - Correção de crash em usuarios_detalhes.js ao abrir suitability de usuário sem dados preenchidos:
 
 - public/js/usuarios/usuarios_detalhes.js:
 	- Adicionado guard if (!suitability) return após dadosSuitability[0]: evita TypeError ao tentar ler propriedades de undefined quando o array retornado pela API está vazio;
 
-#develop-77:
+#jinx-develop-77:
 - Renomear coluna ranking.nome para ranking.apelido e ajustar trigger e referências no código:
 
 - migrations/renomear_ranking_nome_para_apelido.sql (novo):
@@ -933,7 +933,7 @@
 - public/js/usuarios/usuarios_detalhes.js:
 	- Título e campo do formulário: data.nome → data.apelido; label/id/name do input: nome → apelido;
 
-#develop-76:
+#jinx-develop-76:
 - Remoção do trigger trg_carteiras_after_update_investido: correção da causa raiz do bug de pontos_permanentes não gravados:
 
 - migrations/remover_trigger_investido_objetivos.sql (novo):
@@ -941,7 +941,7 @@
 	- Motivo: o trigger comparava carteiras.investido (valor total em pins) com objetivos.objetivo_investir (meta de alocação de saldo), que são métricas diferentes; além disso marcava objetivo_completo = 1 sem chamar adicionarPontosPermanentes, fazendo com que metas concluídas por esse caminho nunca gerassem pontos permanentes;
 	- A conclusão de metas passa a ser responsabilidade exclusiva do service objetivos_service.js (_alocarNasMetas), que executa concluirMeta e adicionarPontosPermanentes na mesma transação;
 
-#develop-75:
+#jinx-develop-75:
 - Correção de bugs pós-deploy do develop-74: trigger trg_ranking_atualizar ausente no banco, servidor rodando código antigo e pontos_permanentes não gravados via trigger:
 
 - banco de dados (purg):
@@ -952,7 +952,7 @@
 - servidor:
 	- reiniciado para carregar o código atualizado do develop-74 (process estava rodando versão anterior que ainda usava SET ranking = ? e acessava sinistro.ranking — causando Unknown column 'ranking' in 'SET' na cron de manutenção de liga e sinistro definido como 0% para todos os usuários);
 
-#develop-74:
+#jinx-develop-74:
 - Renomear conceito "ranking" para "liga" em todo o ecossistema (tier/nível do usuário, ex: "Cobre I", "Bronze V") e renomear tabela ranking_pontos para ranking com adição da coluna liga:
 
 - migrations/renomear_ranking_para_liga.sql (novo):
@@ -1030,7 +1030,7 @@
 - services/objetivos_service.js:
 	- Comentário: manutenção de liga;
 
-#develop-73:
+#jinx-develop-73:
 - Ranking de pontos: tabela no banco atualizada por trigger, endpoint para o app e seção Ranking no painel Jinx:
 
 - migrations/ranking_pontos.sql (novo):
@@ -1064,7 +1064,7 @@
 - public/script.js:
 	- Adicionada referência ao #rankingButton, entrada /ranking no tabRouteMap e event listener que chama loadRankingResults();
 
-#develop-72:
+#jinx-develop-72:
 - Engine de Objetivos e Metas: sistema completo de objetivos financeiros com alocação/dedução automática de saldo, pontuação e integração transacional em depósitos, saques e rendimentos:
 
 - services/objetivos_service.js (novo):
@@ -1168,11 +1168,11 @@
 - public/js/usuarios/usuarios_detalhes.js:
 	- Adicionada seção de objetivos e metas na tela de detalhes do usuário no painel Jinx;
 
-#develop-71:
+#jinx-develop-71:
 - Novas funções e melhorias em rotinas, emblemas, sinistro e carteiras:
 	- (ver commit jinx-develop-71)
 
-#develop-70:
+#jinx-develop-70:
 - Autenticação biométrica (WebAuthn/Passkeys), sanitização token→pin e melhorias de UI no painel Jinx:
 
 - models/endpoints/model_biometria.js (novo):
@@ -1226,7 +1226,7 @@
 	- resultados_financeiros.js: badge #id_resultado adicionado ao canto superior direito de cada card;
 	- tokens.js (pins): badge #id_token adicionado ao canto superior direito de cada card de pin;
 
-#develop-69:
+#jinx-develop-69:
 - Integridade transacional: garantia de atomicidade em todas as operações financeiras multi-etapa:
 
 - database/transaction.js (novo):
@@ -1315,7 +1315,7 @@
 - controllers/rotinas/controller_poppy_compra_diaria_pins.js:
 	- Ambos os loops de compra usam withTransaction(atualizarQuantidadeTokens + gravarTransacao + atualizarTokensIPO + atualizarSaldo); leituras (tokensIPO, saldo_usuario) mantidas fora da transação;
 
-#develop-68:
+#jinx-develop-68:
 - Integração Pix automática com Efí Bank para depósitos e saques (PLD — validação de CPF):
 
 - services/efi_pix.js (novo):
@@ -1383,7 +1383,7 @@
 - package.json:
 	- Adicionada dependência sdk-node-apis-efi; instalada em dev e produção;
 
-#develop-66:
+#jinx-develop-66:
 - Padronização de rotas para /api/v1/, novo endpoint de edição de perfil e correção de rendimento histórico:
 
 - routes/route_endpoints.js:
@@ -1420,7 +1420,7 @@
 	- rotinas.hora_agendada do ID 2 atualizado de 00:30:00 para 15:30:00;
 	- 344 registros de usuarios_dados_financeiros_diarios recalculados com o rendimento_dia correto (valor pago ao cliente);
 
-#develop-65:
+#jinx-develop-65:
 - Novo endpoint de cadastro de usuário e melhorias de segurança em senhas:
 
 - routes/route_endpoints.js:
@@ -1464,7 +1464,7 @@
 - package.json:
 	- Adicionada dependência connect-redis ^9.0.0;
 
-#develop-64:
+#jinx-develop-64:
 - Correções de segurança HTTP/HTTPS e rate limiting:
 
 - nginx (jinx-dev.purg.com.br):
@@ -1475,7 +1475,7 @@
 	- Adicionado keyGenerator no loginLimiter: normaliza IPs IPv4-mapped-IPv6 (::ffff:x.x.x.x) para o formato IPv4 puro, corrigindo o erro ERR_ERL_KEY_GEN_IPV6 que deixava o rate limiting inoperante para clientes IPv6;
 	- Adicionado httpOnly: true explícito no cookie de sessão (era o padrão implícito do express-session, agora documentado explicitamente);
 
-#develop-63:
+#jinx-develop-63:
 - Roteamento client-side via History API (SPA sem dependências novas):
 
 - server.js:
@@ -1494,7 +1494,7 @@
 	- Adicionado listener 'jinx:auth-ready': define estado inicial do histórico e carrega a aba correspondente à URL ao abrir a página diretamente (ex: /usuarios);
 	- Todos os botões de navegação agora chamam pushRoute antes de carregar o conteúdo;
 
-#develop-62:
+#jinx-develop-62:
 - Melhorias de performance (itens seguros):
 
 - database_purg.js (#13):
@@ -1511,7 +1511,7 @@
 	- resultados_financeiros: criados idx_rf_status_ativo (status_ativo) e idx_rf_flag_sinistro (flag_sinistro);
 	- Todos aplicados com ALGORITHM=INPLACE, LOCK=NONE (sem downtime);
 
-#develop-61:
+#jinx-develop-61:
 - Padronização de logs e aumento do pool de conexões:
 
 - logger.js:
@@ -1536,7 +1536,7 @@
 	- Todos os 14 blocos catch agora identificam explicitamente o nome da rotina e horário agendado na mensagem de erro (ex: "Erro ao executar rotina poppy-compra-diaria-pins (17:00)");
 	- Erro estruturado com { message, stack } substituindo o objeto bruto;
 
-#develop-60:
+#jinx-develop-60:
 - Correções críticas de segurança (IDOR, autenticação, dados sensíveis):
 	- Adicionada validação de ownership em saque e depósito: usuário só pode operar sobre seu próprio ID;
 	- Adicionado middleware checkAuthenticated em todas as rotas /api/usuarios, /api/tokens e /api/assinaturas;
@@ -1559,7 +1559,7 @@
 - Correções no nginx:
 	- Adicionados headers de segurança: Strict-Transport-Security, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy;
 
-#develop-59:
+#jinx-develop-59:
 - Correção no redirect HTTP→HTTPS do Nginx (jinx-dev.purg.com.br):
 	- Alterado código de redirect de 301 para 308, preservando o método HTTP (POST) e o corpo da requisição no redirecionamento para HTTPS;
 
@@ -1571,7 +1571,7 @@
 - Correção no controller de próximo ID de usuário (controller_nextuserid_usuarios.js):
 	- Corrigida referência de model de UsuariosModel para UsuariosNextUserIdModel na chamada getNextUserId();
 
-#develop-58:
+#jinx-develop-58:
 - Correções e melhorias no servidor (server.js):
 	- Adicionado suporte a CORS com configuração de origens, métodos e headers permitidos;
 	- Adicionado `trust proxy` para compatibilidade com servidores atrás de Nginx/HTTPS;
@@ -1594,7 +1594,7 @@
 - Correção no banco de dados (database_purg.js):
 	- Alterado host do banco de dados de 'dev-purg.c1geomm2m0qt.us-east-2.rds.amazonaws.com' para 'localhost';
 
-#develop-57:
+#jinx-develop-57:
 - Melhorias no deposito: 
 	- Criado a tela de Depósitos na Jinx com as funções:
 		- Buscar depósitos com status Analisando;
