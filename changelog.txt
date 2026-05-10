@@ -1,3 +1,19 @@
+#develop-105:
+- Pontuação fixa de 40 pts por meta nos objetivos e baixa manual de saques sem integração Efí:
+
+- services/objetivos_service.js (modificado):
+	- gerarMetas: removida distribuição proporcional via Math.floor(pontosTotal / totalMetas); aporte inicial e todas as metas regulares recebem sempre 40 pontos fixos;
+	- gerarMetasRestantes: mesma correção para metas geradas no recálculo por edição de valor_alvo ou prazo;
+	- recalcularMetasObjetivo: pontosRestantes agora calculado como novoPrazo × 40; objetivo_pontos_total persistido como (metas_concluídas + novoPrazo) × 40;
+
+- controllers/objetivos/controller_criar_objetivo.js (modificado):
+	- execute: pontos_total não é mais aceito do frontend; calculado internamente como (prazo + 1) × 40 com aporte_inicial ou prazo × 40 sem;
+	- configurarPatrimonio: mesmo ajuste — pontos_total = prazo × 40;
+
+- controllers/saques/controller_saque_executar.js (modificado):
+	- Removida chamada à Efí Bank (enviarPix) e dependência de AtualizarSaqueE2eModel;
+	- Baixa manual agora marca o saque diretamente como "Executado" via model_saque_registro_executado, sem aguardar webhook externo;
+
 #develop-104:
 - Ranking por usuário, correção de campos no edita-perfil, atualização de emblemas com campos visuais derivados e correção de saldo alocado em metas inativas:
 

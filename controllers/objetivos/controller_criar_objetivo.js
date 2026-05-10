@@ -24,12 +24,12 @@ const CriarObjetivoController = {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { descricao, valor_alvo, prazo, pontos_total, aporte_inicial } = req.body;
+        const { descricao, valor_alvo, prazo, aporte_inicial } = req.body;
 
-        const valorAlvoNum   = Number(valor_alvo);
-        const prazoNum       = parseInt(prazo, 10);
-        const pontosTotalNum = parseInt(pontos_total, 10);
+        const valorAlvoNum     = Number(valor_alvo);
+        const prazoNum         = parseInt(prazo, 10);
         const aporteInicialNum = aporte_inicial ? Number(aporte_inicial) : 0;
+        const pontosTotalNum   = (aporteInicialNum > 0 ? prazoNum + 1 : prazoNum) * 40;
 
         if (valorAlvoNum <= 0 || prazoNum <= 0 || prazoNum > 600) {
             return res.status(400).json({ error: 'valor_alvo deve ser > 0 e prazo entre 1 e 600.' });
@@ -99,10 +99,10 @@ const CriarObjetivoController = {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { valor_alvo, prazo, pontos_total } = req.body;
+        const { valor_alvo, prazo } = req.body;
         const valorAlvoNum   = Number(valor_alvo);
         const prazoNum       = parseInt(prazo, 10);
-        const pontosTotalNum = parseInt(pontos_total, 10);
+        const pontosTotalNum = prazoNum * 40;
 
         if (valorAlvoNum <= 0 || prazoNum <= 0 || prazoNum > 600) {
             return res.status(400).json({ error: 'valor_alvo deve ser > 0 e prazo entre 1 e 600.' });

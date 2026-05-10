@@ -378,9 +378,6 @@ function gerarMetasRestantes(restante, prazo, pontosTotal, numeroInicio, dataIni
     const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
     const restoValor      = valorCentsTotal - valorPorMeta * prazo;
 
-    const pontosPorMeta = Math.floor(pontosTotal / prazo);
-    const restoPontos   = pontosTotal - pontosPorMeta * prazo;
-
     for (let i = 0; i < prazo; i++) {
         const isUltima  = i === prazo - 1;
         const mesOffset = mesInicio + i;
@@ -389,7 +386,7 @@ function gerarMetasRestantes(restante, prazo, pontosTotal, numeroInicio, dataIni
         metas.push({
             numero:        numeroInicio + i,
             valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
-            pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+            pontos:        40,
             dataLimite:    _ultimoDiaMes(ano, mes),
         });
     }
@@ -495,8 +492,7 @@ async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo,
     }
 
     // Pontos já ganhos nas concluídas → restantes distribuídos nas novas metas
-    const pontosJaGanhos  = completadas.reduce((sum, m) => sum + Number(m.objetivo_pontos), 0);
-    const pontosRestantes = Math.max(0, novosPontosTotal - pontosJaGanhos);
+    const pontosRestantes = novoPrazo * 40;
 
     // Registrar recálculo
     await ObjetivosEscrita.registrarRecalculo({
@@ -512,7 +508,7 @@ async function recalcularMetasObjetivo(conn, usuarioId, objetivo, novoValorAlvo,
         descricao:    objetivo.objetivo_descricao,
         valorTotal:   novoValorAlvo,
         numeroTotal:  novoPrazo,
-        pontosTotal:  novosPontosTotal,
+        pontosTotal:  (completadas.length + novoPrazo) * 40,
     }, conn);
 
     // Gerar e inserir novas metas para o restante
@@ -592,13 +588,10 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio
         const valorPorMetaRestante = Math.floor(valorRestanteCents / prazo);
         const restoValorRestante   = valorRestanteCents - valorPorMetaRestante * prazo;
 
-        const pontosPorMeta = Math.floor(pontosTotal / totalMetas);
-        const restoPontos   = pontosTotal - pontosPorMeta * totalMetas;
-
         metas.push({
             numero:        1,
             valorInvestir: aporteInicial.toFixed(2),
-            pontos:        pontosPorMeta,
+            pontos:        40,
             dataLimite:    _ultimoDiaMes(anoInicio, mesInicio),
         });
 
@@ -610,7 +603,7 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio
             metas.push({
                 numero:        i,
                 valorInvestir: ((valorPorMetaRestante + (isUltima ? restoValorRestante : 0)) / 100).toFixed(2),
-                pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+                pontos:        40,
                 dataLimite:    _ultimoDiaMes(ano, mes),
             });
         }
@@ -618,9 +611,6 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio
         const valorCentsTotal = Math.round(valorAlvo * 100);
         const valorPorMeta    = Math.floor(valorCentsTotal / prazo);
         const restoValor      = valorCentsTotal - valorPorMeta * prazo;
-
-        const pontosPorMeta = Math.floor(pontosTotal / prazo);
-        const restoPontos   = pontosTotal - pontosPorMeta * prazo;
 
         for (let i = 1; i <= prazo; i++) {
             const isUltima  = i === prazo;
@@ -630,7 +620,7 @@ function gerarMetas(valorAlvo, prazo, pontosTotal, aporteInicial = 0, dataInicio
             metas.push({
                 numero:        i,
                 valorInvestir: ((valorPorMeta + (isUltima ? restoValor : 0)) / 100).toFixed(2),
-                pontos:        pontosPorMeta + (isUltima ? restoPontos : 0),
+                pontos:        40,
                 dataLimite:    _ultimoDiaMes(ano, mes),
             });
         }
