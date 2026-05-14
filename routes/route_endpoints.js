@@ -39,6 +39,8 @@ const BuscarDepositosPendentesUsuarioController = require('../controllers/endpoi
 const UpdateAssinaturaClienteController = require('../controllers/endpoints/controller_update_assinatura_cliente');
 const TrocaSenhaController = require('../controllers/endpoints/controller_troca_senha');
 const RecuperacaoSenhaController = require('../controllers/mailing/controller_recuperacao_de_senha');
+const ValidarCodigoController    = require('../controllers/endpoints/controller_validar_codigo');
+const NovaSenhaController        = require('../controllers/endpoints/controller_nova_senha');
 const CadastroUsuarioController  = require('../controllers/endpoints/controller_cadastro_usuario');
 const AtualizarPerfilController  = require('../controllers/endpoints/controller_atualizar_perfil');
 const AtualizarPixController     = require('../controllers/endpoints/controller_atualizar_pix');
@@ -149,6 +151,53 @@ router.post(
     }
 
     return res.status(500).json({ success: false, message: 'Erro ao processar a solicitação.' });
+  }
+);
+
+// Rota para definir nova senha via código de recuperação - Não requer autenticação
+router.post(
+  '/api/v1/nova-senha',
+  [
+    body('email')
+      .notEmpty().withMessage('O e-mail é obrigatório.')
+      .isEmail().withMessage('Informe um e-mail válido.')
+      .normalizeEmail({ gmail_remove_dots: false }),
+    body('codigo')
+      .notEmpty().withMessage('O código é obrigatório.')
+      .matches(/^\d{6}$/).withMessage('O código deve conter exatamente 6 dígitos numéricos.'),
+    body('nova_senha')
+      .notEmpty().withMessage('A nova senha é obrigatória.')
+      .isLength({ min: 8 }).withMessage('A nova senha deve ter no mínimo 8 caracteres.')
+      .matches(/[A-Z]/).withMessage('A nova senha deve conter pelo menos uma letra maiúscula.')
+      .matches(/[!@#$%*]/).withMessage('A nova senha deve conter pelo menos um caractere especial (! @ # $ % *).'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    return NovaSenhaController.novaSenha(req, res);
+  }
+);
+
+// Rota para validar código de recuperação de senha - Não requer autenticação
+router.post(
+  '/api/v1/validar-codigo',
+  [
+    body('email')
+      .notEmpty().withMessage('O e-mail é obrigatório.')
+      .isEmail().withMessage('Informe um e-mail válido.')
+      .normalizeEmail({ gmail_remove_dots: false }),
+    body('codigo')
+      .notEmpty().withMessage('O código é obrigatório.')
+      .matches(/^\d{6}$/).withMessage('O código deve conter exatamente 6 dígitos numéricos.'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    return ValidarCodigoController.validarCodigo(req, res);
   }
 );
 

@@ -1,3 +1,16 @@
+#jinx-develop-107:
+- Endpoints públicos de validação de código e definição de nova senha no fluxo de recuperação:
+
+- controllers/endpoints/controller_validar_codigo.js (novo):
+	- validarCodigo: recebe email e codigo, busca usuário pelo e-mail e compara o código via bcrypt.compare contra a senha atual; retorna 401 genérico em caso de falha para não revelar se o e-mail existe;
+
+- controllers/endpoints/controller_nova_senha.js (novo):
+	- novaSenha: recebe email, codigo e nova_senha; revalida o código antes de aplicar a troca, reutilizando atualizarSenha de model_troca_senha;
+
+- routes/route_endpoints.js (modificado):
+	- Adicionadas rotas POST /api/v1/validar-codigo e POST /api/v1/nova-senha antes do router.use('/api/v1/*', checkAuthenticated), tornando-as públicas para o fluxo de esqueci minha senha;
+	- Ambas as rotas validam email (isEmail), codigo (^\d{6}$) e nova_senha (min 8, maiúscula, especial) via express-validator antes de chegar nos controllers;
+
 #jinx-develop-106:
 - Recuperação de senha gera código numérico de 6 dígitos e atualiza texto do e-mail:
 
