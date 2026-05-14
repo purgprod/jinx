@@ -6,26 +6,7 @@ const AtualizarSenhaModel = require('../../models/usuarios/model_atualizarsenha_
 const logger = require('../../logger');
 
 function gerarSenhaAleatoria() {
-    const maiusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const minusculas = 'abcdefghijklmnopqrstuvwxyz';
-    const numeros    = '0123456789';
-    const especiais  = '!@#$%*';
-    const todos      = maiusculas + minusculas + numeros + especiais;
-
-    const getRandom = (str) => str[crypto.randomInt(str.length)];
-
-    const chars = [
-        getRandom(maiusculas),
-        getRandom(especiais),
-        ...Array.from({ length: 6 }, () => getRandom(todos))
-    ];
-
-    for (let i = chars.length - 1; i > 0; i--) {
-        const j = crypto.randomInt(i + 1);
-        [chars[i], chars[j]] = [chars[j], chars[i]];
-    }
-
-    return chars.join('');
+    return Array.from({ length: 6 }, () => crypto.randomInt(10)).join('');
 }
 
 /**

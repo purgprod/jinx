@@ -1,3 +1,12 @@
+#jinx-develop-106:
+- Recuperação de senha gera código numérico de 6 dígitos e atualiza texto do e-mail:
+
+- controllers/mailing/controller_recuperacao_de_senha.js (modificado):
+	- gerarSenhaAleatoria: substituída geração alfanumérica+especiais por 6 dígitos numéricos via crypto.randomInt(10);
+
+- templates/template_recuperacao_de_senha.js (modificado):
+	- Texto "SEGUE A SUA NOVA SENHA" alterado para "SEGUE CÓDIGO DE VALIDAÇÃO";
+
 #jinx-develop-105:
 - Pontuação fixa de 40 pts por meta nos objetivos e baixa manual de saques sem integração Efí:
 

@@ -59,6 +59,8 @@ const VenderTodosPinsController = require('../controllers/rotinas/controller_ven
 const CobrancaMetasCartaoController      = require('../controllers/rotinas/controller_poppy_cobranca_metas_cartao.js');
 const LuluAmortizacaoDiariaController    = require('../controllers/rotinas/controller_lulu_amortizacao_diaria.js');
 const LuluSnapshotDiarioController       = require('../controllers/rotinas/controller_lulu_snapshot_diario.js');
+const NamiResumoSemanalController        = require('../controllers/rotinas/controller_nami_resumo_semanal.js');
+const NamiController                     = require('../controllers/webhook/controller_nami.js');
 
 //----------------------------------------------
 // ROTINAS EXCLUSIVAS DE MANUTENÇÃO DO ECOSSISTEMA
@@ -133,6 +135,12 @@ router.put('/api/rotinas/lulu-amortizacao-diaria', rotinasAuth, lockMiddleware, 
 
 // Lulu: snapshot diário para os gráficos do painel (ao final da cadeia)
 router.put('/api/rotinas/lulu-snapshot-diario', rotinasAuth, lockMiddleware, LuluSnapshotDiarioController.executarSnapshot);
+
+// Nami: enfileira resumo semanal para todos os usuários ativos (todo domingo)
+router.post('/api/rotinas/nami-resumo-semanal', rotinasAuth, lockMiddleware, NamiResumoSemanalController.executar);
+
+// Nami: notifica usuários com metas mensais incompletas (diário — 1, 5, 10, 20 e 29 dias após data_limite)
+router.post('/api/rotinas/nami-meta-mensal-incompleta', rotinasAuth, lockMiddleware, NamiController.verificarMetasMensais);
 
 module.exports = router;
 

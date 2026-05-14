@@ -17,6 +17,14 @@ const CAMPOS_PERMITIDOS = [
     'estado',
 ];
 
+exports.apelidoAtual = async (usuarioId) => {
+    const [rows] = await pool.promise().execute(
+        'SELECT apelido FROM users WHERE usuario_id = ?',
+        [usuarioId]
+    );
+    return rows.length > 0 ? rows[0].apelido : null;
+};
+
 exports.apelidoEmUso = async (apelido, usuarioId) => {
     const [rows] = await pool.promise().execute(
         'SELECT usuario_id FROM users WHERE LOWER(apelido) = LOWER(?) AND usuario_id <> ?',

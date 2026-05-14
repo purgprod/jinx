@@ -1,6 +1,9 @@
 // controllers/endpoints/controller_buscar_depositos_pendentes_usuario.js
 const BuscarDepositoPendenteModel = require('../../models/endpoints/model_deposito_buscar_deposito_pendente_usuario');
+const CancelarDepositoModel       = require('../../models/endpoints/model_deposito_registro_cancelamento');
 const logger = require('../../logger');
+
+const PIX_EXPIRACAO_SEGUNDOS = 3600;
 
 const BuscarDepositosPendentesUsuarioController = {
     async getDepositosPendentes(req, res) {
@@ -18,11 +21,25 @@ const BuscarDepositosPendentesUsuarioController = {
 
         try {
             const depositos = await BuscarDepositoPendenteModel.getDepositoPendente(id);
-            
-            // Semântica HTTP 200: A consulta foi processada com sucesso. 
-            // Uma lista vazia [] é um resultado válido de busca, não um erro 404.
-            logger.info(`Busca finalizada para user ${id}: ${depositos.length} registros encontrados.`);
-            return res.status(200).json(depositos);
+
+            const ativos = [];
+            for (const dep of depositos) {
+                const criadoEm   = new Date(dep.data_criacao).getTime();
+                const expiradoEm = criadoEm + PIX_EXPIRACAO_SEGUNDOS * 1000;
+
+                if (Date.now() > expiradoEm) {
+                    logger.info(`PIX expirado cancelado automaticamente via busca (depositoId=${dep.id}, userId=${id})`);
+                    await CancelarDepositoModel.cancelarSolicitacao(dep.id, 'PIX expirado automaticamente');
+                } else {
+                    ativos.push({
+                        ...dep,
+                        expiracao_restante: Math.max(0, Math.floor((expiradoEm - Date.now()) / 1000)),
+                    });
+                }
+            }
+
+            logger.info(`Busca finalizada para user ${id}: ${ativos.length} registros ativos encontrados.`);
+            return res.status(200).json(ativos);
             
         } catch (error) {
             // Log detalhado para debug interno, mas mensagem genérica para o cliente (segurança)

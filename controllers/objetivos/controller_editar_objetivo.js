@@ -9,6 +9,7 @@ const logger                       = require('../../logger');
 const { withTransaction }          = require('../../database/transaction');
 const ObjetivosLeitura             = require('../../models/objetivos/model_objetivos_leitura');
 const { recalcularMetasObjetivo }  = require('../../services/objetivos_service');
+const BuscarDepositoPorTxidModel   = require('../../models/depositos/model_deposito_buscar_por_txid');
 
 const EditarObjetivoController = {
     async execute(req, res) {
@@ -34,28 +35,20 @@ const EditarObjetivoController = {
                 return res.status(409).json({ error: 'Objetivo inativo não pode ser editado.' });
             }
 
-            const { descricao, valor_alvo, prazo, pontos_total } = req.body;
+            const { descricao, prazo } = req.body;
 
-            const novoValorAlvo   = valor_alvo   !== undefined ? Number(valor_alvo)       : Number(objetivo.objetivo_valor_total);
-            const novoPrazo       = prazo         !== undefined ? parseInt(prazo, 10)      : objetivo.objetivo_numero_total;
-            const novosPontos     = pontos_total  !== undefined ? parseInt(pontos_total, 10) : objetivo.objetivo_pontos_total;
-            const novaDescricao   = descricao     !== undefined ? descricao.trim()         : objetivo.objetivo_descricao;
+            // valor_alvo é imutável após a criação
+            const novoValorAlvo = Number(objetivo.objetivo_valor_total);
+            const novoPrazo     = prazo     !== undefined ? parseInt(prazo, 10)  : objetivo.objetivo_numero_total;
+            const novaDescricao = descricao !== undefined ? descricao.trim()     : objetivo.objetivo_descricao;
 
-            if (novoValorAlvo <= 0 || novoPrazo <= 0 || novoPrazo > 600) {
-                return res.status(400).json({ error: 'valor_alvo deve ser > 0 e prazo entre 1 e 600.' });
+            if (novoPrazo <= 0 || novoPrazo > 600) {
+                return res.status(400).json({ error: 'Prazo deve ser entre 1 e 600 meses.' });
             }
 
             const saldoAtual = Number(objetivo.saldo_alocado_total ?? 0);
 
-            // Quando há saldo investido, o controller pode validar rapidamente.
-            // Quando saldo = 0, a baseline é a primeira meta (aporte), que só o
-            // serviço conhece — a validação fina acontece lá e sobe como validationError.
             if (saldoAtual > 0) {
-                if (novoValorAlvo <= saldoAtual) {
-                    return res.status(400).json({
-                        error: `O valor alvo deve ser maior que o total já investido (R$ ${saldoAtual.toFixed(2)}).`,
-                    });
-                }
                 const parcelaBruta = (novoValorAlvo - saldoAtual) / novoPrazo;
                 if (parcelaBruta < 5) {
                     return res.status(400).json({
@@ -64,17 +57,24 @@ const EditarObjetivoController = {
                 }
             }
 
-            const mudouValor = novoValorAlvo !== Number(objetivo.objetivo_valor_total);
-            const mudouPrazo = novoPrazo     !== objetivo.objetivo_numero_total;
+            const mudouPrazo = novoPrazo !== objetivo.objetivo_numero_total;
+            const motivo = mudouPrazo ? 'alteracao_prazo' : null;
 
-            const motivo = mudouValor ? 'alteracao_alvo' : mudouPrazo ? 'alteracao_prazo' : null;
+            if (motivo) {
+                const depositoRecente = await BuscarDepositoPorTxidModel.temDepositoRecenteExecutado(usuarioId);
+                if (depositoRecente) {
+                    return res.status(409).json({
+                        error: 'Aguarde 10 minutos após um depósito antes de editar seus objetivos.',
+                    });
+                }
+            }
 
             await withTransaction(async (conn) => {
                 if (motivo) {
-                    // Recalcula metas e redistribui saldo existente
+                    // Recalcula metas redistribuindo saldo e pontos proporcionalmente
                     await recalcularMetasObjetivo(
                         conn, usuarioId, objetivo,
-                        novoValorAlvo, novoPrazo, novosPontos,
+                        novoValorAlvo, novoPrazo, Number(objetivo.objetivo_pontos_total),
                         motivo
                     );
                 } else {
@@ -85,7 +85,7 @@ const EditarObjetivoController = {
                         descricao:   novaDescricao,
                         valorTotal:  novoValorAlvo,
                         numeroTotal: novoPrazo,
-                        pontosTotal: novosPontos,
+                        pontosTotal: Number(objetivo.objetivo_pontos_total),
                     }, conn);
                 }
             });

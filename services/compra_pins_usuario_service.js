@@ -19,9 +19,8 @@ const BuscarTokensEmbAtivosModel = require('../models/rotinas/model_poppy_buscar
 const AtualizarQuantidadeTokensModel = require('../models/rotinas/model_poppy_comprar_pins_disponiveis');
 const UsersSaldosModel = require('../models/usuarios/model_saldos_usuarios');
 const AtualizarSaldoUsuariosModel = require('../models/rotinas/model_poppy_atualizar_saldo_usuarios');
-const ligaAcessoInvestimentos = require('../public/js/usuarios/acesso_investimentos_por_liga');
+const ligas = require('../data/liga_acesso_investimentos');
 const BuscarSaquePendenteModel = require('../models/endpoints/model_saque_buscar_saque_pendente');
-const ligas = ligaAcessoInvestimentos.default;
 
 // Mutex compartilhado entre a rotina diária e os webhooks — evita compras concorrentes
 const mutex = new Mutex();

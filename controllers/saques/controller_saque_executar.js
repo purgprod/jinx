@@ -11,6 +11,7 @@
 const logger = require('../../logger');
 const BuscarSaqueParaEnvioModel   = require('../../models/saques/model_saque_buscar_para_envio');
 const ExecutarSolicitacaoModel    = require('../../models/saques/model_saque_registro_executado');
+const NotificacoesModel           = require('../../models/webhook/model_notificacoes');
 
 const ExecutarSaqueController = {
     async execute(req, res) {
@@ -34,6 +35,14 @@ const ExecutarSaqueController = {
                 userId:  id,
                 saqueId: saque.id,
                 valor:   saque.valor_saque
+            });
+
+            setImmediate(async () => {
+                try {
+                    await NotificacoesModel.criar(parseInt(id, 10), 'saque_confirmado', { valor: saque.valor_saque });
+                } catch (err) {
+                    logger.error('[Nami] Falha ao enfileirar notificação de saque confirmado', { userId: id, erro: err.message });
+                }
             });
 
             return res.status(200).json({

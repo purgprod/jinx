@@ -27,6 +27,7 @@ const route_senha_negociacao = require('./routes/route_senha_negociacao');
 const route_familia          = require('./routes/route_familia');
 const route_eventos          = require('./routes/route_eventos');
 const route_indicacoes       = require('./routes/route_indicacoes');
+const route_webhook          = require('./routes/route_webhook');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -223,6 +224,7 @@ app.use('/', route_senha_negociacao);
 app.use('/', route_familia);
 app.use('/', route_eventos);
 app.use('/', route_indicacoes);
+app.use('/', route_webhook);
 
 // Iniciar o servidor
 const server = app.listen(port, () => {

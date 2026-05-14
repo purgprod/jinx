@@ -10,6 +10,7 @@ const { withTransaction } = require('../../database/transaction');
 
 // Engine de Objetivos
 const { alocarSaldoEntreObjetivos } = require('../../services/objetivos_service');
+const NotificacoesModel = require('../../models/webhook/model_notificacoes');
 
 const SCALE = 8;
 const TEN_POW = 10n ** BigInt(SCALE);
@@ -78,6 +79,14 @@ const ExecutarDepositoController = {
             });
 
             logger.info('Fluxo de deposito finalizado', { userId: id, montante: amount, status: 'Executado' });
+
+            setImmediate(async () => {
+                try {
+                    await NotificacoesModel.criar(parseInt(id, 10), 'deposito_confirmado', { valor: amount });
+                } catch (err) {
+                    logger.error('[Nami] Falha ao enfileirar notificação de depósito', { userId: id, erro: err.message });
+                }
+            });
 
             return res.status(200).json({
                 success: true,

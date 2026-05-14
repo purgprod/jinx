@@ -10,6 +10,25 @@ const BuscarDepositoPorTxidModel = {
      * @param {string} txid - Identificador único da cobrança Pix
      * @returns {Object|null} Registro do depósito ou null
      */
+    async temDepositoRecenteExecutado(usuarioId, minutos = 10) {
+        const query = `
+            SELECT 1 FROM depositos
+            WHERE usuario_id = ?
+              AND status_deposito = 'Executado'
+              AND data_status >= DATE_SUB(NOW(), INTERVAL ? MINUTE)
+            LIMIT 1
+        `;
+        return new Promise((resolve, reject) => {
+            connection.query(query, [usuarioId, minutos], (error, results) => {
+                if (error) {
+                    logger.error(`[Model Deposito] Erro ao verificar depósito recente para usuario_id=${usuarioId}:`, error);
+                    return reject(new Error('Erro ao verificar depósito recente.'));
+                }
+                resolve(results.length > 0);
+            });
+        });
+    },
+
     async getDepositoPorTxid(txid) {
         const query = `
             SELECT

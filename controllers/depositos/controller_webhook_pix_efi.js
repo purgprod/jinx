@@ -47,6 +47,9 @@ const UpdateAssinaturaClienteModel = require('../../models/assinaturas/model_upd
 const BuscarUsuariosCarteirasModel = require('../../models/rotinas/model_poppy_buscar_usuarios_e_carteiras');
 const { processarUsuario } = require('../../services/compra_pins_usuario_service');
 
+// --- Nami ---
+const NotificacoesModel = require('../../models/webhook/model_notificacoes');
+
 // ---------------------------------------------------------------------------
 // Utilitários BigInt
 // ---------------------------------------------------------------------------
@@ -138,7 +141,7 @@ async function processarPixRecebido(pix) {
 
     await withTransaction(async (conn) => {
         await AtualizarCarteiraModel.updateCarteira(novoSaldo, deposito.usuario_id, conn);
-        const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.usuario_id, conn);
+        const resultado = await SolicitacaoExecutarDepositoModel.executarSolicitacao(deposito.id, conn);
         if (resultado.affectedRows === 0) {
             throw new Error(`Depósito txid=${txid} não estava em 'Processando' — possível reprocessamento duplicado`);
         }
@@ -149,6 +152,12 @@ async function processarPixRecebido(pix) {
     logger.info(`[WebhookPix] Depósito executado. txid=${txid}, userId=${deposito.usuario_id}, valor=${valor}`);
 
     setImmediate(async () => {
+        try {
+            await NotificacoesModel.criar(deposito.usuario_id, 'deposito_confirmado', { valor });
+        } catch (err) {
+            logger.error('[Nami] Falha ao enfileirar notificação de depósito', { userId: deposito.usuario_id, erro: err.message });
+        }
+
         try {
             await sincronizarLigaUsuario(deposito.usuario_id);
             logger.info(`[WebhookPix] Liga/pontos sincronizados pós-depósito. userId=${deposito.usuario_id}`);
@@ -198,6 +207,13 @@ async function processarPagamentoEnviado(pagamento) {
     if (status === 'REALIZADO') {
         await ConfirmarSaqueModel.confirmarPorE2e(endToEndId);
         logger.info(`[WebhookPix] Saque confirmado. endToEndId=${endToEndId}, userId=${saque.usuario_id}, valor=${valor}`);
+        setImmediate(async () => {
+            try {
+                await NotificacoesModel.criar(saque.usuario_id, 'saque_confirmado', { valor: saque.valor_saque });
+            } catch (err) {
+                logger.error('[Nami] Falha ao enfileirar notificação de saque confirmado', { userId: saque.usuario_id, erro: err.message });
+            }
+        });
         return;
     }
 
@@ -221,6 +237,12 @@ async function processarPagamentoEnviado(pagamento) {
     logger.info(`[WebhookPix] Saldo revertido. userId=${saque.usuario_id}, valor=${saque.valor_saque}`);
 
     setImmediate(async () => {
+        try {
+            await NotificacoesModel.criar(saque.usuario_id, 'saque_falhou', { valor: saque.valor_saque, motivo });
+        } catch (err) {
+            logger.error('[Nami] Falha ao enfileirar notificação de saque falhou', { userId: saque.usuario_id, erro: err.message });
+        }
+
         try {
             await sincronizarLigaUsuario(saque.usuario_id);
             logger.info(`[WebhookPix] Liga/pontos sincronizados pós-reversão de saque. userId=${saque.usuario_id}`);

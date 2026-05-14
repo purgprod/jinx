@@ -100,6 +100,12 @@ const ObjetivosLeitura = {
         const rows = await query(sql, [usuarioId], conn);
         return rows[0] || null;
     },
+
+    async buscarInvestido(usuarioId, conn = null) {
+        const sql = `SELECT investido FROM carteiras WHERE usuario_id = ? LIMIT 1`;
+        const rows = await query(sql, [usuarioId], conn);
+        return rows[0]?.investido ?? 0;
+    },
 };
 
 module.exports = ObjetivosLeitura;

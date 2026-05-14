@@ -47,6 +47,7 @@ const HistoricoRendimentosController = require('../controllers/endpoints/control
 const RankingController              = require('../controllers/ranking/controller_ranking');
 const CartaoController               = require('../controllers/endpoints/controller_cartao');
 const TemaController                 = require('../controllers/endpoints/controller_tema');
+const NamiUsuarioController          = require('../controllers/endpoints/controller_nami_usuario');
 const AvatarController               = require('../controllers/endpoints/controller_avatar');
 const VisualizacaoValoresController  = require('../controllers/endpoints/controller_visualizacao_valores');
 const TipoAcessoController           = require('../controllers/endpoints/controller_tipo_acesso');
@@ -219,6 +220,20 @@ router.get('/api/v1/ligas', authMiddleware.checkAuthenticated, LigasController.g
 
 // Rota para consultar a preferência de tema do usuário
 router.get('/api/v1/tema/:id', authMiddleware.checkAuthenticated, TemaController.getTema);
+
+// Rota para consultar se a Nami está habilitada para o usuário
+router.get('/api/v1/nami/:id', authMiddleware.checkAuthenticated, NamiUsuarioController.getNami);
+
+// Rota para habilitar ou desabilitar a Nami para o usuário
+router.put(
+  '/api/v1/nami/:id',
+  authMiddleware.checkAuthenticated,
+  [
+    param('id').isInt({ gt: 0 }).withMessage('O ID deve ser um inteiro válido.'),
+    body('ativo').isIn([0, 1]).withMessage('O campo "ativo" deve ser 0 ou 1.'),
+  ],
+  NamiUsuarioController.setNami
+);
 
 // Rota para atualizar a preferência de tema do usuário
 router.put(
@@ -415,7 +430,7 @@ router.post(
 );
 
 // Rota para cancelar uma solicitação de deposito específica
-router.post(
+router.delete(
   '/api/v1/cancelar-deposito/:id',
   authMiddleware.checkAuthenticated,
   [

@@ -9,37 +9,37 @@ const SolicitacaoExecutarDepositoModel = {
      * podem sofrer transição para 'Cancelado'.
      * * @param {number|string} usuario_id - ID do usuário.
      */
-    async executarSolicitacao(usuario_id, conn) {
+    async executarSolicitacao(depositoId, conn) {
         const query = `
             UPDATE depositos
             SET
                 status_deposito = 'Executado',
                 motivo = 'Deposito realizado com sucesso.'
-            WHERE usuario_id = ?
+            WHERE id = ?
             AND status_deposito = 'Processando';
         `;
 
         if (conn) {
-            const [results] = await conn.execute(query, [usuario_id]);
+            const [results] = await conn.execute(query, [depositoId]);
             if (results.affectedRows === 0) {
-                logger.warn(`[Model Deposito] Nenhuma alteração feita no deposito ID ${usuario_id}. Possível ID inválido ou status incompatível.`);
+                logger.warn(`[Model Deposito] Nenhuma alteração feita no deposito ID ${depositoId}. Possível ID inválido ou status incompatível.`);
             } else {
-                logger.info(`[Model Deposito] Deposito ID ${usuario_id} executado com sucesso.`);
+                logger.info(`[Model Deposito] Deposito ID ${depositoId} executado com sucesso.`);
             }
             return results;
         }
 
         return new Promise((resolve, reject) => {
-            connection.query(query, [usuario_id], (error, results) => {
+            connection.query(query, [depositoId], (error, results) => {
                 if (error) {
-                    logger.error(`[Model Deposito] Erro ao executar deposito ID ${usuario_id}:`, error);
+                    logger.error(`[Model Deposito] Erro ao executar deposito ID ${depositoId}:`, error);
                     return reject(new Error('Erro interno ao atualizar o status do deposito.'));
                 }
 
                 if (results.affectedRows === 0) {
-                    logger.warn(`[Model Deposito] Nenhuma alteração feita no deposito ID ${usuario_id}. Possível ID inválido ou status incompatível.`);
+                    logger.warn(`[Model Deposito] Nenhuma alteração feita no deposito ID ${depositoId}. Possível ID inválido ou status incompatível.`);
                 } else {
-                    logger.info(`[Model Deposito] Deposito ID ${usuario_id} executado com sucesso.`);
+                    logger.info(`[Model Deposito] Deposito ID ${depositoId} executado com sucesso.`);
                 }
 
                 resolve(results);

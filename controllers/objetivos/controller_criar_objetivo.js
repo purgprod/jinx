@@ -7,8 +7,12 @@ const { validationResult } = require('express-validator');
 const logger               = require('../../logger');
 const { withTransaction }  = require('../../database/transaction');
 const ObjetivosEscrita     = require('../../models/objetivos/model_objetivos_escrita');
+const ObjetivosLeitura     = require('../../models/objetivos/model_objetivos_leitura');
 const MetasEscrita         = require('../../models/objetivos/model_metas_escrita');
+const MetasLeitura         = require('../../models/objetivos/model_metas_leitura');
 const { gerarMetas }       = require('../../services/objetivos_service');
+const NotificacoesModel    = require('../../models/webhook/model_notificacoes');
+const perfilModel          = require('../../models/endpoints/model_atualizar_perfil');
 
 const CriarObjetivoController = {
     async execute(req, res) {
@@ -42,6 +46,9 @@ const CriarObjetivoController = {
         logger.info('[CriarObjetivo] Iniciando criação', { usuarioId, descricao, valorAlvoNum, prazoNum });
 
         try {
+            const objetivosExistentes = await ObjetivosLeitura.buscarObjetivosSecundarios(usuarioId);
+            const primeiroObjetivo = objetivosExistentes.length === 0;
+
             let objetivoId;
             await withTransaction(async (conn) => {
                 // Criar cabeçalho do objetivo
@@ -69,6 +76,28 @@ const CriarObjetivoController = {
             });
 
             logger.info('[CriarObjetivo] Objetivo criado com sucesso', { usuarioId, objetivoId });
+
+            if (primeiroObjetivo) {
+                setImmediate(async () => {
+                    try {
+                        const [apelido, metas] = await Promise.all([
+                            perfilModel.apelidoAtual(usuarioId),
+                            MetasLeitura.buscarMetasAtivas(objetivoId),
+                        ]);
+                        const [primeira, ...restantes] = metas;
+                        await NotificacoesModel.criar(usuarioId, 'cadastro_concluido', {
+                            apelido,
+                            objetivo_valor_total: valorAlvoNum,
+                            data_limite:          primeira.data_limite,
+                            aporte:               Number(primeira.objetivo_investir),
+                            metas:                restantes.map(m => Number(m.objetivo_investir)),
+                        });
+                    } catch (err) {
+                        logger.error(`[Nami] Erro ao criar notificação cadastro_concluido usuario_id=${usuarioId}:`, err);
+                    }
+                });
+            }
+
             return res.status(201).json({
                 success: true,
                 message: 'Objetivo criado com sucesso.',

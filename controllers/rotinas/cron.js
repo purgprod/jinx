@@ -101,6 +101,34 @@ cron.schedule('00 07 25 * *', async () => {
 });
 
 //----------------------------------------------
+// ROTINA DIÁRIA — todos os dias às 09:00
+// Notifica usuários com metas mensais incompletas (1, 5, 10, 20 e 29 dias após data_limite)
+//----------------------------------------------
+cron.schedule('00 09 * * *', async () => {
+    logger.info('Iniciando rotina diária: [Nami] Metas mensais incompletas');
+    try {
+        const r = await axios.post(`${BASE_URL}/api/rotinas/nami-meta-mensal-incompleta`);
+        logger.info(`Rotina diária concluída — enfileirados=${r.data.enfileirados}, ignorados=${r.data.ignorados}`);
+    } catch (error) {
+        logger.error('[Nami] Erro na rotina diária de metas incompletas (09:00):', { message: error.message, stack: error.stack });
+    }
+});
+
+//----------------------------------------------
+// ROTINA SEMANAL — todo domingo às 08:00
+// Enfileira resumo semanal na fila Nami para todos os usuários ativos
+//----------------------------------------------
+cron.schedule('00 08 * * 0', async () => {
+    logger.info('Iniciando rotina semanal: [Nami] Resumo semanal');
+    try {
+        const r = await axios.post(`${BASE_URL}/api/rotinas/nami-resumo-semanal`);
+        logger.info(`Rotina semanal concluída. Resposta: ${r.data.message}`);
+    } catch (error) {
+        logger.error('[Nami] Erro na rotina semanal de resumo (08:00):', { message: error.message, stack: error.stack });
+    }
+});
+
+//----------------------------------------------
 // LIMPEZA DE LOGS — diariamente às 03:00, remove arquivos com mais de 60 dias
 //----------------------------------------------
 cron.schedule('00 03 * * *', async () => {

@@ -24,7 +24,7 @@ const gerarTemplateSenha = (novaSenha) => {
         
         <div style="background-color: #f0f0f0; border: 1px dashed #32d957; border-radius: 16px; padding: 30px; margin-bottom: 30px;">
           <span style="color: #28a745; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 10px; font-weight: 600; font-family: 'Poppins', sans-serif;">
-            SEGUE A SUA NOVA SENHA
+            SEGUE CÓDIGO DE VALIDAÇÃO
           </span>
           <code style="color: #000000; font-size: 32px; font-family: 'Courier New', monospace; letter-spacing: 4px; font-weight: bold;">
             ${novaSenha}

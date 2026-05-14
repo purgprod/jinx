@@ -53,6 +53,7 @@ async function atualizarPerfil(req, res) {
 
         await atualizarPerfilModel.atualizarPerfil(usuarioId, campos);
         logger.info(`Perfil do usuário ID ${usuarioId} atualizado com sucesso.`);
+
         return res.status(200).json({ success: true, message: 'Perfil atualizado com sucesso.' });
     } catch (error) {
         logger.error(`Erro ao atualizar perfil do usuário ID ${usuarioId}: ${error.message}`);

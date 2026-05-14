@@ -7,7 +7,7 @@ const { withTransaction } = require('../../database/transaction');
 const ObjetivosLeitura    = require('../../models/objetivos/model_objetivos_leitura');
 const ObjetivosEscrita    = require('../../models/objetivos/model_objetivos_escrita');
 const MetasEscrita        = require('../../models/objetivos/model_metas_escrita');
-const { _atualizarPontosVolateis } = require('../../services/objetivos_service');
+const MetasLeitura        = require('../../models/objetivos/model_metas_leitura');
 
 const CancelarObjetivoController = {
     /**
@@ -38,17 +38,25 @@ const CancelarObjetivoController = {
             }
 
             await withTransaction(async (conn) => {
+                // Somar pontos permanentes das metas já concluídas antes de cancelar
+                const metasAtivas = await MetasLeitura.buscarMetasAtivas(objetivoId, 'ASC', conn);
+                const pontosACancelar = metasAtivas
+                    .filter(m => Number(m.objetivo_completo) === 1)
+                    .reduce((sum, m) => sum + Number(m.objetivo_pontos), 0);
+
                 await MetasEscrita.cancelarMetasObjetivo(objetivoId, conn);
                 await ObjetivosEscrita.cancelarObjetivo(objetivoId, conn);
-                // Recalcular pontos após remoção
-                const { _atualizarPontosVolateis: atualizarPV } = require('../../services/objetivos_service');
-                // chamada interna sem export — reimplementamos aqui de forma direta
-                const ObjetivosLeituraLocal = require('../../models/objetivos/model_objetivos_leitura');
-                const MetasLeituraLocal     = require('../../models/objetivos/model_metas_leitura');
-                const objetivosRestantes = await ObjetivosLeituraLocal.buscarObjetivosAtivos(usuarioId, conn);
+
+                // Remover pontos permanentes das metas que o usuário havia concluído
+                if (pontosACancelar > 0) {
+                    await ObjetivosEscrita.adicionarPontosPermanentes(usuarioId, -pontosACancelar, conn);
+                }
+
+                // Recalcular pontos_volateis com base nos objetivos restantes
+                const objetivosRestantes = await ObjetivosLeitura.buscarObjetivosAtivos(usuarioId, conn);
                 let pontosVolateis = 0;
                 for (const obj of objetivosRestantes) {
-                    const metas = await MetasLeituraLocal.buscarMetasAtivas(obj.objetivo_id, 'ASC', conn);
+                    const metas = await MetasLeitura.buscarMetasAtivas(obj.objetivo_id, 'ASC', conn);
                     for (const meta of metas) {
                         if (Number(meta.objetivo_completo) === 1) continue;
                         const investir = Number(meta.objetivo_investir);

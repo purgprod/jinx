@@ -2,11 +2,14 @@ const { validationResult } = require('express-validator');
 const logger = require('../../logger');
 
 // Models
-const BuscarDepositoPendenteModel = require('../../models/endpoints/model_deposito_buscar_deposito_pendente');
-const SolicitacaoDepositoModel    = require('../../models/endpoints/model_deposito_registro_solicitacao');
-const AtualizarDepositoQrModel    = require('../../models/depositos/model_deposito_atualizar_qr');
-const DadosCadastroModel          = require('../../models/endpoints/model_dados_cadastro');
-const ObjetivosLeitura            = require('../../models/objetivos/model_objetivos_leitura');
+const BuscarDepositoPendenteModel    = require('../../models/endpoints/model_deposito_buscar_deposito_pendente');
+const SolicitacaoDepositoModel       = require('../../models/endpoints/model_deposito_registro_solicitacao');
+const AtualizarDepositoQrModel       = require('../../models/depositos/model_deposito_atualizar_qr');
+const DadosCadastroModel             = require('../../models/endpoints/model_dados_cadastro');
+const ObjetivosLeitura               = require('../../models/objetivos/model_objetivos_leitura');
+const CancelarDepositoModel          = require('../../models/endpoints/model_deposito_registro_cancelamento');
+
+const PIX_EXPIRACAO_SEGUNDOS = 3600;
 
 // Serviço Efí Bank Pix
 const { criarCobrancaPix } = require('../../services/efi_pix');
@@ -69,22 +72,32 @@ const DepositoController = {
             if (depositosPendentes && depositosPendentes.length > 0) {
                 const pendente = depositosPendentes[0];
 
-                if (pendente.pix_copia_cola) {
+                const criadoEm   = new Date(pendente.data_criacao).getTime();
+                const expiradoEm = criadoEm + PIX_EXPIRACAO_SEGUNDOS * 1000;
+                const expirou    = Date.now() > expiradoEm;
+
+                if (expirou) {
+                    logger.info('PIX expirado detectado, cancelando automaticamente', { userId: id, depositoId: pendente.id });
+                    await CancelarDepositoModel.cancelarSolicitacao(pendente.id, 'PIX expirado automaticamente');
+                    // Prossegue para criar novo PIX abaixo
+                } else if (pendente.pix_copia_cola) {
                     logger.info('Retornando cobrança Pix já existente', { userId: id, txid: pendente.txid });
+                    const segundosRestantes = Math.max(0, Math.floor((expiradoEm - Date.now()) / 1000));
                     return res.status(200).json({
-                        message:        'Você já possui uma solicitação de depósito em análise.',
-                        solicitacao_id: pendente.id,
-                        status:         'Processando',
-                        txid:           pendente.txid,
-                        pix_copia_cola: pendente.pix_copia_cola,
-                        qr_code:        pendente.qr_code
+                        message:           'Você já possui uma solicitação de depósito em análise.',
+                        solicitacao_id:    pendente.id,
+                        status:            'Processando',
+                        txid:              pendente.txid,
+                        pix_copia_cola:    pendente.pix_copia_cola,
+                        qr_code:           pendente.qr_code,
+                        expiracao_restante: segundosRestantes,
+                    });
+                } else {
+                    logger.warn('Solicitação bloqueada: Depósito pendente existente sem QR Code', { userId: id });
+                    return res.status(429).json({
+                        error: 'Você já possui uma solicitação de depósito em análise. Aguarde o processamento.'
                     });
                 }
-
-                logger.warn('Solicitação bloqueada: Depósito pendente existente sem QR Code', { userId: id });
-                return res.status(429).json({
-                    error: 'Você já possui uma solicitação de depósito em análise. Aguarde o processamento.'
-                });
             }
 
             // Busca dados cadastrais (CPF e nome para a cobrança)
