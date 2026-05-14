@@ -9,7 +9,9 @@ const logger = require('../../logger');
 
 const RP_ID   = process.env.WEBAUTHN_RP_ID   || 'purg.com.br';
 const RP_NAME = process.env.WEBAUTHN_RP_NAME  || 'Purg';
-const ORIGIN  = process.env.WEBAUTHN_ORIGIN   || 'https://purg.com.br';
+const ORIGIN  = process.env.WEBAUTHN_ORIGIN
+    ? process.env.WEBAUTHN_ORIGIN.split(',').map(o => o.trim())
+    : ['https://purg.com.br', 'https://www.purg.com.br'];
 
 const BiometriaController = {
 
@@ -69,7 +71,7 @@ const BiometriaController = {
             }
 
             const originRecebido = JSON.parse(Buffer.from(req.body.response.clientDataJSON, 'base64').toString()).origin;
-            logger.info(`[Biometria] Tentativa de cadastro — usuario_id: ${usuario_id}, origin recebido: ${originRecebido}, origin esperado: ${ORIGIN}, rpID: ${RP_ID}`);
+            logger.info(`[Biometria] Tentativa de cadastro — usuario_id: ${usuario_id}, origin recebido: ${originRecebido}, origins esperados: ${JSON.stringify(ORIGIN)}, rpID: ${RP_ID}`);
 
             const verificacao = await verifyRegistrationResponse({
                 response:             req.body,
@@ -143,8 +145,14 @@ const BiometriaController = {
             req.session.biometriaChallenge  = options.challenge;
             req.session.biometriaUsuarioId  = usuario.usuario_id;
 
-            logger.info(`[Biometria] Opções de login geradas — usuario_id: ${usuario.usuario_id}`);
-            return res.status(200).json(options);
+            req.session.save((err) => {
+                if (err) {
+                    logger.error(`[Biometria] Erro ao salvar sessão em loginIniciar: ${err.message}`);
+                    return res.status(500).json({ error: 'Erro ao iniciar autenticação biométrica' });
+                }
+                logger.info(`[Biometria] Opções de login geradas — usuario_id: ${usuario.usuario_id}, session_id: ${req.session.id}`);
+                return res.status(200).json(options);
+            });
 
         } catch (error) {
             logger.error(`[Biometria] Erro em loginIniciar: ${error.message}`);
@@ -160,6 +168,8 @@ const BiometriaController = {
         try {
             const challenge  = req.session.biometriaChallenge;
             const usuario_id = req.session.biometriaUsuarioId;
+
+            logger.info(`[Biometria] loginConcluir — session_id: ${req.session.id}, challenge_present: ${!!challenge}, usuario_id_present: ${!!usuario_id}`);
 
             if (!challenge || !usuario_id) {
                 return res.status(400).json({ error: 'Login não iniciado. Chame /login/iniciar primeiro.' });

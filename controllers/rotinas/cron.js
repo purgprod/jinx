@@ -115,6 +115,20 @@ cron.schedule('00 09 * * *', async () => {
 });
 
 //----------------------------------------------
+// ROTINA DIÁRIA — todos os dias às 10:00
+// Notifica usuários com metas vencidas há mais de 10 dias sem conclusão
+//----------------------------------------------
+cron.schedule('00 10 * * *', async () => {
+    logger.info('Iniciando rotina diária: [Nami] Metas vencidas há mais de 10 dias');
+    try {
+        const r = await axios.post(`${BASE_URL}/api/rotinas/nami-meta-vencida`);
+        logger.info(`Rotina diária concluída — enfileirados=${r.data.enfileirados}, ignorados=${r.data.ignorados}`);
+    } catch (error) {
+        logger.error('[Nami] Erro na rotina diária de metas vencidas (10:00):', { message: error.message, stack: error.stack });
+    }
+});
+
+//----------------------------------------------
 // ROTINA SEMANAL — todo domingo às 08:00
 // Enfileira resumo semanal na fila Nami para todos os usuários ativos
 //----------------------------------------------

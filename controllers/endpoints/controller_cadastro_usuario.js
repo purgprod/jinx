@@ -2,9 +2,11 @@
 
 const bcrypt          = require('bcrypt');
 const { validationResult } = require('express-validator');
-const cadastroModel   = require('../../models/endpoints/model_criar_novo_usuario');
-const IndicacoesModel = require('../../models/indicacoes/model_indicacoes');
-const { withTransaction } = require('../../database/transaction');
+const cadastroModel        = require('../../models/endpoints/model_criar_novo_usuario');
+const IndicacoesModel      = require('../../models/indicacoes/model_indicacoes');
+const ConvitesModel        = require('../../models/familia/model_convites');
+const ConvitesGuardiaoModel = require('../../models/familia/model_convites_guardiao');
+const { withTransaction }  = require('../../database/transaction');
 const logger          = require('../../logger');
 
 async function cadastrarUsuario(req, res) {
@@ -47,11 +49,31 @@ async function cadastrarUsuario(req, res) {
 
             await cadastroModel.createCarteira(novoId, conn);
 
+            let indicacaoRegistrada = false;
+
             if (codigo_ref) {
                 const indicador = await IndicacoesModel.buscarIndicadorPorCodigo(codigo_ref);
                 if (indicador && indicador.usuario_id !== novoId) {
                     await IndicacoesModel.criar({ indicadorId: indicador.usuario_id, indicadoId: novoId }, conn);
                     logger.info(`Indicação registrada: indicador=${indicador.usuario_id} → indicado=${novoId}`);
+                    indicacaoRegistrada = true;
+                }
+            }
+
+            if (!indicacaoRegistrada) {
+                const emailNorm = email.trim().toLowerCase();
+                const conviteTutelado  = await ConvitesModel.buscarPendentePorEmail(emailNorm);
+                const conviteGuardiao  = !conviteTutelado
+                    ? await ConvitesGuardiaoModel.buscarPendentePorEmail(emailNorm)
+                    : null;
+
+                const indicadorViaConvite = conviteTutelado?.guardiao_id
+                    ?? conviteGuardiao?.tutelado_id
+                    ?? null;
+
+                if (indicadorViaConvite && indicadorViaConvite !== novoId) {
+                    await IndicacoesModel.criar({ indicadorId: indicadorViaConvite, indicadoId: novoId }, conn);
+                    logger.info(`Indicação via convite familiar: indicador=${indicadorViaConvite} → indicado=${novoId}`);
                 }
             }
         });

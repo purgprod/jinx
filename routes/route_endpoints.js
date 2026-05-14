@@ -56,6 +56,7 @@ const TipoAcessoController           = require('../controllers/endpoints/control
 const LigasController                = require('../controllers/endpoints/controller_ligas');
 const ProjecaoPatrimonioController   = require('../controllers/projecao/controller_projecao_patrimonio');
 const ProjecaoRendimentoController   = require('../controllers/projecao/controller_projecao_rendimento');
+const TaxaCdiController              = require('../controllers/admin/controller_admin_taxa_cdi');
 
 //------------ AUTENTICAÇÃO --------------//
 
@@ -200,9 +201,6 @@ router.post(
     return ValidarCodigoController.validarCodigo(req, res);
   }
 );
-
-// Demais rotas requerem autenticação
-router.use('/api/v1/*', authMiddleware.checkAuthenticated);
 
 // Rota para atualizar preferência de login do usuário
 router.put(
@@ -527,6 +525,9 @@ router.get('/api/v1/projecao/patrimonio/:id', authMiddleware.checkAuthenticated,
 
 // Projeção de rendimento mensal: curva mês a mês até a última meta ativa do usuário
 router.get('/api/v1/projecao/rendimento/:id', authMiddleware.checkAuthenticated, ProjecaoRendimentoController.getProjecao);
+
+// Taxa CDI de mercado atual (referência para cálculos da plataforma)
+router.get('/api/v1/taxa-cdi', authMiddleware.checkAuthenticated, TaxaCdiController.get);
 
 module.exports = router;
 

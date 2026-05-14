@@ -7,8 +7,12 @@ const logger = require('../../logger');
 const NamiController = {
     async getPendentes(req, res) {
         const limite = Math.min(parseInt(req.query.limite) || 50, 100);
+        const prioridade = req.query.prioridade || null;
+        if (prioridade && prioridade !== 'urgente' && prioridade !== 'normal') {
+            return res.status(400).json({ error: 'Valor inválido para prioridade. Use: urgente, normal.' });
+        }
         try {
-            const notificacoes = await NotificacoesModel.buscarPendentes(limite);
+            const notificacoes = await NotificacoesModel.buscarPendentes(limite, prioridade);
             res.json({ total: notificacoes.length, notificacoes });
         } catch (error) {
             logger.error('[Nami] Erro ao buscar pendentes:', error);

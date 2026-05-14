@@ -61,7 +61,7 @@ class ConvitesModel {
                 fc.email_convidado       AS email_tutelado
              FROM familia_convites fc
              JOIN  users g ON g.usuario_id = fc.guardiao_id
-             LEFT JOIN users t ON LOWER(t.email) = LOWER(fc.email_convidado)
+             LEFT JOIN users t ON LOWER(t.email) = LOWER(fc.email_convidado COLLATE utf8mb4_unicode_ci)
              WHERE fc.guardiao_id = ? AND fc.status = 'pendente' AND fc.expira_em > NOW()
              ORDER BY fc.criado_em DESC`,
             [guardiao_id]
@@ -71,6 +71,16 @@ class ConvitesModel {
             tutelado_id:   r.tutelado_id   ?? 'Sem conta criada',
             nome_tutelado: r.nome_tutelado  ?? 'Sem conta criada',
         }));
+    }
+
+    static async buscarPendentePorEmail(email) {
+        const [rows] = await pool.promise().execute(
+            `SELECT guardiao_id FROM familia_convites
+             WHERE LOWER(email_convidado COLLATE utf8mb4_unicode_ci) = LOWER(?) AND status = 'pendente' AND expira_em > NOW()
+             LIMIT 1`,
+            [email]
+        );
+        return rows[0] || null;
     }
 
     static async expirarConvitesVencidos() {

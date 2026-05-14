@@ -47,7 +47,7 @@ class ConvitesGuardiaoModel {
                 fcg.email_convidado      AS email_guardiao
              FROM familia_convites_guardiao fcg
              JOIN  users t ON t.usuario_id = fcg.tutelado_id
-             LEFT JOIN users g ON LOWER(g.email) = LOWER(fcg.email_convidado)
+             LEFT JOIN users g ON LOWER(g.email) = LOWER(fcg.email_convidado COLLATE utf8mb4_unicode_ci)
              WHERE fcg.tutelado_id = ? AND fcg.status = 'pendente' AND fcg.expira_em > NOW()
              ORDER BY fcg.criado_em DESC`,
             [tutelado_id]
@@ -57,6 +57,16 @@ class ConvitesGuardiaoModel {
             guardiao_id:   r.guardiao_id   ?? 'Sem conta criada',
             nome_guardiao: r.nome_guardiao  ?? 'Sem conta criada',
         }));
+    }
+
+    static async buscarPendentePorEmail(email) {
+        const [rows] = await pool.promise().execute(
+            `SELECT tutelado_id FROM familia_convites_guardiao
+             WHERE LOWER(email_convidado COLLATE utf8mb4_unicode_ci) = LOWER(?) AND status = 'pendente' AND expira_em > NOW()
+             LIMIT 1`,
+            [email]
+        );
+        return rows[0] || null;
     }
 
     static async marcarAceito(token_convite, conn) {

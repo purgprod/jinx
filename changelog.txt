@@ -1,3 +1,89 @@
+#jinx-develop-108:
+- Taxa CDI, webhook de dados do usuário, prioridade de notificações, trigger meta_vencida, convite familiar com indicação automática, correções de sessão WebAuthn e collation:
+
+- migrations/criar_tabela_taxa_cdi.sql (novo):
+	- Cria tabela taxa_cdi com campos id, valor (DECIMAL 6,4) e atualizado_em; populada com registro único id=1;
+
+- migrations/alterar_taxa_cdi_adicionar_copom.sql (novo):
+	- Adiciona coluna proxima_reuniao_copom (DATE NULL) à tabela taxa_cdi; populada com 2026-06-17;
+
+- migrations/adicionar_prioridade_notificacoes.sql (novo):
+	- Adiciona coluna GENERATED PERSISTENT prioridade (urgente/normal) à tabela notificacoes com base no tipo; tipos deposito_confirmado, saque_confirmado e saque_falhou resultam em urgente, demais em normal;
+
+- migrations/alterar_enum_notificacoes_meta_vencida.sql (novo):
+	- Adiciona tipo meta_vencida ao ENUM da coluna tipo da tabela notificacoes; recria coluna prioridade após alteração do ENUM;
+
+- models/admin/model_taxa_cdi.js (novo):
+	- buscar: retorna valor, proxima_reuniao_copom e atualizado_em da tabela taxa_cdi;
+	- atualizar: atualiza valor e proxima_reuniao_copom;
+
+- controllers/admin/controller_admin_taxa_cdi.js (novo):
+	- GET retorna os dados atuais da taxa CDI e próxima reunião COPOM;
+	- PUT valida valor (0–100) e data no formato YYYY-MM-DD antes de persistir;
+
+- routes/route_admin.js (modificado):
+	- Adicionadas rotas GET e PUT /api/admin/taxa-cdi protegidas por autenticação Jinx;
+
+- routes/route_endpoints.js (modificado):
+	- Adicionada rota pública GET /api/v1/taxa-cdi para consumo pelo frontend da Purg;
+	- Removido router.use('/api/v1/*', checkAuthenticated) duplicado que causava dupla execução do middleware de autenticação e logs duplicados em todas as requisições;
+
+- public/js/admin/admin.js (modificado):
+	- Adicionado card de Taxa CDI no painel admin com campo numérico para valor percentual ao ano, campo de data para próxima reunião COPOM, botão salvar e feedback de status com timestamp de última atualização;
+
+- models/webhook/model_dados_usuario.js (novo):
+	- buscarBase: JOIN entre users, carteiras e ranking retornando dados básicos do usuário;
+	- buscarObjetivos: JOIN entre objetivos_descricao e objetivos retornando metas ativas agrupáveis por objetivo;
+	- buscarTokens: JOIN entre usuario_tokens e tokens;
+	- buscarDepositos e buscarSaques: histórico ordenado por data decrescente;
+
+- controllers/webhook/controller_dados_usuario.js (novo):
+	- GET /api/webhook/usuario/:usuario_id: executa as cinco queries em paralelo via Promise.all e agrupa metas por objetivo_id antes de retornar o payload consolidado;
+
+- controllers/webhook/controller_proxima_reuniao_copom.js (novo):
+	- GET /api/webhook/proxima-reuniao-copom: retorna apenas o campo proxima_reuniao_copom da tabela taxa_cdi;
+
+- routes/route_webhook.js (modificado):
+	- Adicionadas rotas GET /api/webhook/proxima-reuniao-copom e GET /api/webhook/usuario/:usuario_id protegidas por authWebhook;
+
+- models/webhook/model_notificacoes.js (modificado):
+	- buscarPendentes: aceita parâmetro prioridade opcional para filtrar notificações por urgente ou normal; inclui campo prioridade no SELECT;
+
+- controllers/webhook/controller_nami.js (modificado):
+	- getPendentes: lê req.query.prioridade, valida os valores permitidos (urgente|normal) e repassa ao model;
+
+- models/webhook/model_meta_vencida.js (novo):
+	- buscarMetasVencidas: retorna metas ativas e incompletas com DATEDIFF > 10 dias após data_limite;
+	- jaFoiNotificado: verifica se o tipo meta_vencida já foi enfileirado para o usuário nos últimos 30 dias;
+
+- controllers/rotinas/controller_nami_meta_vencida.js (novo):
+	- Agrupa metas vencidas por usuário, aplica dedup de 30 dias e enfileira notificação com payload contendo metas e dias_atraso;
+
+- routes/route_rotinas.js (modificado):
+	- Adicionada rota POST /api/rotinas/nami-meta-vencida;
+
+- controllers/rotinas/cron.js (modificado):
+	- Adicionado cron diário às 10:00 para disparar a verificação de metas vencidas;
+
+- models/familia/model_convites.js (modificado):
+	- Adicionado buscarPendentePorEmail para localizar convite pendente por e-mail do tutelado convidado;
+	- Corrigido collation mismatch no JOIN e no WHERE de email_convidado (COLLATE utf8mb4_unicode_ci);
+
+- models/familia/model_convites_guardiao.js (modificado):
+	- Adicionado buscarPendentePorEmail para localizar convite pendente por e-mail do guardião convidado;
+	- Corrigido collation mismatch no JOIN e no WHERE de email_convidado (COLLATE utf8mb4_unicode_ci);
+
+- controllers/endpoints/controller_cadastro_usuario.js (modificado):
+	- Após verificar codigo_ref, busca convites pendentes nas tabelas familia_convites e familia_convites_guardiao pelo e-mail cadastrado; se encontrado, cria automaticamente a indicação dentro da mesma transação;
+
+- controllers/endpoints/controller_biometria.js (modificado):
+	- ORIGIN passa a aceitar array ['https://purg.com.br', 'https://www.purg.com.br'] para suportar login biométrico tanto de purg.com.br quanto de www.purg.com.br;
+	- loginIniciar chama req.session.save() explicitamente antes de enviar a resposta, garantindo que o challenge esteja persistido no MemoryStore antes do browser disparar loginConcluir;
+	- Adicionado log de session_id em loginIniciar e loginConcluir para facilitar diagnóstico de falhas de sessão entre as duas etapas;
+
+- server.js (modificado):
+	- Cookie de sessão ajustado: sameSite alterado de 'strict' para 'lax' para permitir que links externos (push notifications, e-mail, WhatsApp) cheguem com sessão ativa; atributo domain removido pois conflitava com a autenticação WebAuthn entre subdomínios;
+
 #jinx-develop-107:
 - Endpoints públicos de validação de código e definição de nova senha no fluxo de recuperação:
 

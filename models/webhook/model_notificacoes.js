@@ -18,13 +18,16 @@ const NotificacoesModel = {
         });
     },
 
-    async buscarPendentes(limite = 50) {
+    async buscarPendentes(limite = 50, prioridade = null) {
+        const filtroPrioridade = prioridade ? 'AND n.prioridade = ?' : '';
+        const params = prioridade ? [prioridade, limite] : [limite];
         const query = `
             SELECT
                 n.id,
                 n.data_criacao,
                 n.usuario_id,
                 n.tipo,
+                n.prioridade,
                 n.payload,
                 n.tentativas,
                 u.celular,
@@ -34,11 +37,12 @@ const NotificacoesModel = {
             WHERE n.status = 'pendente'
               AND u.celular IS NOT NULL
               AND u.nami_ativo = 1
+              ${filtroPrioridade}
             ORDER BY n.data_criacao ASC
             LIMIT ?
         `;
         return new Promise((resolve, reject) => {
-            connection.query(query, [limite], (error, results) => {
+            connection.query(query, params, (error, results) => {
                 if (error) {
                     logger.error('[Nami] Erro ao buscar notificações pendentes:', error);
                     return reject(new Error('Erro ao buscar notificações pendentes.'));
