@@ -1,3 +1,16 @@
+#jinx-develop-109:
+- Autenticação n8n por celular e geração de cobrança PIX via webhook:
+
+- controllers/webhook/controller_nami.js (modificado):
+	- buscarPorCelular: quando nenhum usuário é encontrado, retorna 200 com { usuario_id: null } em vez de 404, evitando erro no fluxo n8n;
+	- criarPix (novo): recebe usuario_id e valor, busca CPF e nome do usuário, cria cobrança Pix imediata no Efí Bank via criarCobrancaPix, registra depósito na tabela depositos (status Processando) e retorna { txid, pixCopiaECola, qrCode };
+
+- models/webhook/model_nami_dados_deposito_usuario.js (novo):
+	- buscarPorId: busca usuario_id, cpf e nome_completo na tabela users pelo usuario_id, usado pelo controller para montar a cobrança Pix;
+
+- routes/route_webhook.js (modificado):
+	- Adicionada rota POST /api/webhook/nami/usuarios/:usuario_id/pix/cobrar protegida por authWebhook;
+
 #jinx-develop-108:
 - Taxa CDI, webhook de dados do usuário, prioridade de notificações, trigger meta_vencida, convite familiar com indicação automática, correções de sessão WebAuthn e collation:
 
