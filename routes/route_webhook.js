@@ -5,10 +5,12 @@ const RelatorioGerencialController    = require('../controllers/webhook/controll
 const NamiController                  = require('../controllers/webhook/controller_nami');
 const ProximaReuniaoCopomController   = require('../controllers/webhook/controller_proxima_reuniao_copom');
 const DadosUsuarioController          = require('../controllers/webhook/controller_dados_usuario');
+const WebhookCriarObjetivoController  = require('../controllers/webhook/controller_webhook_criar_objetivo');
 
 router.get('/api/webhook/relatorio-gerencial',    authWebhook, RelatorioGerencialController.getRelatorio);
 router.get('/api/webhook/proxima-reuniao-copom',  authWebhook, ProximaReuniaoCopomController.get);
 router.get('/api/webhook/usuario/:usuario_id',    authWebhook, DadosUsuarioController.get);
+router.post('/api/webhook/criar-objetivo/:usuario_id', authWebhook, WebhookCriarObjetivoController.execute);
 
 router.get('/api/webhook/nami/pendentes',                 authWebhook, NamiController.getPendentes);
 router.put('/api/webhook/nami/:id/enviado',              authWebhook, NamiController.marcarEnviado);

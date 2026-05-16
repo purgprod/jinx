@@ -9,12 +9,13 @@ const DadosUsuarioController = {
         }
 
         try {
-            const [base, objetivosRows, tokens, depositos, saques] = await Promise.all([
+            const [base, objetivosRows, tokens, depositos, saques, rendimentosMensais] = await Promise.all([
                 DadosUsuarioModel.buscarBase(usuario_id),
                 DadosUsuarioModel.buscarObjetivos(usuario_id),
                 DadosUsuarioModel.buscarTokens(usuario_id),
                 DadosUsuarioModel.buscarDepositos(usuario_id),
                 DadosUsuarioModel.buscarSaques(usuario_id),
+                DadosUsuarioModel.buscarRendimentosMensais(usuario_id),
             ]);
 
             if (!base) {
@@ -77,6 +78,10 @@ const DadosUsuarioController = {
                     chave_pix:    s.chave_pix,
                     status_saque: s.status_saque,
                     motivo:       s.motivo,
+                })),
+                rendimentos_mensais: rendimentosMensais.map(r => ({
+                    mes:               r.mes,
+                    rendimento_mensal: parseFloat(r.rendimento_mensal),
                 })),
             });
 

@@ -7,6 +7,7 @@ const IndicacoesModel      = require('../../models/indicacoes/model_indicacoes')
 const ConvitesModel        = require('../../models/familia/model_convites');
 const ConvitesGuardiaoModel = require('../../models/familia/model_convites_guardiao');
 const { withTransaction }  = require('../../database/transaction');
+const NotificacoesModel    = require('../../models/webhook/model_notificacoes');
 const logger          = require('../../logger');
 
 async function cadastrarUsuario(req, res) {
@@ -79,6 +80,20 @@ async function cadastrarUsuario(req, res) {
         });
 
         logger.info(`Cadastro de novo usuário realizado com sucesso. ID: ${novoId}`);
+
+        setImmediate(async () => {
+            try {
+                await NotificacoesModel.criar(novoId, 'novo_usuario', {
+                    usuario_id: novoId,
+                    apelido:    nome_completo.trim().toUpperCase(),
+                    celular,
+                    email:      email.trim().toLowerCase(),
+                });
+            } catch (err) {
+                logger.error(`[Nami] Erro ao criar notificação novo_usuario usuario_id=${novoId}:`, err);
+            }
+        });
+
         return res.status(201).json({ success: true, message: 'Usuário cadastrado com sucesso.', usuario_id: novoId });
 
     } catch (error) {

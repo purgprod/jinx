@@ -121,6 +121,27 @@ const DadosUsuarioModel = {
             });
         });
     },
+
+    async buscarRendimentosMensais(usuario_id) {
+        const query = `
+            SELECT
+                DATE_FORMAT(data_criacao, '%Y-%m') AS mes,
+                SUM(rendimento_dia)                AS rendimento_mensal
+            FROM usuarios_dados_financeiros_diarios
+            WHERE usuario_id = ?
+            GROUP BY mes
+            ORDER BY mes ASC
+        `;
+        return new Promise((resolve, reject) => {
+            connection.query(query, [usuario_id], (error, results) => {
+                if (error) {
+                    logger.error(`[Webhook] Erro ao buscar rendimentos mensais usuario_id=${usuario_id}:`, error);
+                    return reject(new Error('Erro ao buscar rendimentos mensais.'));
+                }
+                resolve(results);
+            });
+        });
+    },
 };
 
 module.exports = DadosUsuarioModel;

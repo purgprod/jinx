@@ -1,3 +1,27 @@
+#jinx-develop-110:
+- Rendimentos mensais no webhook de dados do usuário, endpoint de criação de objetivo via webhook e novas notificações novo_usuario e novo_objetivo:
+
+- models/webhook/model_dados_usuario.js (modificado):
+	- buscarRendimentosMensais: agrupa rendimento_dia por mês (DATE_FORMAT '%Y-%m') via SUM na tabela usuarios_dados_financeiros_diarios, retornando mes e rendimento_mensal ordenados por data ASC;
+
+- controllers/webhook/controller_dados_usuario.js (modificado):
+	- GET /api/webhook/usuario/:usuario_id: incluído buscarRendimentosMensais no Promise.all e adicionado bloco rendimentos_mensais na resposta com mes e rendimento_mensal (parseFloat);
+
+- controllers/webhook/controller_webhook_criar_objetivo.js (novo):
+	- POST /api/webhook/criar-objetivo/:usuario_id: replicação da lógica de controller_criar_objetivo sem verificação de sessão; valida usuario_id, descricao, valor_alvo, prazo e aporte_inicial; cria objetivo e metas em transação via withTransaction; dispara notificação novo_objetivo via setImmediate; se for o primeiro objetivo do usuário dispara cadastro_concluido;
+
+- routes/route_webhook.js (modificado):
+	- Adicionada rota POST /api/webhook/criar-objetivo/:usuario_id protegida por authWebhook;
+
+- controllers/endpoints/controller_cadastro_usuario.js (modificado):
+	- Após cadastro bem-sucedido, dispara notificação novo_usuario via setImmediate com payload contendo usuario_id, apelido, celular e email;
+
+- controllers/objetivos/controller_criar_objetivo.js (modificado):
+	- Após criação de objetivo, dispara notificação novo_objetivo via setImmediate com payload contendo objetivo_id, descricao, valor_alvo e prazo; mantém disparo de cadastro_concluido para o primeiro objetivo;
+
+- migrations/alterar_enum_notificacoes_novo_usuario_novo_objetivo.sql (novo):
+	- Remove coluna prioridade gerada, adiciona novo_usuario e novo_objetivo ao ENUM tipo da tabela notificacoes e recria a coluna prioridade GENERATED PERSISTENT (ambos os novos tipos resultam em 'normal');
+
 #jinx-develop-109:
 - Autenticação n8n por celular e geração de cobrança PIX via webhook:
 

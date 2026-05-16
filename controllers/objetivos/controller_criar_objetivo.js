@@ -77,6 +77,19 @@ const CriarObjetivoController = {
 
             logger.info('[CriarObjetivo] Objetivo criado com sucesso', { usuarioId, objetivoId });
 
+            setImmediate(async () => {
+                try {
+                    await NotificacoesModel.criar(usuarioId, 'novo_objetivo', {
+                        objetivo_id:  objetivoId,
+                        descricao:    descricao.trim(),
+                        valor_alvo:   valorAlvoNum,
+                        prazo:        prazoNum,
+                    });
+                } catch (err) {
+                    logger.error(`[Nami] Erro ao criar notificação novo_objetivo usuario_id=${usuarioId}:`, err);
+                }
+            });
+
             if (primeiroObjetivo) {
                 setImmediate(async () => {
                     try {
