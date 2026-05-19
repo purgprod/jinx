@@ -70,9 +70,11 @@ const DadosUsuarioModel = {
                 ut.quantidade_tokens,
                 ut.rendimento_token,
                 t.razao_social,
+                t.vencimento,
+                t.valor_token,
                 t.risco
             FROM usuario_tokens ut
-            LEFT JOIN tokens t ON t.id_token = ut.token_id
+            INNER JOIN tokens t ON t.id_token = ut.token_id AND t.status_ativo = 1
             WHERE ut.usuario_id = ?
         `;
         return new Promise((resolve, reject) => {

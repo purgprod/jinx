@@ -50,6 +50,10 @@ const { processarUsuario } = require('../../services/compra_pins_usuario_service
 // --- Nami ---
 const NotificacoesModel = require('../../models/webhook/model_notificacoes');
 
+// --- Lulu ---
+const LuluTaxaInserirModel  = require('../../models/lulu/model_lulu_taxa_inserir');
+const LuluConfigBuscarModel = require('../../models/lulu/model_lulu_config_buscar');
+
 // ---------------------------------------------------------------------------
 // Utilitários BigInt
 // ---------------------------------------------------------------------------
@@ -156,6 +160,17 @@ async function processarPixRecebido(pix) {
             await NotificacoesModel.criar(deposito.usuario_id, 'deposito_confirmado', { valor });
         } catch (err) {
             logger.error('[Nami] Falha ao enfileirar notificação de depósito', { userId: deposito.usuario_id, erro: err.message });
+        }
+
+        try {
+            const luluConfig = await LuluConfigBuscarModel.getConfig();
+            const valorTaxa  = (parseFloat(valor) * parseFloat(luluConfig.taxa_pix_percentual) / 100).toFixed(2);
+            if (parseFloat(valorTaxa) > 0) {
+                await LuluTaxaInserirModel.inserir({ usuarioId: deposito.usuario_id, depositoId: deposito.id, valorTaxa, tipo: 'pix' });
+                logger.info(`[Lulu] Taxa PIX registrada. userId=${deposito.usuario_id}, valorTaxa=${valorTaxa}`);
+            }
+        } catch (errLulu) {
+            logger.error(`[Lulu] Erro ao registrar taxa PIX. userId=${deposito.usuario_id}`, { erro: errLulu.message });
         }
 
         try {

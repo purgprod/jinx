@@ -47,6 +47,7 @@ const ROTINAS_SEQUENCIAIS = [
     { id: 13, nome: '[Manutenção] Histórico dos planos dos usuários',           method: 'post', url: `${BASE_URL}/api/rotinas/manutencao-planos-assinaturas-historico` },
     { id: 15, nome: '[Lulu] Amortização diária de taxa de cartão',             method: 'put',  url: `${BASE_URL}/api/rotinas/lulu-amortizacao-diaria` },
     { id: 16, nome: '[Lulu] Snapshot diário do painel',                        method: 'put',  url: `${BASE_URL}/api/rotinas/lulu-snapshot-diario` },
+    { id: 18, nome: '[Depositos] Cancelar PIX expirados',                      method: 'post', url: `${BASE_URL}/api/rotinas/cancelar-depositos-expirados` },
 ];
 
 //----------------------------------------------
@@ -133,13 +134,7 @@ cron.schedule('00 10 * * *', async () => {
 // Enfileira resumo semanal na fila Nami para todos os usuários ativos
 //----------------------------------------------
 cron.schedule('00 08 * * 0', async () => {
-    logger.info('Iniciando rotina semanal: [Nami] Resumo semanal');
-    try {
-        const r = await axios.post(`${BASE_URL}/api/rotinas/nami-resumo-semanal`);
-        logger.info(`Rotina semanal concluída. Resposta: ${r.data.message}`);
-    } catch (error) {
-        logger.error('[Nami] Erro na rotina semanal de resumo (08:00):', { message: error.message, stack: error.stack });
-    }
+    await executarRotina({ id: 17, nome: '[Nami] Resumo semanal', method: 'post', url: `${BASE_URL}/api/rotinas/nami-resumo-semanal` });
 });
 
 //----------------------------------------------

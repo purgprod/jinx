@@ -61,7 +61,8 @@ const LuluAmortizacaoDiariaController    = require('../controllers/rotinas/contr
 const LuluSnapshotDiarioController       = require('../controllers/rotinas/controller_lulu_snapshot_diario.js');
 const NamiResumoSemanalController        = require('../controllers/rotinas/controller_nami_resumo_semanal.js');
 const NamiMetaVencidaController          = require('../controllers/rotinas/controller_nami_meta_vencida.js');
-const NamiSemObjetivoController          = require('../controllers/rotinas/controller_nami_sem_objetivo.js');
+const NamiSemObjetivoController              = require('../controllers/rotinas/controller_nami_sem_objetivo.js');
+const CancelarDepositosExpiradosController   = require('../controllers/rotinas/controller_cancelar_depositos_expirados.js');
 const NamiController                     = require('../controllers/webhook/controller_nami.js');
 
 //----------------------------------------------
@@ -149,6 +150,9 @@ router.post('/api/rotinas/nami-meta-vencida', rotinasAuth, lockMiddleware, NamiM
 
 // Nami: notifica usuários cadastrados há pelo menos 1 dia que ainda não criaram nenhum objetivo (diário)
 router.post('/api/rotinas/nami-sem-objetivo', rotinasAuth, lockMiddleware, NamiSemObjetivoController.executar);
+
+// Cancela depósitos PIX com mais de 60 minutos sem confirmação
+router.post('/api/rotinas/cancelar-depositos-expirados', rotinasAuth, lockMiddleware, CancelarDepositosExpiradosController.executar);
 
 module.exports = router;
 

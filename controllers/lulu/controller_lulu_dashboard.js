@@ -52,24 +52,35 @@ const LuluDashboardController = {
     },
 
     async updateConfig(req, res) {
-        const { percentual_deducao, taxa_cartao_percentual } = req.body;
+        const {
+            percentual_deducao,
+            taxa_cartao_percentual,
+            percentual_deducao_pix,
+            taxa_pix_percentual,
+            taxa_pix_automatico_valor,
+        } = req.body;
 
-        const p = parseFloat(percentual_deducao);
-        const t = parseFloat(taxa_cartao_percentual);
+        const p    = parseFloat(percentual_deducao);
+        const t    = parseFloat(taxa_cartao_percentual);
+        const pp   = parseFloat(percentual_deducao_pix);
+        const tp   = parseFloat(taxa_pix_percentual);
+        const tpa  = parseFloat(taxa_pix_automatico_valor);
 
-        if (isNaN(p) || p <= 0 || p > 100) {
-            return res.status(400).json({ error: 'percentual_deducao inválido (0-100).' });
-        }
-        if (isNaN(t) || t <= 0 || t > 100) {
-            return res.status(400).json({ error: 'taxa_cartao_percentual inválida (0-100).' });
-        }
+        if (isNaN(p)  || p  <= 0 || p  > 100) return res.status(400).json({ error: 'percentual_deducao inválido (0-100).' });
+        if (isNaN(t)  || t  <= 0 || t  > 100) return res.status(400).json({ error: 'taxa_cartao_percentual inválida (0-100).' });
+        if (isNaN(pp) || pp <= 0 || pp > 100) return res.status(400).json({ error: 'percentual_deducao_pix inválido (0-100).' });
+        if (isNaN(tp) || tp <= 0 || tp > 100) return res.status(400).json({ error: 'taxa_pix_percentual inválida (0-100).' });
+        if (isNaN(tpa) || tpa <= 0)            return res.status(400).json({ error: 'taxa_pix_automatico_valor inválido.' });
 
         try {
             await LuluConfigAtualizarModel.atualizar({
-                percentualDeducao:    p.toFixed(2),
-                taxaCartaoPercentual: t.toFixed(2)
+                percentualDeducao:        p.toFixed(2),
+                taxaCartaoPercentual:     t.toFixed(2),
+                percentualDeducaoPix:     pp.toFixed(2),
+                taxaPixPercentual:        tp.toFixed(2),
+                taxaPixAutomaticoValor:   tpa.toFixed(2),
             });
-            logger.info(`[Lulu] Config atualizada. percentual=${p}, taxa_cartao=${t}`);
+            logger.info(`[Lulu] Config atualizada. percentual_cartao=${p}, taxa_cartao=${t}, percentual_pix=${pp}, taxa_pix=${tp}, taxa_pix_auto=${tpa}`);
             res.json({ message: 'Configuração atualizada com sucesso.' });
         } catch (err) {
             logger.error('[Lulu] Erro ao atualizar config.', { erro: err.message });

@@ -9,11 +9,13 @@ const LuluUsuariosParaDeduzirModel = {
             `SELECT
                 lt.id                                        AS taxa_id,
                 lt.usuario_id,
+                lt.tipo,
                 lt.valor_taxa,
                 lt.valor_recuperado,
                 (lt.valor_taxa - lt.valor_recuperado)        AS valor_restante,
                 r.rendimento_diario,
-                lc.percentual_deducao
+                lc.percentual_deducao,
+                lc.percentual_deducao_pix
              FROM lulu_taxas lt
              INNER JOIN users u
                      ON u.usuario_id = lt.usuario_id AND u.status_ativo = 1

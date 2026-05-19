@@ -64,6 +64,8 @@ const DadosUsuarioController = {
                     quantidade_tokens: t.quantidade_tokens,
                     rendimento_token:  parseFloat(t.rendimento_token),
                     razao_social:      t.razao_social,
+                    vencimento:        t.vencimento,
+                    valor_token:       parseFloat(t.valor_token),
                     risco:             t.risco,
                 })),
                 depositos: depositos.map(d => ({

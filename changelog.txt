@@ -1,3 +1,63 @@
+#jinx-develop-112:
+- Lulu estendido para PIX (normal e automático), webhook PIX automático Efí Bank, cancelamento proativo de PIX expirados, campos Lulu no relatório gerencial e vencimento/valor_token no endpoint de usuário:
+
+- migrations/alterar_lulu_para_pix.sql (novo):
+	- lulu_taxas: cobranca_cartao_id passa a ser nullable; adicionadas colunas deposito_id (FK depositos.id) e tipo ENUM('cartao', 'pix', 'pix_automatico') DEFAULT 'cartao';
+	- lulu_config: adicionadas colunas percentual_deducao_pix (25%), taxa_pix_percentual (1,19%) e taxa_pix_automatico_valor (R$ 3,50);
+
+- models/lulu/model_lulu_taxa_inserir.js (modificado):
+	- aceita parâmetros depositoId e tipo além de cobrancaCartaoId; INSERT passa a preencher deposito_id e tipo;
+
+- models/lulu/model_lulu_usuarios_para_deduzir.js (modificado):
+	- SELECT inclui lt.tipo e lc.percentual_deducao_pix para controle de taxa por grupo;
+
+- models/lulu/model_lulu_config_buscar.js (modificado):
+	- retorna novos campos percentual_deducao_pix, taxa_pix_percentual e taxa_pix_automatico_valor;
+
+- models/lulu/model_lulu_config_atualizar.js (modificado):
+	- suporta atualização dos novos campos de configuração PIX;
+
+- controllers/lulu/controller_lulu_dashboard.js (modificado):
+	- exibe os novos campos de configuração PIX no dashboard;
+
+- controllers/rotinas/controller_lulu_amortizacao_diaria.js (modificado):
+	- separa as taxas em grupos por tipo (cartao e pix/pix_automatico); aplica FIFO com percentual 10% para cartão e 25% para PIX em cada grupo independentemente;
+
+- controllers/depositos/controller_webhook_pix_efi.js (modificado):
+	- após confirmar depósito PIX normal, registra taxa Lulu com tipo='pix' calculada em 1,19% do valor depositado;
+
+- controllers/depositos/controller_webhook_pix_automatico_efi.js (novo):
+	- POST /api/pix/webhook/automatico: processa notificações de PIX Automático da Efí Bank (cobrança recorrente mensal via Pix);
+	- itera pixAutoCobrancas, processa apenas status CONCLUIDA; credita saldo, aloca objetivos, promove assinatura, enfileira notificação deposito_confirmado e registra taxa Lulu fixa de R$ 3,50 com tipo='pix_automatico';
+
+- models/depositos/model_deposito_buscar_expirados.js (novo):
+	- buscarExpirados: retorna depósitos com status 'Processando', txid preenchido e data_criacao há mais de 60 minutos;
+
+- controllers/rotinas/controller_cancelar_depositos_expirados.js (novo):
+	- POST /api/rotinas/cancelar-depositos-expirados: responde imediatamente e, em background, cancela todos os PIX expirados com motivo 'Pix expirado automaticamente após 60 minutos.';
+
+- controllers/rotinas/cron.js (modificado):
+	- resumo_semanal migrado para executarRotina({ id: 17 }) com rastreamento de status na tabela rotinas;
+	- adicionada entrada id=18 para cancelar-depositos-expirados no encadeamento sequencial diário;
+
+- routes/route_depositos.js (modificado):
+	- adicionada rota POST /api/pix/webhook/automatico protegida por validação de token Efí;
+
+- routes/route_rotinas.js (modificado):
+	- adicionada rota POST /api/rotinas/cancelar-depositos-expirados protegida por rotinasAuth e lockMiddleware;
+
+- models/webhook/model_relatorio_gerencial.js (modificado):
+	- getDados inclui quatro novas subqueries: lulu_taxas_deposito_periodo, lulu_valor_deduzido_periodo, lulu_taxas_deposito_total e lulu_valor_deduzido_total; parâmetros de bind atualizados de 6 para 10;
+
+- controllers/webhook/controller_relatorio_gerencial.js (modificado):
+	- bloco financeiro do response inclui os quatro novos campos Lulu (taxas e deduções por período e totais);
+
+- models/webhook/model_dados_usuario.js (modificado):
+	- buscarTokens: LEFT JOIN alterado para INNER JOIN com filtro status_ativo = 1; adicionados t.vencimento e t.valor_token ao SELECT;
+
+- controllers/webhook/controller_dados_usuario.js (modificado):
+	- tokens.map inclui vencimento e valor_token (parseFloat) no payload de resposta;
+
 #jinx-develop-111:
 - Edição de valor_alvo em objetivos, notificação sem_objetivo, remoção de cadastro_concluido, metas vencidas por usuário e ranking global no webhook:
 

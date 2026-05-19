@@ -32,11 +32,31 @@ const RelatorioGerencialModel = {
                     AS saques_pendentes,
 
                 (SELECT COALESCE(SUM(investido), 0) FROM carteiras WHERE status_ativo = 1 AND usuario_id != 1)
-                    AS volume_investido
+                    AS volume_investido,
+
+                (SELECT COALESCE(SUM(valor_taxa), 0)
+                 FROM lulu_taxas
+                 WHERE tipo IN ('pix', 'pix_automatico')
+                   AND DATE(criado_em) BETWEEN ? AND ?)
+                    AS lulu_taxas_deposito_periodo,
+
+                (SELECT COALESCE(SUM(valor_deduzido), 0)
+                 FROM lulu_deducoes
+                 WHERE DATE(criado_em) BETWEEN ? AND ?)
+                    AS lulu_valor_deduzido_periodo,
+
+                (SELECT COALESCE(SUM(valor_taxa), 0)
+                 FROM lulu_taxas
+                 WHERE tipo IN ('pix', 'pix_automatico'))
+                    AS lulu_taxas_deposito_total,
+
+                (SELECT COALESCE(SUM(valor_deduzido), 0)
+                 FROM lulu_deducoes)
+                    AS lulu_valor_deduzido_total
         `;
 
         return new Promise((resolve, reject) => {
-            connection.query(query, [dataInicio, data, dataInicio, data, dataInicio, data], (error, results) => {
+            connection.query(query, [dataInicio, data, dataInicio, data, dataInicio, data, dataInicio, data, dataInicio, data], (error, results) => {
                 if (error) {
                     logger.error('[Webhook] Erro ao buscar relatório gerencial:', error);
                     return reject(new Error('Erro ao buscar dados do relatório.'));

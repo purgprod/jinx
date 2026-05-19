@@ -60,38 +60,46 @@ const LuluAmortizacaoDiariaController = {
         for (const row of registros) {
             if (!porUsuario.has(row.usuario_id)) {
                 porUsuario.set(row.usuario_id, {
-                    rendimento:        row.rendimento_diario,
-                    percentual:        row.percentual_deducao,
-                    taxas:             []
+                    rendimento:           row.rendimento_diario,
+                    percentualCartao:     row.percentual_deducao,
+                    percentualPix:        row.percentual_deducao_pix,
+                    taxasCartao:          [],
+                    taxasPix:             [],
                 });
             }
-            porUsuario.get(row.usuario_id).taxas.push(row);
+            const grupo = porUsuario.get(row.usuario_id);
+            if (row.tipo === 'cartao') {
+                grupo.taxasCartao.push(row);
+            } else {
+                grupo.taxasPix.push(row);
+            }
         }
 
         let totalUsuarios = 0, totalQuitadas = 0;
 
         for (const [usuarioId, dados] of porUsuario) {
-            // Valor total a deduzir hoje = rendimento × percentual / 100
-            const totalDeducaoBig = toBig(dados.rendimento) * toBig(String(dados.percentual)) / toBig('100');
-            if (totalDeducaoBig <= 0n) continue;
+            // Calcula deduções separadas por grupo de tipo
+            const operacoes = [];
 
-            // FIFO: distribui o total entre as taxas na ordem de criação
-            let restanteDeducao = totalDeducaoBig;
-            const operacoes = []; // { taxaId, valorDeduzidoBig, novoRecuperado, quitada }
+            function processarGrupo(taxas, percentual) {
+                const totalDeducaoBig = toBig(dados.rendimento) * toBig(String(percentual)) / toBig('100');
+                if (totalDeducaoBig <= 0n) return;
 
-            for (const taxa of dados.taxas) {
-                if (restanteDeducao <= 0n) break;
-
-                const valorRestanteBig = toBig(String(taxa.valor_restante));
-                if (valorRestanteBig <= 0n) continue;
-
-                const deduzir         = restanteDeducao < valorRestanteBig ? restanteDeducao : valorRestanteBig;
-                const novoRecuperado  = toBig(String(taxa.valor_recuperado)) + deduzir;
-                const quitada         = novoRecuperado >= toBig(String(taxa.valor_taxa));
-
-                operacoes.push({ taxaId: taxa.taxa_id, deduzir, novoRecuperado: toStr(novoRecuperado), quitada });
-                restanteDeducao -= deduzir;
+                let restanteDeducao = totalDeducaoBig;
+                for (const taxa of taxas) {
+                    if (restanteDeducao <= 0n) break;
+                    const valorRestanteBig = toBig(String(taxa.valor_restante));
+                    if (valorRestanteBig <= 0n) continue;
+                    const deduzir        = restanteDeducao < valorRestanteBig ? restanteDeducao : valorRestanteBig;
+                    const novoRecuperado = toBig(String(taxa.valor_recuperado)) + deduzir;
+                    const quitada        = novoRecuperado >= toBig(String(taxa.valor_taxa));
+                    operacoes.push({ taxaId: taxa.taxa_id, deduzir, novoRecuperado: toStr(novoRecuperado), quitada });
+                    restanteDeducao -= deduzir;
+                }
             }
+
+            processarGrupo(dados.taxasCartao, dados.percentualCartao);
+            processarGrupo(dados.taxasPix,    dados.percentualPix);
 
             if (!operacoes.length) continue;
 
