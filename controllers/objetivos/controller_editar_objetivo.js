@@ -1,5 +1,5 @@
 // controllers/objetivos/controller_editar_objetivo.js
-// Edita descrição, valor_alvo ou prazo de um objetivo.
+// Edita descrição, prazo ou valor_alvo (somente para cima) de um objetivo.
 // Mudanças em valor_alvo ou prazo disparam o recalculation_job.
 
 'use strict';
@@ -35,20 +35,29 @@ const EditarObjetivoController = {
                 return res.status(409).json({ error: 'Objetivo inativo não pode ser editado.' });
             }
 
-            const { descricao, prazo } = req.body;
+            const { descricao, prazo, valor_alvo } = req.body;
 
-            // valor_alvo é imutável após a criação
-            const novoValorAlvo = Number(objetivo.objetivo_valor_total);
-            const novoPrazo     = prazo     !== undefined ? parseInt(prazo, 10)  : objetivo.objetivo_numero_total;
-            const novaDescricao = descricao !== undefined ? descricao.trim()     : objetivo.objetivo_descricao;
+            const valorAtual    = Number(objetivo.objetivo_valor_total);
+            const novoValorAlvo = valor_alvo !== undefined ? Number(valor_alvo) : valorAtual;
+            const novoPrazo     = prazo      !== undefined ? parseInt(prazo, 10) : objetivo.objetivo_numero_total;
+            const novaDescricao = descricao  !== undefined ? descricao.trim()    : objetivo.objetivo_descricao;
+
+            if (novoValorAlvo < valorAtual) {
+                return res.status(400).json({ error: 'O valor alvo não pode ser reduzido.' });
+            }
 
             if (novoPrazo <= 0 || novoPrazo > 600) {
                 return res.status(400).json({ error: 'Prazo deve ser entre 1 e 600 meses.' });
             }
 
             const saldoAtual = Number(objetivo.saldo_alocado_total ?? 0);
+            const mudouPrazo = novoPrazo     !== objetivo.objetivo_numero_total;
+            const mudouValor = novoValorAlvo !== valorAtual;
+            const motivo     = mudouValor ? 'alteracao_valor' : mudouPrazo ? 'alteracao_prazo' : null;
 
-            if (saldoAtual > 0) {
+            // Quando só o prazo muda, valida parcela antes de entrar na transação.
+            // Quando o valor muda, o service recalcularMetasObjetivo faz essa validação.
+            if (!mudouValor && saldoAtual > 0) {
                 const parcelaBruta = (novoValorAlvo - saldoAtual) / novoPrazo;
                 if (parcelaBruta < 5) {
                     return res.status(400).json({
@@ -56,9 +65,6 @@ const EditarObjetivoController = {
                     });
                 }
             }
-
-            const mudouPrazo = novoPrazo !== objetivo.objetivo_numero_total;
-            const motivo = mudouPrazo ? 'alteracao_prazo' : null;
 
             if (motivo) {
                 const depositoRecente = await BuscarDepositoPorTxidModel.temDepositoRecenteExecutado(usuarioId);

@@ -61,6 +61,7 @@ const LuluAmortizacaoDiariaController    = require('../controllers/rotinas/contr
 const LuluSnapshotDiarioController       = require('../controllers/rotinas/controller_lulu_snapshot_diario.js');
 const NamiResumoSemanalController        = require('../controllers/rotinas/controller_nami_resumo_semanal.js');
 const NamiMetaVencidaController          = require('../controllers/rotinas/controller_nami_meta_vencida.js');
+const NamiSemObjetivoController          = require('../controllers/rotinas/controller_nami_sem_objetivo.js');
 const NamiController                     = require('../controllers/webhook/controller_nami.js');
 
 //----------------------------------------------
@@ -145,6 +146,9 @@ router.post('/api/rotinas/nami-meta-mensal-incompleta', rotinasAuth, lockMiddlew
 
 // Nami: notifica usuários com metas vencidas há mais de 10 dias sem conclusão (diário — 10:00)
 router.post('/api/rotinas/nami-meta-vencida', rotinasAuth, lockMiddleware, NamiMetaVencidaController.executar);
+
+// Nami: notifica usuários cadastrados há pelo menos 1 dia que ainda não criaram nenhum objetivo (diário)
+router.post('/api/rotinas/nami-sem-objetivo', rotinasAuth, lockMiddleware, NamiSemObjetivoController.executar);
 
 module.exports = router;
 

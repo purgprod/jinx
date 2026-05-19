@@ -1,3 +1,53 @@
+#jinx-develop-111:
+- Edição de valor_alvo em objetivos, notificação sem_objetivo, remoção de cadastro_concluido, metas vencidas por usuário e ranking global no webhook:
+
+- routes/route_objetivos.js (modificado):
+	- PUT /api/v1/objetivos/:id/:objetivo_id: adicionada validação opcional de valor_alvo (float positivo) ao body;
+
+- controllers/objetivos/controller_editar_objetivo.js (modificado):
+	- valor_alvo passa a ser editável, porém apenas para valores maiores que o atual (retorna 400 se reduzido);
+	- introduzido motivo 'alteracao_valor' que aciona recalcularMetasObjetivo; validação de parcela mínima pré-transação preservada apenas quando só o prazo muda;
+	- removidos imports órfãos ObjetivosLeitura e variável primeiroObjetivo;
+
+- controllers/rotinas/controller_nami_sem_objetivo.js (novo):
+	- POST /api/rotinas/nami-sem-objetivo: itera usuários cadastrados há ≥1 dia sem nenhum objetivo ativo; ignora quem já recebeu notificação sem_objetivo nos últimos 3 dias; enfileira notificação com payload { apelido };
+
+- models/webhook/model_sem_objetivo.js (novo):
+	- buscarUsuariosSemObjetivo: SELECT em users com NOT EXISTS em objetivos_descricao filtrando status_ativo, nami_ativo, celular e DATEDIFF ≥ 1;
+	- jaFoiNotificadoRecentemente: verifica notificação sem_objetivo nos últimos 3 dias;
+
+- routes/route_rotinas.js (modificado):
+	- Adicionada rota POST /api/rotinas/nami-sem-objetivo protegida por rotinasAuth e lockMiddleware;
+
+- migrations/alterar_enum_notificacoes_sem_objetivo.sql (novo):
+	- Adiciona sem_objetivo ao ENUM tipo da tabela notificacoes e recria coluna prioridade GENERATED PERSISTENT;
+
+- controllers/objetivos/controller_criar_objetivo.js (modificado):
+	- Removido disparo de notificação cadastro_concluido e variáveis associadas (primeiroObjetivo, objetivosExistentes); removidos imports MetasLeitura, ObjetivosLeitura e perfilModel;
+
+- controllers/webhook/controller_webhook_criar_objetivo.js (modificado):
+	- Removido disparo de notificação cadastro_concluido e variáveis associadas; removidos imports MetasLeitura, ObjetivosLeitura e perfilModel;
+
+- migrations/alterar_enum_notificacoes_remover_cadastro_concluido.sql (novo):
+	- Remove cadastro_concluido do ENUM tipo da tabela notificacoes e recria coluna prioridade GENERATED PERSISTENT;
+
+- controllers/webhook/controller_metas_vencidas_usuario.js (novo):
+	- GET /api/webhook/nami/usuarios/:usuario_id/metas-vencidas: retorna todas as metas com data_limite vencida e ainda incompletas do usuário, com objetivo_nome, meta_numero, valor_meta, valor_alocado, percentual, data_limite e dias_atraso;
+
+- models/webhook/model_metas_vencidas_usuario.js (novo):
+	- buscarPorUsuario: JOIN entre objetivos_descricao e objetivos filtrando status_ativo, objetivo_completo = 0 e DATEDIFF > 0;
+
+- controllers/webhook/controller_ranking_global.js (novo):
+	- GET /api/webhook/ranking-global?celular=: recebe celular como query param; retorna posição do usuário no ranking com as labels primeiro, segundo, terceiro, dois_a_frente, um_a_frente, usuario, um_a_tras e dois_a_tras; dois_a_frente e um_a_frente são null quando sobrepostos ao top 3; um_a_tras e dois_a_tras são null quando o usuário está no final do ranking;
+
+- models/webhook/model_ranking_global.js (novo):
+	- buscarUsuarioPorCelular: JOIN entre ranking e users pelo celular;
+	- buscarTotal: COUNT(*) na tabela ranking;
+	- buscarPorPosicoes: SELECT com WHERE posicao IN (...) para buscar todas as entradas necessárias em uma única query;
+
+- routes/route_webhook.js (modificado):
+	- Adicionadas rotas GET /api/webhook/nami/usuarios/:usuario_id/metas-vencidas e GET /api/webhook/ranking-global protegidas por authWebhook;
+
 #jinx-develop-110:
 - Rendimentos mensais no webhook de dados do usuário, endpoint de criação de objetivo via webhook e novas notificações novo_usuario e novo_objetivo:
 

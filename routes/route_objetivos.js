@@ -87,8 +87,8 @@ router.post(
 
 // ─── EDITAR ───────────────────────────────────────────────────────────────────
 // PUT /api/v1/objetivos/:id/:objetivo_id
-// Edita descrição ou prazo. valor_alvo é imutável após a criação.
-// Mudança de prazo dispara recalculation_job.
+// Edita descrição, prazo ou valor_alvo (apenas para valores maiores que o atual).
+// Mudança de prazo ou valor_alvo dispara recalculation_job.
 router.put(
     '/api/v1/objetivos/:id/:objetivo_id',
     authMiddleware.checkAuthenticated,
@@ -97,6 +97,7 @@ router.put(
         param('objetivo_id').isInt({ gt: 0 }).withMessage('objetivo_id inválido.'),
         body('descricao').optional().isString().isLength({ min: 3, max: 255 }),
         body('prazo').optional().isInt({ min: 1, max: 600 }),
+        body('valor_alvo').optional().isFloat({ min: 0.01 }).withMessage('valor_alvo deve ser um número positivo.'),
     ],
     EditarObjetivoController.execute
 );

@@ -6,11 +6,16 @@ const NamiController                  = require('../controllers/webhook/controll
 const ProximaReuniaoCopomController   = require('../controllers/webhook/controller_proxima_reuniao_copom');
 const DadosUsuarioController          = require('../controllers/webhook/controller_dados_usuario');
 const WebhookCriarObjetivoController  = require('../controllers/webhook/controller_webhook_criar_objetivo');
+const MetasVencidasUsuarioController  = require('../controllers/webhook/controller_metas_vencidas_usuario');
+const RankingGlobalController         = require('../controllers/webhook/controller_ranking_global');
 
 router.get('/api/webhook/relatorio-gerencial',    authWebhook, RelatorioGerencialController.getRelatorio);
 router.get('/api/webhook/proxima-reuniao-copom',  authWebhook, ProximaReuniaoCopomController.get);
 router.get('/api/webhook/usuario/:usuario_id',    authWebhook, DadosUsuarioController.get);
 router.post('/api/webhook/criar-objetivo/:usuario_id', authWebhook, WebhookCriarObjetivoController.execute);
+
+router.get('/api/webhook/nami/usuarios/:usuario_id/metas-vencidas', authWebhook, MetasVencidasUsuarioController.get);
+router.get('/api/webhook/ranking-global', authWebhook, RankingGlobalController.get);
 
 router.get('/api/webhook/nami/pendentes',                 authWebhook, NamiController.getPendentes);
 router.put('/api/webhook/nami/:id/enviado',              authWebhook, NamiController.marcarEnviado);
