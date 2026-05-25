@@ -1,3 +1,9 @@
+#jinx-develop-113:
+- Correção da ordem de execução das rotinas diárias da Lulu: amortização e snapshot passaram a rodar imediatamente após o pagamento de assinaturas (id:8), antes da compra diária de Pins (id:11), evitando que saldos fiquem negativos:
+
+- controllers/rotinas/cron.js (modificado):
+	- rotinas id:15 ([Lulu] Amortização diária) e id:16 ([Lulu] Snapshot diário) movidas para logo após id:8 (pagamento de assinaturas), antes de id:2, id:9, id:10, id:11 e id:13;
+
 #jinx-develop-112:
 - Lulu estendido para PIX (normal e automático), webhook PIX automático Efí Bank, cancelamento proativo de PIX expirados, campos Lulu no relatório gerencial e vencimento/valor_token no endpoint de usuário:
 
